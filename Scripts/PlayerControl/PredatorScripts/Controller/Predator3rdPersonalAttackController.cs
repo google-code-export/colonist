@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 
 [@RequireComponent(typeof (PredatorPlayerStatus))]
@@ -16,11 +17,6 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     public string PreAttackAnimation = "preattack_right";
 
     public string PreAttackAnimation_Mixed = "preattack_right_mix";
-
-    //public string StrikeUpwardAnimation = "attack_upward";
-    //public string[] StrikeStarightAnimation = new string[]{"attack_straight"};
-    //public string StrikeDownwardAnimation = "attack_downward";
-    //public string StrikeMidCutAnimation = "attack_middle_cut";
 
     public string[] Strike_SingleClaw = new string[]{
         "attack_left_claw_spike-1", "attack_left_claw_spike-2",
@@ -42,15 +38,12 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
 
     public LayerMask EnemyLayer;
 
-    public float MaxAnimationSpeed = 0.95f;
-    public float MinAnimationSpeed = 0.5f;
-    private float animationSpeed = 0;
-
     public float PowerAccelerationTime = 1.3333f;
-    public float MaxStrikePower = 100f;
-    [HideInInspector]
-    public float strikePower = 0f;
 
+    /// <summary>
+    /// The gesture cool down time. Gesture process routine check user gesture input at every %GestureCooldown% seconds.
+    /// </summary>
+    public float GestureCooldown = 0.15f;
     /// <summary>
     /// The total time in seconds to accelerate to max strike power
     /// The default value is 1.3333f, it takes 1.3333 seconds to achieve max strike power!
@@ -68,16 +61,21 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     /// The ComboCombat in prefab which is to be setup by designer.
     /// </summary>
 	public ComboCombat[] ComboCombats;
-    
-    private CharacterController controller = null;
-    
     public int AttackAnimationLayer = 3;
-
 	public GameObject CombatHintHUD;
-	
+
+    public float MaxStrikePower = 100f;
+    [HideInInspector]
+    public float strikePower = 0f;
+
 	private IList<GestureInfomation> UnprocessGestureList = new List<GestureInfomation>();
 	private PredatorPlayerStatus predatorStatus = null;
-	
+    private CharacterController controller = null;
+    /// <summary>
+    /// When BlockUserGestureInput = true, the gesture will be dropped, and GestureList will be cleared per frame.
+    /// </summary>
+    private bool BlockUserGestureInput = false;
+    
 	void InitComboCombat()
 	{
 		foreach(ComboCombat comboCombat in ComboCombats)
@@ -126,11 +124,37 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
 	{
 		StartCoroutine(RepeatCheckUserGesture());
 	}
-	
+
+    void Update()
+    {
+        //if (Input.GetKeyDown("t"))
+        //{
+        //    Vector3 dir = transform.rotation * new Vector3(0, 0, -10);//transform.TransformDirection(0,0,1);
+        //    //transform.rotation = newRotation;
+        //    Debug.DrawLine(transform.position, transform.position + dir, Color.red, 5);
+        //    Quaternion.LookRotation(dir).SetEulerAngles(Quaternion.LookRotation(dir).eulerAngles - dis);
+        //    Vector3 newEuler = Quaternion.LookRotation(dir).eulerAngles - dis;
+        //    predatorStatus.body.rotation = Quaternion.Euler(newEuler);
+        //}
+        if (BlockUserGestureInput && UnprocessGestureList.Count > 0)
+        {
+            UnprocessGestureList.Clear();
+        }
+    }
+
 #region User gesture and combat token processing 
+
+    /// <summary>
+    /// Call by GestureHandler.
+    /// Push a new user gesture into queue - UnprocessGestureList
+    /// </summary>
+    /// <param name="gestureInfo"></param>
     void NewUserGesture(GestureInfomation gestureInfo)
     {
-        UnprocessGestureList.Add(gestureInfo);
+        if (!BlockUserGestureInput)
+        {
+            UnprocessGestureList.Add(gestureInfo);
+        }
     }
 	
     /// <summary>
@@ -141,69 +165,137 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
 	{
 		//the combat token by user
 		string combatToken = "";
-        int tokenCount = 0;
+        int emptyLoop = 0;
 		while(true)
 		{
-           if (UnprocessGestureList.Count > 0)
-           {
-               GestureInfomation gestureInfoToBeProcessed = UnprocessGestureList[0];
-			   combatToken += ((int)gestureInfoToBeProcessed.Type).ToString();
-				//New Hint in GUI (HUD)
-               CombatHintHUD.SendMessage("NewHint", gestureInfoToBeProcessed.Type);
-			   //Search the matched combo, and return the combat
-               Combat combat = GetComboCombatByToken(combatToken, gestureInfoToBeProcessed.Type);
-               //Process the combat
-               yield return StartCoroutine(ProcessCombat(combat));
-			   //StartCoroutine(ProcessUserGesture(gestureInfoToBeProcessed));
+            if (UnprocessGestureList.Count > 0)
+            {
+                emptyLoop = 0;
+                GestureInfomation gestureInfoToBeProcessed = UnprocessGestureList[0];
+                //Setup user combo combat token
+                combatToken += ((int)gestureInfoToBeProcessed.Type).ToString();
+                //New Hint in GUI (HUD)
+                CombatHintHUD.SendMessage("NewHint", gestureInfoToBeProcessed.Type);
+                //Search the matched combo, and return the combat
+                bool tokenMatched = false;
+                Combat combat = GetComboCombatByToken(combatToken, gestureInfoToBeProcessed.Type, out tokenMatched);
+                combat.gestureInfo = gestureInfoToBeProcessed;
 
-			   UnprocessGestureList.Remove(gestureInfoToBeProcessed);
-               //Only support up to 4 combo combat
-               if (combatToken.Length == 4)
-               {
-                   combatToken = "";
-               }
-		      //Debug.Log("Process gesture:" + GestureList.Count + " at time:" + Time.time);
-		   }
-		   yield return new WaitForSeconds(0.15f);
-		}
-	}
+                //Debug.Log("Token matched:" + tokenMatched);
+                //Process the combat
+                //If combat command has special function to process combat, invoke the special combat function
+                if (combat.specialCombatFunction != string.Empty)
+                {
+                    yield return StartCoroutine(combat.specialCombatFunction, combat);
+                }
+                //Else, use default combat process routine
+                else
+                {
+                    yield return StartCoroutine(DefaultCombat(combat));
+                }
+                UnprocessGestureList.Remove(gestureInfoToBeProcessed);
+                //If the combat sum == 5, or unmatched token, clean the combat history, and clean the GUI Hint
+                if (tokenMatched == false || combatToken.Length == ComboCombat.ComboCombatMaxCount)
+                {
+                    combatToken = "";
+                    CombatHintHUD.SendMessage("ClearHint");
+                }
+                //Debug.Log("Process gesture:" + GestureList.Count + " at time:" + Time.time);
+            }
+            else
+            {
+                emptyLoop++;
+                if (emptyLoop == 2)
+                {
+                    combatToken = "";
+                    CombatHintHUD.SendMessage("ClearHint");
+                }
+                
+            }
+            yield return new WaitForSeconds(GestureCooldown);
+         }
+    }
 
-    IEnumerator ProcessCombat(Combat combat)
+
+    /// <summary>
+    /// The default routine to process combat
+    /// </summary>
+    /// <param name="combat"></param>
+    /// <returns></returns>
+    IEnumerator DefaultCombat(Combat combat)
     {
-        yield return null;
+        string attackAnimation = Util.RandomFromArray(combat.specialAnimation);
+        //If combat.BlockUserInput = TRUE, user gesture input will be dropped during combat processing
+        BlockUserGestureInput = combat.BlockUserInput;
+        //Look for enemy - in near radius
+        float DistanceToEnemy = 0;
+        GameObject target = LookforBestTarget(null, OffenseRadiusNear, out DistanceToEnemy);
+        if (target != null)
+        {
+            Util.RotateToward(transform, target.transform.position, false, 0);
+            if (DistanceToEnemy > ClawRadius)
+            {
+                yield return StartCoroutine(RushTo(target.transform,0.3f));
+            }
+            StartCoroutine(SendHitMessage(combat.damageForm, target, 10, animation[attackAnimation].length / 2));
+        }
+        animation.CrossFade(attackAnimation);
+        //Send hit message in 1/2 time of animation
+        //If the WaitUntilAnimationReturn = TRUE, then wait for animation over
+        if (combat.WaitUntilAnimationReturn)
+        {
+            yield return new WaitForSeconds(animation[attackAnimation].length);
+            //re-accept user gesture input 
+            BlockUserGestureInput = false;
+        }
+        else
+        {
+            //re-accept user gesture input 
+            yield return null;
+        }
     }
 
 	private GameObject lastTarget = null;
-    IEnumerator ProcessUserGesture(GestureInfomation gesture)
-	{
-		Vector3? worldDirection = null;
-		GameObject target = null;
-        //Find for the target:
-		if(gesture.gestureDirection.HasValue)
-		{
-			worldDirection = Util.GestureDirectionToWorldDirection(gesture.gestureDirection.Value);
-			target = LookingforBestTarget(worldDirection);
-		}
-		else 
-		{
-			target = LookingforBestTarget(transform.forward);
-		}
-        //Process the gesture:
-		switch(gesture.Type)
-		{
-		    case GestureType.Single_Tap:
-			string single_spike_animation = Util.RandomFromArray(Strike_SingleClaw);
-			DamageForm damageForm = DamageForm.Predator_Strike_Single_Claw;
+    /// <summary>
+    /// Deprecated.
+    /// </summary>
+    /// <param name="gesture"></param>
+    /// <returns></returns>
+    //IEnumerator ProcessUserGesture(GestureInfomation gesture)
+    //{
+    //    Vector3? worldDirection = null;
+    //    GameObject target = null;
+    //    //Find for the target:
+    //    if(gesture.gestureDirection.HasValue)
+    //    {
+    //        worldDirection = Util.GestureDirectionToWorldDirection(gesture.gestureDirection.Value);
+    //        target = LookforBestTarget(worldDirection);
+    //    }
+    //    else 
+    //    {
+    //        target = LookforBestTarget(transform.forward);
+    //    }
+    //    //Process the gesture:
+    //    switch(gesture.Type)
+    //    {
+    //        case GestureType.Single_Tap:
+    //        string single_spike_animation = Util.RandomFromArray(Strike_SingleClaw);
+    //        DamageForm damageForm = DamageForm.Predator_Strike_Single_Claw;
 			
-			if(target && Util.DistanceOfCharacters(this.gameObject, target) >= ClawRadius)
-			{
-			   yield return StartCoroutine(RushTo(target.transform));
-			}
-			yield return StartCoroutine(Strike(single_spike_animation,damageForm,target,10));
-			break;
-		}
-	}
+    //        if(target && Util.DistanceOfCharacters(this.gameObject, target) >= ClawRadius)
+    //        {
+    //           yield return StartCoroutine(RushTo(target.transform));
+    //        }
+    //        yield return StartCoroutine(Strike(single_spike_animation,damageForm,target,10));
+    //        break;
+    //    }
+    //}
 
+    /// <summary>
+    /// Return the default tap/slice combat.
+    /// </summary>
+    /// <param name="GestureType"></param>
+    /// <returns></returns>
     private Combat GetDefaultCombat(GestureType GestureType)
     {
         switch (GestureType)
@@ -217,13 +309,13 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     }
 
 	/// <summary>
-	/// Gets the combat by token. 
+	/// Gets the combat by token. If not prefab matched comboCombat can be found, return default combat.
     /// For example : there are two combo combat defined in prefab: tap + tap + tap + slice (1110) , slice + tap + tap + slice (1001)
 	///               then parameter token = 111 = returned 1110
     ///               parameter token = 1001 = return 1001
     ///               parameter token = 101 = return default combat of gesture type = tap , because no prefab combat can be found
 	/// </summary>
-	private Combat GetComboCombatByToken(string token, GestureType gestureType)
+	private Combat GetComboCombatByToken(string token, GestureType gestureType, out bool tokenMatched)
 	{
 		ComboCombat comboCombat = null;
 		foreach(ComboCombat _comboCombat in this.ComboCombats)
@@ -237,27 +329,16 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
         //If no matched combo combat is found, return the default combat
 		if(comboCombat==null) 
 		{
+            tokenMatched = false;
             return GetDefaultCombat(gestureType);
 		}
 		else 
 		{
+            tokenMatched = true;
             return comboCombat.combat[token.Length - 1];
 		}
 	}
 #endregion
-	
-    void Update()
-    {
-        //if (Input.GetKeyDown("t"))
-        //{
-        //    Vector3 dir = transform.rotation * new Vector3(0, 0, -10);//transform.TransformDirection(0,0,1);
-        //    //transform.rotation = newRotation;
-        //    Debug.DrawLine(transform.position, transform.position + dir, Color.red, 5);
-        //    Quaternion.LookRotation(dir).SetEulerAngles(Quaternion.LookRotation(dir).eulerAngles - dis);
-        //    Vector3 newEuler = Quaternion.LookRotation(dir).eulerAngles - dis;
-        //    predatorStatus.body.rotation = Quaternion.Euler(newEuler);
-        //}
-    }
 
     /// <summary>
     /// Crossfade PreAttack, accumluating power to perform a powerful strike!
@@ -271,61 +352,52 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     }
 
 
-
-	/// <summary>
-	/// Play strike aniamtion, and send hit message to target
-	/// </summary>
-	/// <param name="animationToPlay"></param>
-	/// <param name="damageForm"></param>
-	/// <param name="target"></param>
-	/// <param name="hitPoint"></param>
-	/// <returns></returns>
-    IEnumerator Strike(string animationToPlay, DamageForm damageForm, GameObject target, float hitPoint)
+    /// <summary>
+    /// Rush to a target, in %time%
+    /// </summary>
+    /// <param name="target"></param>
+    /// <param name="time"></param>
+    /// <returns></returns>
+    private IEnumerator RushTo(Transform target, float time)
     {
-        float length = animation[animationToPlay].length;
-		if(target != null)
-		{
-			transform.LookAt(target.transform);
-		}
-		animation.CrossFade(animationToPlay);
-        //TimeLength1 = first part of strike animation
-        //TimeLength2 = last part of strike animation
-		float TimeLength1 = length * 0.5f;
-		float TimeLength2 = length - TimeLength1;
-		yield return new WaitForSeconds(TimeLength1);
-        //Send hit message to target, after TimeLength1
-		if(target != null)
-		{
-		  if(Util.DistanceOfCharacters(this.gameObject,target) <= ClawRadius)
-		  {
-			 SendHitMessage(damageForm, target, hitPoint);
-		  }
-		}
-		yield return new WaitForSeconds(TimeLength2);
-    }
-
-    private IEnumerator RushTo(Transform target)
-    {
-		transform.LookAt(target);
         Vector3 direction = target.position - transform.position;
+        Vector3 position = target.position;
 		float distance = Util.DistanceOfCharacters(this.gameObject, target.gameObject);
         float _start = Time.time;
-        float timeLength = 0.3f;
-        Vector3 Speed = direction / timeLength;
-        while ((Time.time - _start) <= timeLength)
+        Vector3 Speed = direction / time;
+        predatorStatus.DisableUserMovement = true;
+        while ((Time.time - _start) <= time)
         {
+            Util.RotateToward(transform, position, false, 0);
             this.controller.SimpleMove(Speed);
             yield return null;
         }
+        predatorStatus.DisableUserMovement = false;
     }
 
-    private void SendHitMessage(DamageForm DamageForm, GameObject enemy, float HitPoint)
+    private IEnumerator SendHitMessage(DamageForm DamageForm, GameObject enemy, float HitPoint, float lagTime)
     {
+        if (enemy == null)
+        {
+            yield break;
+        }
+        if (Mathf.Approximately(lagTime, 0) == false)
+        {
+            yield return new WaitForSeconds(lagTime);
+        }
         float distance = Util.DistanceOfCharacters(enemy, this.gameObject);
         if (distance <= ClawRadius)
         {
             DamageParameter damageParam = new DamageParameter(this.gameObject, DamageForm, HitPoint);
-            enemy.SendMessage("ApplyDamage", damageParam);
+            try
+            {
+                enemy.SendMessage("ApplyDamage", damageParam);
+            }
+            catch (Exception exc)
+            {
+                Debug.LogError(exc.Message + " object receiver:" + enemy.name);
+                
+            }
         }
     }
 
@@ -345,7 +417,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     /// <param name="radius"></param>
     /// <param name="direction"></param>
     /// <returns></returns>
-    private GameObject _FindEnemyAtDirection(Vector3 direction, float capsuleRadius, float SweepDistance)
+    private GameObject _FindEnemyAtDirection(Vector3 direction, float capsuleRadius, float SweepDistance, out float distance)
     {
         float radius = controller.radius;
         Vector3 topPoint = controller.center + transform.position + Vector3.up * controller.height * 0.5f;
@@ -355,12 +427,12 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
         {
             IList<Collider> colliderList;
             Util.CopyToList(hits, out colliderList);
-            float distance = 0;
             Collider cloest = Util.findClosest(transform.position, colliderList, out distance);
             return cloest.gameObject;
         }
         else
         {
+            distance = 0;
             return null;
         }
     }
@@ -370,35 +442,41 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     /// </summary>
     /// <param name="radius"></param>
     /// <returns></returns>
-    private GameObject _FindEnemy(float radius)
+    private GameObject _FindEnemy(float radius, out float distance)
     {
         GameObject ret = null;
         //Get attackable object
         Collider[] colliders = Physics.OverlapSphere(this.transform.position, radius, EnemyLayer);
+        distance = 0;
         if (colliders != null && colliders.Length > 0)
         {
-            Collider c = Util.findClosest(Util.GetCharacterCenter(this.gameObject), colliders);
+            Collider c = Util.findClosest(Util.GetCharacterCenter(this.gameObject), colliders, out distance);
             ret = c.gameObject;
         }
         return ret;
     }
 	
-	/// <summary>
-	/// Lookingfors the best target.
-	/// If direction.HasValue = true, then use Physics.CapsuleCastAll to sweep in direction to detect enemy target
-	/// Else if direction == null, then Physics.Oversphere to find enemy around
-	/// </summary>
-    GameObject LookingforBestTarget(Vector3? direction)
+/// <summary>
+/// Lookingfors the best target.
+/// If direction.HasValue = true, then use Physics.CapsuleCastAll to sweep in direction to detect enemy target
+/// Else if direction == null, then Physics.Oversphere to find enemy around
+/// </summary>
+/// <param name="direction"></param>
+/// <param name="Radius"></param>
+/// <param name="distance">out - the distance to target, 0 if target not found</param>
+/// <returns></returns>
+    GameObject LookforBestTarget(Vector3? direction, float Radius, out float distance)
     {
         GameObject enemy = null;
+        distance = 0;
         if (direction.HasValue)
         {
             float CapsuleRadius = controller.radius;
-            enemy = _FindEnemyAtDirection(direction.Value, CapsuleRadius, OffenseRadiusNear);
+            enemy = _FindEnemyAtDirection(direction.Value, CapsuleRadius, Radius, out distance);
         }
         if(enemy == null)
         {
-            enemy = _FindEnemy(OffenseRadiusNear);
+            enemy = _FindEnemy(Radius, out distance);
         }
         return enemy;
     }
