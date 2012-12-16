@@ -37,10 +37,10 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
 //            SendMessage("Grounding");
 //        }
 //		
-		if(Input.GetKeyDown(KeyCode.Space))
-		{
-            SendMessage("JumpTo", transform.position + transform.forward * 10);
-		}
+        //if(Input.GetKeyDown(KeyCode.Space))
+        //{
+        //    SendMessage("JumpTo", transform.position + transform.forward * 10);
+        //}
 //		JumpDirection.y -= 8 * Time.deltaTime;        
 //		// Move the controller    
 //		controller.Move(JumpDirection * Time.deltaTime);
@@ -76,8 +76,10 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
 	}
 	
 	private float jumpSpeed = 30f;
-	IEnumerator JumpTo(Vector3 toPosition)
+	IEnumerator JumpTo(Combat combat)
 	{
+        Vector3 direction = Util.GestureDirectionToWorldDirection(combat.gestureInfo.gestureDirection.Value);
+        Vector3 toPosition = transform.position + direction * 5;
 		float distance = Vector3.Distance(transform.position, toPosition);
         Vector3 dir = toPosition - transform.position;
 

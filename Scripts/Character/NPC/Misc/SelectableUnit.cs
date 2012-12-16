@@ -30,11 +30,11 @@ public class SelectableUnit : MonoBehaviour
 
     public void DispathCommand(Command c)
     {
-        baseAI.DispatchCommand(c);
+        //baseAI.DispatchCommand(c);
     }
     public void ExecuteCommand(Command c)
     {
-        baseAI.ExecuteCommand(c,true);
+        //baseAI.ExecuteCommand(c, true);
     }
     #region GUI methods
 

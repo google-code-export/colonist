@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+
 public class Util : MonoBehaviour {
 	
 	public static int RecurrsiveDecrementProduct(int startValue, int step)
@@ -127,6 +128,20 @@ public class Util : MonoBehaviour {
             Transform childDst = dst.Find(path);
             childSrc.position = childDst.position;
             childSrc.rotation = childDst.rotation;
+        }
+    }
+
+    public static Rect GetScreenOccupancy(ScreenOccupancy ScreenOccupancy)
+    {
+        switch (ScreenOccupancy)
+        {
+            case ScreenOccupancy.LeftScreen:
+                return new Rect(0, 0, Screen.width / 2, Screen.height);
+            case ScreenOccupancy.RightScreen:
+                return new Rect(Screen.width / 2, 0, Screen.width / 2, Screen.height);
+            case ScreenOccupancy.FullScreen:
+            default:
+                return new Rect(0, 0, Screen.width / 2, Screen.height);
         }
     }
 
@@ -495,6 +510,18 @@ public class Util : MonoBehaviour {
         from.rotation = Quaternion.Lerp(from.rotation, to.rotation, Mathf.Clamp01(1 / OverTime) * Time.deltaTime);
     }
 
+    public static void ChangeGameObjectLayer(GameObject gameObject, int layer, bool recusiveChange)
+    {
+        gameObject.layer = layer;
+        if (recusiveChange)
+        {
+            foreach (Transform child in gameObject.transform)
+            {
+                ChangeGameObjectLayer(child.gameObject, layer, recusiveChange);
+            }
+        }
+    }
+
     public static bool CompareTransform(Transform from, Transform to)
     {
         bool comparePos = (from.position == to.position);
@@ -601,7 +628,7 @@ public class Util : MonoBehaviour {
                 Util.RotateToward(transform, pos, false, 0);
             }
             // Move the character (rateframe independent)
-            direction = forward * movementspeed * speedModifier;
+            direction = direction.normalized * movementspeed * speedModifier;
             controller.SimpleMove(direction);
         }
         else
@@ -643,7 +670,7 @@ public class Util : MonoBehaviour {
         clip.AddEvent(_event);
     }
 
-    public static void AddAnimationEvent(AnimationClip clip, int triggerFrame, int totalFrame, float totalAnimationLength, string functionName, Object ObjectParameter)
+    public static void AddAnimationEvent(AnimationClip clip, int triggerFrame, int totalFrame, float totalAnimationLength, string functionName, UnityEngine.Object ObjectParameter)
     {
         AnimationEvent _event = new AnimationEvent();
         _event.functionName = functionName;
@@ -680,6 +707,38 @@ public class Util : MonoBehaviour {
             if (collider != null)
             {
                 collider.enabled = available;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Execute a function with parameter %from% increasing to %to% in %duration& seconds.
+    /// Do NOT PASS A LONG execution function in!
+    /// </summary>
+    /// <param name="from"></param>
+    /// <param name="to"></param>
+    /// <param name="func"></param>
+    /// <param name="duration"></param>
+    /// <returns></returns>
+    public static IEnumerator ExecFunctionWithGradualParameter(float from, float to, System.Action<float> func, float duration)
+    {
+        const float loop = 10;
+        YieldInstruction span = duration == 0 ? null : new WaitForSeconds(duration / loop);
+        float interval = (to - @from) / loop;
+        if (to > @from)
+        {
+            for (float i = from; i < to; i += interval)
+            {
+                func(i);
+                yield return span;
+            }
+        }
+        else
+        {
+            for (float i = from; i > to; i += interval)
+            {
+                func(i);
+                yield return span;
             }
         }
     }

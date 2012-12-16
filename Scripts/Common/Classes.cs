@@ -405,14 +405,34 @@ public class TouchInfomation
 public class Combat
 {
 	public string name;
-	public bool IsFinalCombat;
+    /// <summary>
+    /// If BlockUserInput = true, then will reject user input when animating.
+    /// </summary>
+	public bool BlockPlayerInput;
+
+    /// <summary>
+    /// If WaitUntilAnimationReturn = true, then will wait until animation is over.
+    /// </summary>
+    public bool WaitUntilAnimationReturn;
 	/// <summary>
 	/// The special animation - if the special animation is null, will play default animation assoicating to the Gesture type.
 	/// </summary>
 	public string[] specialAnimation;
+    public DamageForm damageForm;
 	public GestureType gestureType;
-	public bool PendForAnimationReturn;
-	public string[] yieldFunction;
+	public string specialCombatFunction;
+
+    /// <summary>
+    /// the gesture information that assoicated to the combat
+    /// </summary>
+    [HideInInspector]
+    public GestureInfomation gestureInfo;
+
+    /// <summary>
+    /// If FinalCombat = true, then user input should be unblocked after this combat.
+    /// </summary>
+    [HideInInspector]
+    public bool FinalCombat;
 }
 
 /// <summary>
@@ -421,13 +441,14 @@ public class Combat
 [System.Serializable]
 public class ComboCombat
 {
-	public string name;
+    public const int ComboCombatMaxCount = 5;
+	public string comboName;
 	public Combat[] combat;
 	/// <summary>
 	/// Initalize combat token.
 	/// 1111 = tap * 4
 	/// 1110 = tap * 3 + slice
-	/// 1102 = tap + tap + slice + curve
+	/// 11001 = tap + tap + slice + slice + tap
 	/// </summary>
 	public void Init()
 	{

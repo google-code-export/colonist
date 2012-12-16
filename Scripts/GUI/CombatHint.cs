@@ -18,7 +18,7 @@ public class CombatHint : MonoBehaviour {
 	public float height = 32;
 	
 	private IList<GestureType> GestureList = new List<GestureType>();
-	private int MaxCount = 4;
+    private int MaxCount = ComboCombat.ComboCombatMaxCount;
 	
 	// Use this for initialization
 	void Start () {
@@ -38,16 +38,21 @@ public class CombatHint : MonoBehaviour {
 		}
 		GestureList.Add(gestureType);
 	}
-	
+
+    void ClearHint()
+    {
+        GestureList.Clear();
+    }
 	
     void OnGUI()
     {
 		//From left to right
 		for(int i=0; i<GestureList.Count; i++)
 		{
-			Rect area1 = new Rect(Screen.width - width * (5 - i), 0, width, height);
-			GestureType gestureType = GestureList[i];
-		    GUI.DrawTexture(area1, GestureToTexture(gestureType), ScaleMode.ScaleToFit, true);
+            int GridSpaceCount = MaxCount + 1;
+            Rect area1 = new Rect(Screen.width - width * (GridSpaceCount - i), 0 + height, width, height);
+            GestureType gestureType = GestureList[i];
+            GUI.DrawTexture(area1, GestureToTexture(gestureType), ScaleMode.ScaleToFit, true);
 		}
 	}
 	

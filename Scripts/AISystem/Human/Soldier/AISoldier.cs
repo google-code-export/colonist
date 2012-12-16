@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class AISoldier : MonoBehaviour {
+public class AISoldier : AI {
     
     public float MovementSpeed = 2f;
     public float FallbackSpeed = 2f;
@@ -46,8 +46,6 @@ public class AISoldier : MonoBehaviour {
     public Transform LLeg = null;
     public Transform RLeg = null;
 
-    [HideInInspector]
-    public Transform currentTarget;
     /// <summary>
     /// StartWaypoint is routed when spawning the NPC
     /// </summary>
@@ -58,15 +56,6 @@ public class AISoldier : MonoBehaviour {
     /// </summary>
     [HideInInspector]
     public WayPoint PartolWaypoint;
-	
-	/// <summary>
-	/// The flag to halt an AI.
-	/// true = Halt
-	/// false = No halt
-	/// </summary>
-	[HideInInspector]
-	public bool Halt = false;
-	
 	
     private WayPoint currentWaypoint;
 
@@ -100,6 +89,7 @@ public class AISoldier : MonoBehaviour {
     {
         controller = GetComponent<CharacterController>();
         InitAnimation();
+        base.InitAI();
     }
 
 	// Use this for initialization
@@ -270,11 +260,11 @@ public class AISoldier : MonoBehaviour {
     {
         while (true)
         {
-			if(Halt)
-			{
-				yield return null;
-				continue;
-			}
+            if (Halt)
+            {
+                yield return null;
+                continue;
+            }
            //if no target is found, do nothing
            if (currentTarget == null && FindTarget() == false)
            {
@@ -351,9 +341,9 @@ public class AISoldier : MonoBehaviour {
         Debug.Log("Last hit wall time frame:" + lastHitWallTime + " " + Time.frameCount);
     }
 
-    void StopAI()
+    public override void StopAI()
     {
-		Debug.Log("In stopAI!");
+        base.StopAI();
         StopAllCoroutines();
         animation.Stop();
         //Remove character controller

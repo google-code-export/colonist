@@ -27,6 +27,12 @@ public class PredatorPlayerStatus : MonoBehaviour{
     public Transform leftUpperClaw = null;
     public Transform rightUpperClaw = null;
 
+    /// <summary>
+    /// When DisableUserMovement = true, the movement controller will ignore the user movement command in Update()
+    /// </summary>
+    [HideInInspector]
+    public bool DisableUserMovement = false;
+
     public static bool isBusy
     {
         get
@@ -34,6 +40,8 @@ public class PredatorPlayerStatus : MonoBehaviour{
             return isFetching || isAttacking || isMoving;
         }
     }
+
+
     private static bool isFetching = false;
     private static bool isAttacking = false;
     private static bool isMoving = false;

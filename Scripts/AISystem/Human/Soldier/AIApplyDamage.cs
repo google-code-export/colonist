@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 [RequireComponent(typeof(GetHP))]
-[RequireComponent(typeof(AISoldier))]
+[RequireComponent(typeof(AI))]
 public class AIApplyDamage : MonoBehaviour {
 
     public ReceiveDamageBeheavior[] receiveDamageBeheavior;
@@ -30,7 +30,7 @@ public class AIApplyDamage : MonoBehaviour {
 	
 	private CharacterController characterController = null;
 	private float LastGetHitTime = -99;
-	private AISoldier SolderAI;
+	private AI AI;
     void Awake()
     {
         foreach (string ani in Animations)
@@ -40,7 +40,7 @@ public class AIApplyDamage : MonoBehaviour {
         }
         Util.SetRagdoll(this.gameObject, false);
 		characterController = GetComponent<CharacterController>();
-		SolderAI = GetComponent<AISoldier>();
+        AI = GetComponent<AI>();
     }
 
 	// Use this for initialization
@@ -50,14 +50,18 @@ public class AIApplyDamage : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	
+        if (Input.GetKeyDown("p"))
+        {
+            DamageParameter dp= new DamageParameter(this.gameObject, DamageForm.Predator_Strike_Single_Claw, 10);
+            SendMessage("ApplyDamage", dp);
+        }
 	}
 	
 	void FixedUpdate()
 	{
 		if((Time.time - LastGetHitTime) > 1f)
 		{
-			SolderAI.Halt = false;
+			AI.Halt = false;
 		}
 	}
 
@@ -70,7 +74,7 @@ public class AIApplyDamage : MonoBehaviour {
         }
 
         HP -= damageParam.damagePoint;
-		SolderAI.Halt = true;
+        AI.Halt = true;
         //Find the die beheavior which match to the damageForm
         if (HP <= 0)
         {

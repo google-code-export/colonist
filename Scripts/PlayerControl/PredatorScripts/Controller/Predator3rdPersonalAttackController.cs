@@ -43,7 +43,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     /// <summary>
     /// The gesture cool down time. Gesture process routine check user gesture input at every %GestureCooldown% seconds.
     /// </summary>
-    public float GestureCooldown = 0.15f;
+    public float CombatCooldown = 0.15f;
     /// <summary>
     /// The total time in seconds to accelerate to max strike power
     /// The default value is 1.3333f, it takes 1.3333 seconds to achieve max strike power!
@@ -68,11 +68,17 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     [HideInInspector]
     public float strikePower = 0f;
 
+    /// <summary>
+    /// Key = combo combat token
+    /// Value = combo combat
+    /// </summary>
+    private Dictionary<string, ComboCombat> ComboCombatTokenDict = new Dictionary<string, ComboCombat>();
 	private IList<GestureInfomation> UnprocessGestureList = new List<GestureInfomation>();
+    private IList<Combat> UnprocessCombatList = new List<Combat>();
 	private PredatorPlayerStatus predatorStatus = null;
     private CharacterController controller = null;
     /// <summary>
-    /// When BlockUserGestureInput = true, the gesture will be dropped, and GestureList will be cleared per frame.
+    /// When BlockUserGestureInput = true, the new coming player gesture will be dropped, and GestureList will be cleared per frame.
     /// </summary>
     private bool BlockUserGestureInput = false;
     
@@ -81,6 +87,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
 		foreach(ComboCombat comboCombat in ComboCombats)
 		{
 			comboCombat.Init();
+            ComboCombatTokenDict[comboCombat.token] = comboCombat;
 		}
 	}
 	
@@ -122,7 +129,8 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
 	
 	void Start()
 	{
-		StartCoroutine(RepeatCheckUserGesture());
+		//StartCoroutine(RepeatCheckUserGesture());
+        StartCoroutine(RepeatCheckCombatList());
 	}
 
     void Update()
@@ -136,16 +144,41 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
         //    Vector3 newEuler = Quaternion.LookRotation(dir).eulerAngles - dis;
         //    predatorStatus.body.rotation = Quaternion.Euler(newEuler);
         //}
+        //when BlockUserGestureInput = true, block the player's gesture input
         if (BlockUserGestureInput && UnprocessGestureList.Count > 0)
         {
             UnprocessGestureList.Clear();
         }
+        //In case application quit abnormally that the player could never gain control again, 
+        //hereby it's necessary to reflag the BlockUserGestureInput to false
+        if (BlockUserGestureInput && (Time.time - LastBlockPlayerGestureInputTime) >= this.CombatCooldown * 1.5f)
+        {
+            BlockUserGestureInput = false;
+        }
+        //If player do not append combat in 1 second, reset the playerComboToken and clear HUD hint
+        if( ((Time.time - LastProcessPlayerGestureInputTime) > 1f) && playerComboToken != string.Empty)
+        {
+            playerComboToken = "";
+            CombatHintHUD.SendMessage("ClearHint");
+        }
     }
 
-#region User gesture and combat token processing 
+#region User gesture and combat token processing
 
+    string playerComboToken = "";
+    /// <summary>
+    /// variable the last time of blocking player gesture input
+    /// </summary>
+    float LastBlockPlayerGestureInputTime = -1;
+    /// <summary>
+    /// variable the last time of receiving player gesture input
+    /// </summary>
+    float LastProcessPlayerGestureInputTime = -1;
     /// <summary>
     /// Call by GestureHandler.
+    /// 1. New HUD Hint
+    /// 2. Search combo combat by playerComboToken
+    /// 3. Determine the playerCombo can go ahead , or terminated(unmatched)
     /// Push a new user gesture into queue - UnprocessGestureList
     /// </summary>
     /// <param name="gestureInfo"></param>
@@ -153,68 +186,68 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     {
         if (!BlockUserGestureInput)
         {
-            UnprocessGestureList.Add(gestureInfo);
+            //New Hint in GUI (HUD)
+            CombatHintHUD.SendMessage("NewHint", gestureInfo.Type);
+            //Accumulate player combo token string
+            playerComboToken += ((int)gestureInfo.Type).ToString();
+            //Check if player combo token has a matched prefab
+            bool playerTokenMatched = false, isLastCombat = false;
+            Combat combat = GetComboCombatByToken(playerComboToken, gestureInfo.Type, out playerTokenMatched, out isLastCombat);
+
+            //If player combo token not matched, set BlockUserGestureInput = true to block all player input, 
+            //until the combat processing finish, then BlockUserGestureInput will be set true again.
+            //reset playerComboToken
+            if (playerTokenMatched == false)
+            {
+               combat.FinalCombat = true;
+               LastBlockPlayerGestureInputTime = Time.time;
+               BlockUserGestureInput = true;
+               playerComboToken = "";
+            }
+            else if (isLastCombat && playerTokenMatched)
+            {
+                combat.FinalCombat = true;
+                playerComboToken = "";
+            }
+            //record the last receiving player gesture input time
+            LastProcessPlayerGestureInputTime = Time.time;
+           // UnprocessGestureList.Add(gestureInfo);
+            UnprocessCombatList.Add(combat);
         }
     }
-	
+
     /// <summary>
-    /// Damon routine, check & process user input at interval = 0.15 seconds(cooldown time)
+    /// Daemon  routine, check if UnprocessCombatList contains element, then processing it.
     /// </summary>
     /// <returns></returns>
-	IEnumerator RepeatCheckUserGesture()
-	{
-		//the combat token by user
-		string combatToken = "";
-        int emptyLoop = 0;
-		while(true)
-		{
-            if (UnprocessGestureList.Count > 0)
+    IEnumerator RepeatCheckCombatList()
+    {
+        while (true)
+        {
+            if (UnprocessCombatList.Count > 0)
             {
-                emptyLoop = 0;
-                GestureInfomation gestureInfoToBeProcessed = UnprocessGestureList[0];
-                //Setup user combo combat token
-                combatToken += ((int)gestureInfoToBeProcessed.Type).ToString();
-                //New Hint in GUI (HUD)
-                CombatHintHUD.SendMessage("NewHint", gestureInfoToBeProcessed.Type);
-                //Search the matched combo, and return the combat
-                bool tokenMatched = false;
-                Combat combat = GetComboCombatByToken(combatToken, gestureInfoToBeProcessed.Type, out tokenMatched);
-                combat.gestureInfo = gestureInfoToBeProcessed;
-
-                //Debug.Log("Token matched:" + tokenMatched);
-                //Process the combat
-                //If combat command has special function to process combat, invoke the special combat function
+                Combat combat = UnprocessCombatList[0];
+                UnprocessCombatList.Remove(combat);
                 if (combat.specialCombatFunction != string.Empty)
                 {
                     yield return StartCoroutine(combat.specialCombatFunction, combat);
                 }
-                //Else, use default combat process routine
                 else
                 {
                     yield return StartCoroutine(DefaultCombat(combat));
                 }
-                UnprocessGestureList.Remove(gestureInfoToBeProcessed);
-                //If the combat sum == 5, or unmatched token, clean the combat history, and clean the GUI Hint
-                if (tokenMatched == false || combatToken.Length == ComboCombat.ComboCombatMaxCount)
+                if (combat.FinalCombat)
                 {
-                    combatToken = "";
+                    BlockUserGestureInput = false;
                     CombatHintHUD.SendMessage("ClearHint");
                 }
-                //Debug.Log("Process gesture:" + GestureList.Count + " at time:" + Time.time);
             }
-            else
-            {
-                emptyLoop++;
-                if (emptyLoop == 2)
-                {
-                    combatToken = "";
-                    CombatHintHUD.SendMessage("ClearHint");
-                }
-                
-            }
-            yield return new WaitForSeconds(GestureCooldown);
-         }
+            yield return new WaitForSeconds(CombatCooldown);
+        }
+        
     }
+
+    
 
 
     /// <summary>
@@ -226,7 +259,12 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     {
         string attackAnimation = Util.RandomFromArray(combat.specialAnimation);
         //If combat.BlockUserInput = TRUE, user gesture input will be dropped during combat processing
-        BlockUserGestureInput = combat.BlockUserInput;
+        if (combat.BlockPlayerInput == true)
+        {
+            LastBlockPlayerGestureInputTime = Time.time;
+            BlockUserGestureInput = combat.BlockPlayerInput;
+        }
+        
         //Look for enemy - in near radius
         float DistanceToEnemy = 0;
         GameObject target = LookforBestTarget(null, OffenseRadiusNear, out DistanceToEnemy);
@@ -245,8 +283,6 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
         if (combat.WaitUntilAnimationReturn)
         {
             yield return new WaitForSeconds(animation[attackAnimation].length);
-            //re-accept user gesture input 
-            BlockUserGestureInput = false;
         }
         else
         {
@@ -308,24 +344,44 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
         }
     }
 
-	/// <summary>
-	/// Gets the combat by token. If not prefab matched comboCombat can be found, return default combat.
+    private bool IsPlayerComboTokenMatched(string playerComboToken)
+    {
+        foreach (string prefabComboTokenKey in ComboCombatTokenDict.Keys)
+        {
+            if (prefabComboTokenKey.StartsWith(playerComboToken) && prefabComboTokenKey.Length >= playerComboToken.Length)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Gets the combat by token. If no prefab matched comboCombat can be found, return default combat.
     /// For example : there are two combo combat defined in prefab: tap + tap + tap + slice (1110) , slice + tap + tap + slice (1001)
-	///               then parameter token = 111 = returned 1110
+    ///               then parameter token = 111 = returned 1110
     ///               parameter token = 1001 = return 1001
     ///               parameter token = 101 = return default combat of gesture type = tap , because no prefab combat can be found
-	/// </summary>
-	private Combat GetComboCombatByToken(string token, GestureType gestureType, out bool tokenMatched)
+    /// </summary>
+    /// <param name="playerComboToken">the player combo token</param>
+    /// <param name="gestureType">gesture type</param>
+    /// <param name="tokenMatched">output, indicate if the token matched to a prefab combat</param>
+    /// <param name="IsLastCombat">output, indicated if the matched combat is the last combat in combo</param>
+    /// <returns></returns>
+	private Combat GetComboCombatByToken(string playerComboToken, GestureType gestureType, out bool tokenMatched, out bool IsLastCombat)
 	{
 		ComboCombat comboCombat = null;
-		foreach(ComboCombat _comboCombat in this.ComboCombats)
-		{
-			if(_comboCombat.token.StartsWith(token))
-			{
-				comboCombat = _comboCombat;
-				break;
-			}
-		}
+        IsLastCombat = false;
+        //Search matched prefab combo combat, by playerCombatToken 
+        foreach (string prefabComboTokenKey in ComboCombatTokenDict.Keys)
+        {
+            if (prefabComboTokenKey.StartsWith(playerComboToken) && prefabComboTokenKey.Length >= playerComboToken.Length)
+            {
+                comboCombat = ComboCombatTokenDict[prefabComboTokenKey];
+                IsLastCombat = prefabComboTokenKey.Length == playerComboToken.Length;
+                break;
+            }
+        }
         //If no matched combo combat is found, return the default combat
 		if(comboCombat==null) 
 		{
@@ -335,7 +391,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
 		else 
 		{
             tokenMatched = true;
-            return comboCombat.combat[token.Length - 1];
+            return comboCombat.combat[playerComboToken.Length - 1];
 		}
 	}
 #endregion
