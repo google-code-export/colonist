@@ -37,6 +37,7 @@ public class Predator3rdPersonMovementController : MonoBehaviour {
     /// </summary>
     [HideInInspector]
     public Vector3 MoveDirection_CharacterRelative = new Vector3();
+
  
     private CharacterController characterController = null;
 
@@ -98,15 +99,18 @@ public class Predator3rdPersonMovementController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         //If predator is attacking, stop moving
-        if (PredatorPlayerStatus.IsAttacking == false)
+        //and DisableUserMovement must be false  to allow user commanding the movement
+        if (PredatorPlayerStatus.IsAttacking == false && playerStatus.DisableUserMovement == false)
         {
             switch (MovementControlMode)
             {
+                    //C-S Style:
                 case MovementControlMode.CameraRelative:
                     CameraRelativeMoving();
                     Rotating();
                     AnimateWalking_CameraRelative();
                     break;
+                    //Diablo style:
                 case MovementControlMode.CharacterRelative:
                     CharacterRelativeMoving();
                     AnimateWalking_CharacterRelative();
@@ -114,16 +118,7 @@ public class Predator3rdPersonMovementController : MonoBehaviour {
             }
         }
 
-        if (PredatorPlayerStatus.isBusy == false)
-        {
-            //animation.CrossFade(idleAnimation);
-        }
-        else if (animation.IsPlaying(idleAnimation))
-        {
-            animation.Stop(idleAnimation);
-        }
-		
-		//if DecelerationFactor > 0, gradually descrease it
+		//if DecelerationFactor > 0, gradually decrease it
 		if(DecelerationFactor > 0)
 		{
 			DecelerationFactor -= accelerationFactor * Time.deltaTime;

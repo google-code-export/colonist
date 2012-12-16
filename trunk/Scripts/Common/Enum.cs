@@ -10,6 +10,13 @@ public enum MovementControlMode
     CameraRelative = 1
 }
 
+public enum ScreenOccupancy
+{
+    LeftScreen = 0,
+    RightScreen = 1,
+    FullScreen = 2
+}
+
 public enum GestureType
 {
 

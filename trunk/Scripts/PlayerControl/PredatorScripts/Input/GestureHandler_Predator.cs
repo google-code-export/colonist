@@ -6,6 +6,7 @@ using System.Collections.Generic;
 public class GestureHandler_Predator : JoyButton {
 
     public ThirdPersonFollowCamera_Predator camera_controller = null;
+    public ScreenOccupancy ScreenOccupancy = ScreenOccupancy.RightScreen;
 	/// <summary>
 	/// This list stores the touches during one user touch
 	/// </summary>
@@ -13,8 +14,7 @@ public class GestureHandler_Predator : JoyButton {
 	private Predator3rdPersonalAttackController attackController;
  	// Use this for initialization
 	void Awake () {
-        //GestureHandler covers the full screen size, so to detect every touch that not own by other joybutton 
-        JoyButtonBound = new Rect(0, 0, Screen.width, Screen.height);
+        JoyButtonBound = Util.GetScreenOccupancy(ScreenOccupancy);
 		this.JoyButtonName = "GestureHandler";
 		attackController = GetComponent<Predator3rdPersonalAttackController>();
  	}
