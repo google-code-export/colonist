@@ -36,8 +36,6 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     /// </summary>
     private IList<string> FullAttackAnimation = new List<string>();
 
-    public LayerMask EnemyLayer;
-
     public float PowerAccelerationTime = 1.3333f;
 
     /// <summary>
@@ -77,6 +75,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     private IList<Combat> UnprocessCombatList = new List<Combat>();
 	private PredatorPlayerStatus predatorStatus = null;
     private CharacterController controller = null;
+    private LayerMask EnemyLayer;
     /// <summary>
     /// When BlockUserGestureInput = true, the new coming player gesture will be dropped, and GestureList will be cleared per frame.
     /// </summary>
@@ -125,6 +124,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
         predatorStatus = GetComponent<PredatorPlayerStatus>();
         dis = transform.rotation.eulerAngles - predatorStatus.body.rotation.eulerAngles;
         qDis = Quaternion.FromToRotation(predatorStatus.body.forward, transform.forward);
+        EnemyLayer = predatorStatus.EnemyLayer;
     }
 	
 	void Start()

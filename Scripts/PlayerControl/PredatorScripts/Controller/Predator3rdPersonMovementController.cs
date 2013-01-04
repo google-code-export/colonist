@@ -3,13 +3,14 @@ using System.Collections;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(PredatorPlayerStatus))]
+[RequireComponent(typeof(Predator3rdPersonalJumpController))]
 public class Predator3rdPersonMovementController : MonoBehaviour {
 
     public Camera workingCamera = null;
     public float ForwardMovingSpeed = 3f;
     public float BackwardMovingSpeed = 1.5f;
     public float RightwardMovingSpeed = 2f;
-
+    public float RotationAnglarSpeed = 10;
 
     public string idleAnimation = "idle";
     public string WalkAnimation = "walk";
@@ -38,7 +39,6 @@ public class Predator3rdPersonMovementController : MonoBehaviour {
     [HideInInspector]
     public Vector3 MoveDirection_CharacterRelative = new Vector3();
 
- 
     private CharacterController characterController = null;
 
     private string[] movementAnimation = null;
@@ -47,6 +47,7 @@ public class Predator3rdPersonMovementController : MonoBehaviour {
     private int movementAnimationLayer = 0;
     private PredatorPlayerStatus playerStatus = null;
     private MovementControlMode MovementControlMode = MovementControlMode.CameraRelative;
+    private Predator3rdPersonalJumpController JumpController;
 	/// <summary>
 	/// The deceleration factor. When DecelerationFactor > 0, the movement speed = speed * (1-DecelerationFactor)
 	/// </summary>
@@ -81,6 +82,7 @@ public class Predator3rdPersonMovementController : MonoBehaviour {
 	// Use this for initialization
 	void Awake () {
         characterController = this.GetComponent<CharacterController>();
+        JumpController = GetComponent<Predator3rdPersonalJumpController>();
         //Use the main camera by default
         if (workingCamera == null)
         {
@@ -96,11 +98,16 @@ public class Predator3rdPersonMovementController : MonoBehaviour {
         //SendMessage("TestWalk");
     }
 
+    void FixedUpdate()
+    {
+
+    }
+
 	// Update is called once per frame
 	void Update () {
         //If predator is attacking, stop moving
         //and DisableUserMovement must be false  to allow user commanding the movement
-        if (PredatorPlayerStatus.IsAttacking == false && playerStatus.DisableUserMovement == false)
+        if (PredatorPlayerStatus.IsJumping==false && PredatorPlayerStatus.IsAttacking == false && playerStatus.DisableUserMovement == false)
         {
             switch (MovementControlMode)
             {
@@ -142,9 +149,10 @@ public class Predator3rdPersonMovementController : MonoBehaviour {
         //Vector3 direction = Vector3.forward * MoveForwardModifier + Vector3.right * MoveRightModifier;
         //direction = workingCamera.transform.TransformDirection(direction);
         //direction.y = 0;
-        Vector3 direction = MoveDirection_CharacterRelative;
+        Vector3 direction = MoveDirection_CharacterRelative.normalized;
         direction.y = 0;
-        Util.MoveTowards(transform, transform.position + direction, characterController, true, true, ForwardMovingSpeed * (1-DecelerationFactor), 10);
+        Util.MoveTowards(transform, transform.position + direction, characterController, true, true, ForwardMovingSpeed * (1 - DecelerationFactor), RotationAnglarSpeed);
+        //characterController.SimpleMove(direction * 1 * (1 - DecelerationFactor));
     }
 
     void CameraRelativeMoving()

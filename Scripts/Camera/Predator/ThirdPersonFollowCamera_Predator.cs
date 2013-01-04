@@ -88,6 +88,8 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour {
 
     private void PositionDampingByParameter(bool smoothDamp)
     {
+		if(LevelManager.Instance != null)
+		{
         Vector3 characterCeneter = GetCharacterCenter();
         //Vector3 newPosition = characterCeneter + Vector3.up * DynamicLockHeight;
         //Vector3 NewPositionOffset = Character.transform.TransformDirection(Vector3.back) * Mathf.Abs(DynamicLockDistance);
@@ -99,6 +101,7 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour {
             characterCeneter + NewPositionOffset;
         newPosition = AdjustLineOfSight(newPosition, GetCharacterCenter());
         transform.position = newPosition;
+		}
         //Debug.DrawRay(Character.transform.position + Character.center, backOffset,Color.red, 5);
     }
  

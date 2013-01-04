@@ -149,7 +149,7 @@ public class Predator3rdPersonalFetchController : MonoBehaviour {
         if ((currentFetchedObject = FindFetchable(FetchRadius)) != null)
         {
             Util.RotateToward(transform, currentFetchedObject.collider.bounds.center, false, 0);
-            float TargetHP = currentFetchedObject.GetComponent<GetHP>().HP;
+            float TargetHP = currentFetchedObject.GetComponent<UnitHealth>().GetCurrentHP();
             //Puncture only,  or puncture to kill then lift
             if (TargetHP <= PunctureTossPower)
             {
@@ -218,8 +218,8 @@ public class Predator3rdPersonalFetchController : MonoBehaviour {
     {
         GameObject ret = null;
         //Get fetched object
-        Collider[] colliders = Physics.OverlapSphere(this.transform.position, radius, Util.JoinLayerMask(FetchableLayer));
-        
+        //Collider[] colliders = Physics.OverlapSphere(this.transform.position, radius, Util.JoinLayerMask(FetchableLayer));
+        Collider[] colliders = Physics.OverlapSphere(this.transform.position, radius, FetchableLayer[0]);
         if (colliders != null && colliders.Length > 0)
         {
             Collider c = Util.findClosest(Util.GetCharacterCenter(this.gameObject), colliders);

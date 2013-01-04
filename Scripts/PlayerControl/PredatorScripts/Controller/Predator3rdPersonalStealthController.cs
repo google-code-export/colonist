@@ -31,13 +31,13 @@ public class Predator3rdPersonalStealthController : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.S))
         {
             ToggleStealth();
         }
     }
 
-    private void ToggleStealth()
+    public void ToggleStealth()
     {
         if (stealth)
             SendMessage("CloakOut");

@@ -1,3 +1,9 @@
+public enum AXIS
+{
+    X = 0,
+    Y = 1,
+    Z = 2
+}
 public enum MovementControlMode
 {
     /// <summary>
@@ -81,15 +87,25 @@ public enum HorizontalDirection
 
 public enum DamageForm
 {
-     Common = -1,
-     Predator_Waving_Claw = 0,
-     Predator_Clamping_Claws = 1,
-     Predator_Strike_Single_Claw = 2,
-     Predator_Strike_Dual_Claw = 3,
-     //Predator_Straight = 4,
-     ElectricityBoltHit = 5,
-     Collision = 6,
-     Punctured = 7
+    /// <summary>
+    /// The default DamageForm
+    /// </summary>
+     Common = 0,
+
+#region Human 1-999
+     ElectricityBoltHit = 1,
+     Collision = 2,
+     Punctured = 3,
+     Flame = 4,
+#endregion
+
+#region PredatorPlayer 1000 ~ 1999
+     Predator_Waving_Claw = 1000,
+     Predator_Clamping_Claws = 1001,
+     Predator_Strike_Single_Claw = 1002,
+     Predator_Strike_Dual_Claw = 1003,
+     Predator_Puncture = 1004,
+#endregion
 }
 
 /// <summary>
@@ -102,6 +118,9 @@ public enum AIMovementStatus
     Running = 2,
 }
 
+/// <summary>
+/// Deprecated - legacy enumeration
+/// </summary>
 public enum AIStatus
 {
     Idle = 0,
@@ -111,7 +130,6 @@ public enum AIStatus
     Frozen = 4,
     Fallback = 5
 }
-
 
 public enum MoveDirection
 {
@@ -156,4 +174,35 @@ public enum GameEventType
     NPCKill = 205,
     NPCAttack = 206,//Event when player perform an attack
     NPCReloading = 207
+}
+
+
+
+/// <summary>
+/// Conjunct two condition
+/// None = no conjunct - only one condition
+/// And = Condition1 = true AND condition2 = true
+/// Or = Condition1 = true Or condition2 = true
+/// </summary>
+public enum LogicConjunction
+{
+    None = 0,
+    And = 1,
+    Or = 2
+}
+
+public enum BooleanComparisionOperator
+{
+    IsTrue = 0,
+    IsFalse = 1
+}
+
+public enum ValueComparisionOperator
+{
+    Equal = 0,
+    LessThan = 1,
+    LessOrEqual = 2,
+    GreaterThan = 3,
+    GreaterOrEqual = 4,
+    NotEqual = 5,
 }
