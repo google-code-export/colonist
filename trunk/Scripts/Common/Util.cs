@@ -4,7 +4,28 @@ using System.Collections.Generic;
 
 
 public class Util : MonoBehaviour {
-	
+
+    /// <summary>
+    /// Return element index in the array.
+    /// If not exists, return -1
+    /// </summary>
+    static int IndexOfArray<T>(T[] array, T element)
+    {
+        int index = -1;
+        if (array != null && array.Length > 0)
+        {
+            for(int i=0;i<array.Length; i++)
+            {
+                if(array[i].Equals(element)){
+                    index = i;
+                    break;
+                }
+            }
+            return index;
+        }
+        return index;
+    }
+
 	public static int RecurrsiveDecrementProduct(int startValue, int step)
 	{
 		if(startValue==1) return 1;
@@ -45,7 +66,17 @@ public class Util : MonoBehaviour {
 		newArray[length] = o;
 		return newArray;
 	}
-	
+
+    public static string ArrayToString<T>(T[] Array)
+    {
+        string ret = "";
+        foreach (T a in Array)
+        {
+            ret += a.ToString() + " ";
+        }
+        return ret;
+    }
+
 	public static void CloneArray<T>(T[] src, T[] dst)
 	{
 		for(int i=0;i<src.Length;i++)
@@ -75,6 +106,25 @@ public class Util : MonoBehaviour {
             if(!o.Equals(except))
             {
                 ret = AddToArray(o, ret);
+            }
+        }
+        return ret;
+    }
+
+    /// <summary>
+    /// Clone an array, exclude the element at index
+    /// </summary>
+    /// <param name="array"></param>
+    /// <param name="except"></param>
+    /// <returns></returns>
+    public static T[] CloneExcept<T>(T[] array, int exceptIndex)
+    {
+        T[] ret = new T[] { };
+        for (int i = 0; i < array.Length; i++)
+        {
+            if (i != exceptIndex)
+            {
+                ret = AddToArray(array[i], ret);
             }
         }
         return ret;
@@ -295,7 +345,7 @@ public class Util : MonoBehaviour {
     /// <param name="layer"></param>
     /// <param name="lm"></param>
     /// <returns></returns>
-    public static bool CheckLayerWithMask(int layer, LayerMask lm)
+    public static bool CheckLayerWithinMask(int layer, LayerMask lm)
     {
         int _lm = 1 << layer;
         return ((_lm & lm) == _lm);
@@ -308,14 +358,21 @@ public class Util : MonoBehaviour {
         return layer;
     }
 
-    public static int JoinLayerMask(LayerMask[] layermask)
+    public static bool IsTransformInsideBounds(Transform src, Collider dst)
     {
-        int ret = 0;
-        foreach (LayerMask l in layermask)
+        return dst.bounds.Contains(src.position);
+    }
+
+    public static bool IsTransformInsideBounds(Transform src, Collider[] dst)
+    {
+        foreach(Collider dest in dst)
         {
-            ret |= l.value;
+            if(dest.bounds.Contains(src.position))
+            {
+                return true;
+            }
         }
-        return ret;
+        return false;
     }
 
     public static Collider[] GetObjectsInLayer(string layerName, Vector3 position, float radius)
@@ -329,6 +386,19 @@ public class Util : MonoBehaviour {
     {
         int idx = Random.Range(0, array.Length);
         return array[idx];
+    }
+
+    public static T RandomFromList<T>(IList<T> list)
+    {
+        if (list.Count == 1)
+        {
+            return list[0];
+        }
+        else
+        {
+            int RandomIndex = Random.Range(0, list.Count);
+            return list[RandomIndex];
+        }
     }
 
     public static string RandomFromArray(string []array)
@@ -522,6 +592,35 @@ public class Util : MonoBehaviour {
         }
     }
 
+    public static bool CompareValue(float LeftValue, ValueComparisionOperator Operator, float RightValue)
+    {
+        bool ret = false;
+        switch (Operator)
+        {
+            case ValueComparisionOperator.Equal:
+                ret = Mathf.Approximately(LeftValue, RightValue);
+                break;
+            case ValueComparisionOperator.GreaterThan:
+                ret = LeftValue > RightValue;
+                break;
+            case ValueComparisionOperator.GreaterOrEqual:
+                ret = LeftValue > RightValue || Mathf.Approximately(LeftValue, RightValue);
+                break;
+            case ValueComparisionOperator.LessThan:
+                ret = LeftValue < RightValue;
+                break;
+            case ValueComparisionOperator.LessOrEqual:
+                ret = LeftValue < RightValue || Mathf.Approximately(LeftValue, RightValue);
+                break;
+            case ValueComparisionOperator.NotEqual:
+                ret = !Mathf.Approximately(LeftValue, RightValue);
+                break;
+            default:
+                break;
+        }
+        return ret;
+    }
+
     public static bool CompareTransform(Transform from, Transform to)
     {
         bool comparePos = (from.position == to.position);
@@ -598,6 +697,22 @@ public class Util : MonoBehaviour {
     {
         Vector3 cloestPoint = a.ClosestPointOnBounds(point);
         return Util.Distance_XZ(cloestPoint, point);
+    }
+
+    /// <summary>
+    /// Move smoothly by a given velocity.
+    /// </summary>
+    /// <param name="transform"></param>
+    /// <param name="Velocity"></param>
+    /// <param name="controller"></param>
+    /// <param name="rotationSpeed"></param>
+    public static void MoveSmoothly(Transform transform, Vector3 Velocity, CharacterController controller, float rotationSpeed)
+    {
+        Vector3 forward = transform.forward;
+        Util.RotateToward(transform, transform.position + Velocity, true, rotationSpeed);
+        float speedModifier = Vector3.Dot(forward, Velocity.normalized);
+        speedModifier = Mathf.Clamp01(speedModifier);
+        controller.SimpleMove(Velocity * speedModifier);
     }
 
     public static void MoveTowards(Transform transform, Vector3 direction, CharacterController controller, float movementspeed)

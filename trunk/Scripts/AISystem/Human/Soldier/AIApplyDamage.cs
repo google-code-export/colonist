@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.Collections;
-[RequireComponent(typeof(GetHP))]
+[RequireComponent(typeof(UnitHealth))]
 [RequireComponent(typeof(AI))]
 public class AIApplyDamage : MonoBehaviour {
 
@@ -13,11 +13,11 @@ public class AIApplyDamage : MonoBehaviour {
     {
         get
         {
-            return GetComponent<GetHP>().HP;
+            return GetComponent<UnitHealth>().GetCurrentHP();
         }
         set
         {
-            GetComponent<GetHP>().HP = value;
+            GetComponent<UnitHealth>().SetCurrentHP(value);
         }
     }
 
@@ -59,7 +59,7 @@ public class AIApplyDamage : MonoBehaviour {
 	
 	void FixedUpdate()
 	{
-		if((Time.time - LastGetHitTime) > 1f)
+        if (AI.Halt && ((Time.time - LastGetHitTime) > 1f))
 		{
 			AI.Halt = false;
 		}
@@ -206,4 +206,5 @@ public class AIApplyDamage : MonoBehaviour {
         StartCoroutine("ApplyDamage", damageParam);
     }
 
+    
 }

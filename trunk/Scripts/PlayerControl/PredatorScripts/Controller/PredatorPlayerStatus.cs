@@ -9,6 +9,7 @@ using System.Collections;
 [@RequireComponent(typeof(Predator3rdPersonMovementController))]
 [@RequireComponent(typeof(Predator3rdPersonalAttackController))]
 [@RequireComponent(typeof(Predator3rdPersonalFetchController))]
+[@RequireComponent(typeof(Predator3rdPersonalJumpController))]
 public class PredatorPlayerStatus : MonoBehaviour{
 
     public MovementControlMode PlayerControlMode = MovementControlMode.CharacterRelative;
@@ -27,6 +28,10 @@ public class PredatorPlayerStatus : MonoBehaviour{
     public Transform leftUpperClaw = null;
     public Transform rightUpperClaw = null;
 
+    public LayerMask GroundLayer;
+    public LayerMask WallLayer;
+    public LayerMask JumpoverObstacleLayer;
+    public LayerMask EnemyLayer;
     /// <summary>
     /// When DisableUserMovement = true, the movement controller will ignore the user movement command in Update()
     /// </summary>
@@ -45,7 +50,7 @@ public class PredatorPlayerStatus : MonoBehaviour{
     private static bool isFetching = false;
     private static bool isAttacking = false;
     private static bool isMoving = false;
-
+    private static bool isJumping = false;
     public static bool IsFetching
     {
         get
@@ -70,24 +75,35 @@ public class PredatorPlayerStatus : MonoBehaviour{
         }
     }
 
+    public static bool IsJumping
+    {
+        get
+        {
+            return isJumping;
+        }
+    }
+
     private Predator3rdPersonMovementController movementController;
     private Predator3rdPersonalAttackController attackController;
     private Predator3rdPersonalFetchController fetchController;
-
+    private Predator3rdPersonalJumpController JumpController;
     void Awake()
     {
         movementController = this.GetComponent<Predator3rdPersonMovementController>();
         attackController = this.GetComponent<Predator3rdPersonalAttackController>();
         fetchController = this.GetComponent<Predator3rdPersonalFetchController>();
+        JumpController = this.GetComponent<Predator3rdPersonalJumpController>();
     }
 
     private void UpdateStatus()
     {
         isAttacking = attackController.IsPlayingAttack() || fetchController.isPlayingFetchAnimation();
-        isMoving =!(Mathf.Approximately(movementController.MoveForwardModifier, 0) &&
+        isMoving = !(Mathf.Approximately(movementController.MoveDirection_CharacterRelative.magnitude,0) &&
+                   Mathf.Approximately(movementController.MoveForwardModifier, 0) &&
                    Mathf.Approximately(movementController.MoveRightModifier, 0) &&
                    Mathf.Approximately(movementController.RotateRightModifier, 0));
         isFetching = fetchController.HasFetchSomething;
+        isJumping = JumpController.IsJumping;
     }
 
     void FixedUpdate()

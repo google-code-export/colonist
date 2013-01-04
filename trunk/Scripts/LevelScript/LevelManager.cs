@@ -23,7 +23,7 @@ public class LevelManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-	    GameEvent(new GameEvent(GameEventType.LevelStart, this.gameObject));
+        //GameEvent(new GameEvent(GameEventType.LevelStart, this.gameObject));
 	}
 	
 	// Update is called once per frame

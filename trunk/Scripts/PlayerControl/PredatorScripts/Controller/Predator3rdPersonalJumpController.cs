@@ -1,18 +1,39 @@
 using UnityEngine;
 using System.Collections;
 
+[@RequireComponent(typeof (PredatorPlayerStatus))]
+[@RequireComponent(typeof(Predator3rdPersonVisualEffectController))]
 public class Predator3rdPersonalJumpController : MonoBehaviour {
 
-    private CharacterController controller;
-    public string JumpToGround = "jumpToGround";
-    public string Jumping = "jumping";
+    public string JumpToGroundAnimation = "jumpToGround";
+    public string JumpingAnimation = "jumping";
     public string PrejumpAnimation = "prejump";
-	
+    public int JumpAnimationLayer = 3;
+
+    public float JumpOverSpeed = 10f;
+    public float JumpoverCheckDistance = 3;
+    
+    public float ForwardJumpTime = 0.5f;
+    public float ForwardJumpSpeed = 12f;
+    [HideInInspector]
+    public bool IsJumping = false;
+
     [HideInInspector]
     public bool checkJump = true;
+
+    private CharacterController controller;
+    private PredatorPlayerStatus PredatorStatus;
+    private LayerMask GroundLayer;
+    private LayerMask JumpOverObstacleLayer;
+    private Predator3rdPersonVisualEffectController ClawEffectController;
     void Awake()
     {
         controller = GetComponent<CharacterController>();
+        animation[PrejumpAnimation].layer = JumpAnimationLayer;
+        PredatorStatus = GetComponent<PredatorPlayerStatus>();
+        ClawEffectController = GetComponent<Predator3rdPersonVisualEffectController>();
+        GroundLayer = PredatorStatus.GroundLayer;
+        JumpOverObstacleLayer = PredatorStatus.JumpoverObstacleLayer;
     }
 
 	// Use this for initialization
@@ -25,74 +46,151 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
 	float JumpValue = 0;
 	Vector3 JumpDirection = Vector3.zero;
 	void Update () {
-//        if (controller.isGrounded == false && checkJump)
-//        {
-//            controller.SimpleMove(new Vector3());
-//            animation.CrossFade(Jumping);
-//            JumpToGroundTrigger = false;
-//        }
-//        else if(JumpToGroundTrigger == false)
-//        {
-//            JumpToGroundTrigger = true;
-//            SendMessage("Grounding");
-//        }
-//		
-        //if(Input.GetKeyDown(KeyCode.Space))
-        //{
-        //    SendMessage("JumpTo", transform.position + transform.forward * 10);
-        //}
-//		JumpDirection.y -= 8 * Time.deltaTime;        
-//		// Move the controller    
-//		controller.Move(JumpDirection * Time.deltaTime);
 	}
 
     void Grounding()
     {
-        animation.CrossFade(JumpToGround); 
+        animation.CrossFade(JumpToGroundAnimation); 
         checkJump = false;
     }
-	
-	IEnumerator JumpUp()
-	{
-		animation.CrossFade(PrejumpAnimation);
-		yield return new WaitForSeconds(animation[PrejumpAnimation].length);
-		
-		// Apply gravity    
-		Vector3 moveDirection = new Vector3();
-		moveDirection.y = 16;
-		// Move the controller    
-		checkJump = true;
-		controller.Move(moveDirection * Time.deltaTime);
-		while(controller.isGrounded == false)
-		{
-			Debug.Log("Jumping");
-			animation.CrossFade(Jumping);
-			moveDirection.y -= 8 * Time.deltaTime;
-			controller.Move(moveDirection * Time.deltaTime);
-			checkJump = true;
-			yield return null;
-		}
-		Grounding();
-	}
-	
-	private float jumpSpeed = 30f;
-	IEnumerator JumpTo(Combat combat)
-	{
-        Vector3 direction = Util.GestureDirectionToWorldDirection(combat.gestureInfo.gestureDirection.Value);
-        Vector3 toPosition = transform.position + direction * 5;
-		float distance = Vector3.Distance(transform.position, toPosition);
-        Vector3 dir = toPosition - transform.position;
 
-        float time = distance / jumpSpeed;
-		animation.Blend(this.PrejumpAnimation,1);
-		yield return new WaitForSeconds(animation[PrejumpAnimation].length);
-		float _s = Time.time;
-		while((Time.time - _s) <= time)
-		{
-            Util.MoveTowards(transform, dir, controller, jumpSpeed);
-            animation.CrossFade(this.Jumping);
+    /// <summary>
+    /// Trigger a Jump beheavior.
+    /// if there is a jump over obstacle ahead, jump over it
+    /// else , jump forward.
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerator Jump()
+    {
+        JumpOverObstacle obstacle = null;
+        bool HasObstacle = CheckJumpOverObstacle(out obstacle);
+
+        ClawEffectController.ShowBothClawVisualEffects();
+
+        //If there is obstacle, jump over it
+        if (HasObstacle)
+        {
+            Vector3 HeightPoint , GroundPoint;
+            obstacle.GetJumpOverTrack(transform, out HeightPoint, out GroundPoint);
+            yield return StartCoroutine(JumpOver(HeightPoint, GroundPoint));
+        }
+        //Else, jump forward
+        else
+        {
+            yield return StartCoroutine(JumpForward());
+        }
+        ClawEffectController.HideBothClawTrailRenderEffect();
+    }
+
+    /// <summary>
+    /// Jumping forward at speed = ForwardJumpSpeed, in ForwardJumpTime
+    /// </summary>
+    /// <returns></returns>
+    IEnumerator JumpForward()
+    {
+        IsJumping = true;
+        Vector3 jumpDirection = transform.forward;
+        //animation.CrossFade(PrejumpAnimation);
+        animation.Play(PrejumpAnimation);
+        yield return new WaitForSeconds(animation[PrejumpAnimation].length);
+        float _time = Time.time;
+        while ((Time.time - _time) <= ForwardJumpTime)
+        {
+            animation.Play(JumpingAnimation);
+            Vector3 jumpVelocity = jumpDirection * ForwardJumpSpeed * Time.deltaTime;
+            //gravity = 9.8
+            jumpVelocity.y -= 9.8f * Time.deltaTime;
+            controller.Move(jumpVelocity);
+            //Util.MoveTowards(transform, transform.forward, controller, ForwardJumpSpeed);
             yield return null;
-		}
-        animation.CrossFade(JumpToGround);
-	}
+        }
+        //If not ground, force grounding at once
+        if (controller.isGrounded == false)
+        {
+            GroundAtOnce();
+        }
+        IsJumping = false;
+        //Grounding animation is optional - player may skip this part 
+        animation.Play(JumpToGroundAnimation);
+        yield return new WaitForSeconds(animation[JumpToGroundAnimation].length);
+        Debug.Log("JumpForwardEnd");
+    }
+
+    /// <summary>
+    /// Move up to a height position, then move to GroundPoint, at JumpingSpeed
+    /// </summary>
+    /// <param name="HeightPoint"></param>
+    /// <param name="GroundPoint"></param>
+    /// <returns></returns>
+    IEnumerator JumpOver(Vector3 HeightPoint, Vector3 GroundPoint)
+    {
+        //Play prejump
+        IsJumping = true;
+        animation.Play(PrejumpAnimation);
+        yield return new WaitForSeconds(animation[PrejumpAnimation].length);
+        //Before jumping up, adjust facing direction:
+        transform.LookAt(new Vector3(GroundPoint.x, transform.position.y, GroundPoint.z));
+        //jump to height point
+        Vector3 distanceUp = HeightPoint - transform.position;
+        Vector3 jumpUpVelocity = distanceUp.normalized * JumpOverSpeed;
+        float overtimeUp = distanceUp.magnitude / JumpOverSpeed;
+        float _time = Time.time;
+        animation.CrossFade(JumpingAnimation);
+        while ((Time.time - _time) <= overtimeUp)
+        {
+            transform.position += jumpUpVelocity * Time.deltaTime;
+            yield return null;
+        }
+        //Then down to GroundPoint
+        Vector3 distanceDown = GroundPoint - transform.position;
+        Vector3 jumpDownVelocity = distanceDown.normalized * JumpOverSpeed;
+        float overtimeDown = distanceDown.magnitude / JumpOverSpeed;
+        _time = Time.time;
+        animation.CrossFade(JumpingAnimation);
+        while ((Time.time - _time) <= overtimeDown)
+        {
+            transform.position += jumpDownVelocity * Time.deltaTime;
+            yield return null;
+        }
+        //In case the contoller grounding lower than terrain collider, force the position a little bit upper 
+        transform.position = GroundPoint + Vector3.up * 0.1f;
+
+        IsJumping = false;
+        //Grounding animation is optional - player may skip this part 
+        animation.CrossFade(JumpToGroundAnimation);
+        yield return new WaitForSeconds(animation[JumpToGroundAnimation].length);
+    }
+
+    /// <summary>
+    /// Check if the predator is facing an obstacle
+    /// </summary>
+    /// <param name="obstacleHeight">output the height of the obstacle</param>
+    /// <param name="obstacleWidth">output the width of the obstacle</param>
+    /// <param name="DistanceToObstacle">output the distance from predator to the obstacle</param>
+    /// <returns></returns>
+    bool CheckJumpOverObstacle(out JumpOverObstacle Obstacle)
+    {
+        RaycastHit hitInfo;
+        if (Physics.Raycast(transform.position, transform.forward * JumpoverCheckDistance, out hitInfo, JumpoverCheckDistance, JumpOverObstacleLayer))
+        {
+            JumpOverObstacle obstacle = hitInfo.collider.GetComponent<JumpOverObstacle>();
+            Obstacle = obstacle;
+            return true;
+        }
+        else
+        {
+            Obstacle = null;
+            return false;
+        }
+    }
+
+    void GroundAtOnce()
+    {
+        RaycastHit hitInfo;
+        if (Physics.Raycast(transform.position, Vector3.down, out hitInfo, 999, GroundLayer))
+        {
+            Debug.Log("Ground at:" + hitInfo.point);
+            transform.position = hitInfo.point;
+        }
+    }
 }

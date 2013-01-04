@@ -93,27 +93,6 @@ public class GameGUIHelper : MonoBehaviour {
     public static Rect GetSquareOnGUICoordinate(RectPosition position, float edgeLength, float offset)
     {
         return GetSquareOnGUICoordinate(position, edgeLength, new Vector2(offset, offset));
-        //Rect rect;
-        //switch (position)
-        //{
-        //    case RectPosition.BottomLeft:
-        //        rect = new Rect(0 + offset, Screen.height - offset - edgeLength, edgeLength, edgeLength); //Left bottom button
-        //        break;
-        //    case RectPosition.BottomRight:
-        //        rect = new Rect(Screen.width - offset - edgeLength, Screen.height - offset - edgeLength, edgeLength, edgeLength);
-        //        break;
-        //    case RectPosition.TopLeft:
-        //        rect = new Rect(0 + offset, 0 + offset, edgeLength, edgeLength);
-        //        break;
-        //    case RectPosition.TopRight:
-        //        rect = new Rect(Screen.width - offset - edgeLength, 0 + offset, edgeLength, edgeLength);
-        //        break;
-        //    case RectPosition.Center:
-        //    default:
-        //        rect = new Rect(Screen.width / 2 - edgeLength / 2, Screen.height / 2 - edgeLength / 2, edgeLength, edgeLength);
-        //        break;
-        //}
-        //return rect;
     }
 
     /// <summary>

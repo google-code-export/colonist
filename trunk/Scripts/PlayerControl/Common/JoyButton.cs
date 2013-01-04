@@ -2,8 +2,8 @@ using UnityEngine;
 using System.Collections;
 
 /// <summary>
-/// An anstract class of JoyButton
-/// Implement this methods:
+/// An abstract class of JoyButton
+/// Offspring should implement methods:
 /// - onTouchBegin
 /// - onTouchMove
 /// - onTouchEnd
@@ -65,6 +65,9 @@ public abstract class JoyButton : MonoBehaviour
     /// The button's size, it's always a rectangle.
     /// </summary>
     public float JoyButtonSize = 150;
+
+    public Vector2 JoyButtonScreenOffset;
+
     /// <summary>
     /// The button's bound offset , the actual display position on screen = JoyButtonBound + JoyButtonBoundOffset
     /// </summary>

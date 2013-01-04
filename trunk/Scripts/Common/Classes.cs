@@ -2,9 +2,6 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-
-
-
 public class GestureInfomation
 {
     public GestureType Type;
@@ -53,10 +50,6 @@ public class DamageParameter
     #endregion
 
     #region optional
-    /// <summary>
-    /// For some damage form, there're more than one targets
-    /// </summary>
-    public GameObject[] multiDst;
 
     public enum ExtraParameterKey
     {

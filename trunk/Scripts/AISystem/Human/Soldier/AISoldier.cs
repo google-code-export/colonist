@@ -1,8 +1,8 @@
 using UnityEngine;
 using System.Collections;
 
-public class AISoldier : AI {
-    
+public class AISoldier :AI {
+
     public float MovementSpeed = 2f;
     public float FallbackSpeed = 2f;
     public float SprintSpeed = 2f; 
@@ -59,13 +59,11 @@ public class AISoldier : AI {
 	
     private WayPoint currentWaypoint;
 
-    private CharacterController controller;
-
     // fallback parameters:
     private float enemyDistance = 9999;
     private float LastTimeRedirectionFallback = -1;
     private Vector3 fallBackDirection = new Vector3();
-
+     
     private float HitWallTimeLength = 0;
     private bool BlockByWall = false;
     /// <summary>
@@ -108,13 +106,13 @@ public class AISoldier : AI {
 	
 	// Update is called once per frame
 	void Update () {
-        if (this.currentTarget != null && IsAnimatingAttack())
+        if (this.CurrentTarget != null && IsAnimatingAttack())
         {
-            Util.RotateToward(transform, currentTarget.position, false, 0);
+            Util.RotateToward(transform, CurrentTarget.position, false, 0);
         }
-        if (currentTarget && currentTarget.GetComponent<GetHP>().HP <= 0)
+        if (CurrentTarget && CurrentTarget.GetComponent<UnitHealth>().GetCurrentHP() <= 0)
         {
-            currentTarget = null;
+            CurrentTarget = null;
         }
         //We need to check, whether the npc who blocked by wall, is still being blocked or not.
         //If the last lastHitWallTime is 1/3 second ago, then it means the npc has not been blocked anymore
@@ -141,17 +139,17 @@ public class AISoldier : AI {
     /// </summary>
     private void CalculateFallbackParameter()
     {
-        if (currentTarget)
+        if (CurrentTarget)
         {
-            enemyDistance = currentTarget.GetComponent<CharacterController>() ?
-                    Util.DistanceOfCharactersXZ(controller, currentTarget.GetComponent<CharacterController>()) :
-                    Util.Distance_XZ(currentTarget.position, transform.position);
+            enemyDistance = CurrentTarget.GetComponent<CharacterController>() ?
+                    Util.DistanceOfCharactersXZ(controller, CurrentTarget.GetComponent<CharacterController>()) :
+                    Util.Distance_XZ(CurrentTarget.position, transform.position);
             if (enemyDistance <= AlertRadius)
             {
                 //Redirect fallback direction in every <RedirectFallbackTimeout> seconds
                 if (LastTimeRedirectionFallback <=0 || (Time.time - LastTimeRedirectionFallback) >= RedirectFallbackTimeout)
                 {
-                    Vector3 direction = transform.position - currentTarget.transform.position;
+                    Vector3 direction = transform.position - CurrentTarget.transform.position;
                     //plus random factor
                     Quaternion rotation = Quaternion.LookRotation(direction);
                     rotation = Util.RotateAngleYAxis(rotation, Random.Range(-30f, 30f));
@@ -175,7 +173,7 @@ public class AISoldier : AI {
         Collider[] colliders = Physics.OverlapSphere(transform.position, 9999, targetLayer);
         if (colliders != null && colliders.Length > 0)
         {
-            currentTarget = colliders[0].transform;
+            CurrentTarget = colliders[0].transform;
             return true;
         }
         else
@@ -188,15 +186,15 @@ public class AISoldier : AI {
         {
             Debug.Log("Controller is null!");
         }
-        if (!currentTarget.GetComponent<CharacterController>())
+        if (!CurrentTarget.GetComponent<CharacterController>())
         {
-            Debug.Log("currentTarget.Controller is null: " + currentTarget.name);
+            Debug.Log("currentTarget.Controller is null: " + CurrentTarget.name);
         }
-        if (Util.DistanceOfCharactersXZ(controller, currentTarget.GetComponent<CharacterController>()) > AttackRadius)
+        if (Util.DistanceOfCharactersXZ(controller, CurrentTarget.GetComponent<CharacterController>()) > AttackRadius)
         {
             return false;
         }
-        if (Physics.Linecast(transform.position, currentTarget.position, terrainLayer))
+        if (Physics.Linecast(transform.position, CurrentTarget.position, terrainLayer))
         {
             return false;
         }
@@ -211,11 +209,11 @@ public class AISoldier : AI {
 
         }
         //Move to target 
-        float distance = Util.DistanceOfCharactersXZ(this.controller, currentTarget.GetComponent<CharacterController>());
+        float distance = Util.DistanceOfCharactersXZ(this.controller, CurrentTarget.GetComponent<CharacterController>());
         //If distance not close enough to attack
         if (distance > AttackRadius)
         {
-            Util.MoveTowards(transform, currentTarget.position, this.controller, true, false, MovementSpeed, 0);
+            Util.MoveTowards(transform, CurrentTarget.position, this.controller, true, false, MovementSpeed, 0);
             animation.CrossFade(RunAnimation);
         }
         else
@@ -233,7 +231,7 @@ public class AISoldier : AI {
 		//Debug.Log("ShootOnce:" + isMoving);
         if ((Time.time - lastShootTime) < AttackInterval)
         {
-            Util.RotateToward(transform, currentTarget.position, false, 0);
+            Util.RotateToward(transform, CurrentTarget.position, false, 0);
             return;
         }
 
@@ -247,7 +245,7 @@ public class AISoldier : AI {
             animation.Rewind(ShootAnimation);
             animation.CrossFade(ShootAnimation);
         }
-        SendMessage("Fire", currentTarget);
+        SendMessage("Fire", CurrentTarget);
         lastShootTime = Time.time;
     }
 
@@ -266,7 +264,7 @@ public class AISoldier : AI {
                 continue;
             }
            //if no target is found, do nothing
-           if (currentTarget == null && FindTarget() == false)
+           if (CurrentTarget == null && FindTarget() == false)
            {
                yield return null;
                continue;
@@ -324,7 +322,7 @@ public class AISoldier : AI {
     {
         Util.MoveTowards(transform, fallBackDirection, controller, FallbackSpeed);
         animation.CrossFade(WalkBackwardAnimation);
-        if (currentTarget)
+        if (CurrentTarget)
         {
             ShootOnce(true);
         }

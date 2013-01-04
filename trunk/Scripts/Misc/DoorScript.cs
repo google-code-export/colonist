@@ -43,7 +43,7 @@ public class DoorScript : MonoBehaviour {
 
     void OnTriggerEnter(Collider other)
     {
-        if (Util.CheckLayerWithMask(other.gameObject.layer, triggerLayer.value) == false)
+        if (Util.CheckLayerWithinMask(other.gameObject.layer, triggerLayer.value) == false)
         {
             return;
         }
@@ -56,7 +56,7 @@ public class DoorScript : MonoBehaviour {
 
     void OnTriggerExit(Collider other)
     {
-        if (Util.CheckLayerWithMask(other.gameObject.layer, triggerLayer.value) == false)
+        if (Util.CheckLayerWithinMask(other.gameObject.layer, triggerLayer.value) == false)
         {
             return;
         }

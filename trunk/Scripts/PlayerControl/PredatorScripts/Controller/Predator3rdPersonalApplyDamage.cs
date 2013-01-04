@@ -1,28 +1,21 @@
 using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof(GetHP))]
-public class Predator3rdPersonalApplyDamage : MonoBehaviour {
-
-    public float HP
-    {
-        get
-        {
-            return GetComponent<GetHP>().HP;
-        }
-        set
-        {
-            GetComponent<GetHP>().HP = value;
-        }
-    }
+public class Predator3rdPersonalApplyDamage : UnitHealth {
+    [HideInInspector]
+    public float HP;
+    
     public float MaxHP = 100;
     public PrograssBar HealthPrograss = null;
- 
     public ParticleSystem electricityHitEffect = null;
 
+    void Awake()
+    {
+        HP = MaxHP;
+    }
 	// Use this for initialization
 	void Start () {
-	
+	     
 	}
 	
 	// Update is called once per frame
@@ -35,9 +28,10 @@ public class Predator3rdPersonalApplyDamage : MonoBehaviour {
         return HP;
     }
 
-    public IEnumerator ApplyDamage(DamageParameter param)
+    public override IEnumerator ApplyDamage(DamageParameter param)
     {
         HP -= param.damagePoint;
+        //Debug.Log("Predator HP:" + HP);
         switch (param.damageForm)
         {
             case DamageForm.ElectricityBoltHit:
@@ -56,10 +50,28 @@ public class Predator3rdPersonalApplyDamage : MonoBehaviour {
     }
 
 
-    public IEnumerator Die()
+    public override IEnumerator Die(DamageParameter param)
     {
         Destroy(this.transform.root.gameObject);
         yield return null;
     }
-    
+
+    #region implement UnitHealth interface
+    public override void SetCurrentHP(float value)
+    {
+        HP = value;
+    }
+    public override void SetMaxHP(float value)
+    {
+        MaxHP = value;
+    }
+    public override float GetCurrentHP()
+    {
+        return HP;
+    }
+    public override float GetMaxHP()
+    {
+        return MaxHP;
+    }
+    #endregion
 }
