@@ -9,10 +9,12 @@ using Pathfinding;
 /// AI manages the beheavior of the NPC.
 /// </summary>
 [RequireComponent(typeof(Seeker))]
+[RequireComponent(typeof(Unit))]
 [RequireComponent(typeof(CharacterController))]
 public class AI : UnitHealth , I_AIBehaviorHandler{
 
-    public Unit Unit = new Unit();
+    [HideInInspector]
+    public Unit Unit;
     /// <summary>
     /// The obstacle layer which can blocks attack
     /// </summary>
@@ -84,14 +86,15 @@ public class AI : UnitHealth , I_AIBehaviorHandler{
     void Awake()
     {
         seeker = GetComponent<Seeker>();
+        this.Unit = GetComponent<Unit>();
         controller = GetComponent<CharacterController>();
         InitAI();
-        InitUnit();
         StartAStarPathfind();
     }
 
     void Start()
     {
+        InitUnit();
         StartCoroutine("AlterBehavior", AlterBehaviorInterval);
     }
 
@@ -146,7 +149,6 @@ public class AI : UnitHealth , I_AIBehaviorHandler{
     /// </summary>
     public virtual void InitUnit()
     {
-        Unit.InitUnit();
         //Initialize the animation data:
         foreach (UnitAnimationData data in Unit.IdleData)
         {
@@ -979,6 +981,11 @@ public class AI : UnitHealth , I_AIBehaviorHandler{
                 transform.LookAt(new Vector3(CurrentTarget.position.x, transform.position.y, CurrentTarget.position.z));
                 DoAttack(attackData);
             }
+            else if (animation.IsPlaying(attackData.AnimationName))
+            {
+                yield return null;
+                continue;
+            }
             //else if can't see target, navigating until CanSeeCurrentTarget = true & within AttackableRange
             else
             {
@@ -995,7 +1002,7 @@ public class AI : UnitHealth , I_AIBehaviorHandler{
                     }
                     yield return null;
                 }
-                
+
                 StopNavigation();
                 continue;
             }
@@ -1086,33 +1093,6 @@ public class AI : UnitHealth , I_AIBehaviorHandler{
 
 #endregion
 
-#region Visual Effect
-
-    /// <summary>
-    /// Create a effect object.
-    /// Note: the %name% MUST BE an effective name in the key set of Unit.EffectDataDict
-    /// </summary>
-    /// <param name="name"></param>
-    public virtual void CreateEffect(string name)
-    {
-        if (Unit.EffectDataDict.Keys.Contains(name) == false)
-        {
-            Debug.LogError("There is no such effect:" + name + " gameobject-" + gameObject.name);
-        }
-        else
-        {
-            EffectData data = Unit.EffectDataDict[name];
-            Object effectObject = Object.Instantiate(data.EffectObject, data.Anchor.position, data.Anchor.rotation);
-            if (data.DestoryInTimeOut)
-            {
-                Destroy(effectObject, data.DestoryTimeOut);
-            }
-        }
-    }
-
-    
-
-#endregion
 
 #region Receive Damage and Die
     public override IEnumerator ApplyDamage(DamageParameter damageParam)
@@ -1128,7 +1108,16 @@ public class AI : UnitHealth , I_AIBehaviorHandler{
             StartCoroutine("Die", damageParam);
             yield break;
         }
+        else
+        {
+            StartCoroutine("ReceiveDamage", damageParam);
+            yield break;
+        }
+        
+    }
 
+    public virtual IEnumerator ReceiveDamage(DamageParameter damageParam)
+    {
         //Get the right ReceiveDamageData
         ReceiveDamageData ReceiveDamageData = null;
         if (Unit.ReceiveDamageDataDict.ContainsKey(damageParam.damageForm))
@@ -1150,10 +1139,24 @@ public class AI : UnitHealth , I_AIBehaviorHandler{
             ReceiveDamageData = Unit.ReceiveDamageDataDict[DamageForm.Common][0];
         }
         //Create effect data
-        foreach (string effectDataName in ReceiveDamageData.EffectDataName)
+        if (ReceiveDamageData.EffectDataName != null && ReceiveDamageData.EffectDataName.Length > 0)
         {
-            CreateEffect(effectDataName);
+            foreach (string effectDataName in ReceiveDamageData.EffectDataName)
+            {
+                EffectData EffectData = Unit.EffectDataDict[effectDataName];
+                GlobalBloodEffectDecalSystem.CreateBloodEffect(transform.position + controller.center, EffectData);
+            }
         }
+        //Create blood decal:
+        if (ReceiveDamageData.DecalDataName != null && ReceiveDamageData.DecalDataName.Length > 0)
+        {
+            foreach (string decalName in ReceiveDamageData.DecalDataName)
+            {
+                DecalData DecalData = Unit.DecalDataDict[decalName];
+                GlobalBloodEffectDecalSystem.CreateBloodDecal(transform.position + controller.center, DecalData);
+            }
+        }
+
         //Halt AI if set true
         if (ReceiveDamageData.HaltAI)
         {
@@ -1205,6 +1208,12 @@ public class AI : UnitHealth , I_AIBehaviorHandler{
             animation.CrossFade(DeathData.AnimationName);
         }
         
+    }
+
+    public void CreateDecal()
+    {
+        //Locate the place to create decal:
+
     }
 #endregion
 

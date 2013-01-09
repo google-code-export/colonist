@@ -28,24 +28,21 @@ public class SplitBodyRagdoll : MonoBehaviour
 	private IList<CharacterJoint> characterJoints = new List<CharacterJoint> ();
 	public Rigidbody[] ItemDroppedInDeath = null;
 	public Vector3 BreakBackOfSpine1;
-
+    public EffectData[] EffectData = new EffectData[] { };
 	void Awake ()
 	{
-		//		foreach (string DieAnimation in DieAnimations) {
-		//			if (DieAnimation != "") {
-		//				animation [DieAnimation].AddMixingTransform (root);
-		//				animation [DieAnimation].AddMixingTransform (spine1);
-		//				animation [DieAnimation].RemoveMixingTransform (spine1);
-		//			}
-		//		}
 	}
 
 	// Use this for initialization
 	void Start ()
 	{
-		Debug.Log ("CALLER1:" + this.gameObject.name);
 		StartRagdoll ();
-		//		StartCoroutine (StartRagdoll ());
+        foreach (EffectData effect in EffectData)
+        {
+            GameObject effectObject = (GameObject)GameObject.Instantiate(effect.EffectObject, effect.Anchor.position, effect.Anchor.rotation);
+            if (effect.DestoryInTimeOut)
+                Destroy(effectObject, effect.DestoryTimeOut);
+        }
 	}
 
 	// Update is called once per frame
