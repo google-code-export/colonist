@@ -17,7 +17,7 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour
 	public Transform LookAt = null;
 	public float DynamicDistance = 1;
 	public float DynamicHeight = 1.5f;
-
+    public bool ShouldAutoAdjustCamera = true;
 	/// <summary>
 	/// The target transform to look at. If this is null, than will pick DefaultViewPoint to look at.
 	/// </summary>
@@ -35,26 +35,47 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour
 	/// </summary>
 	public CharacterController Character = null;
 	private Vector3 dampingVelocity = new Vector3 ();
-    
-	/// <summary>
-	/// Determined 
-	/// </summary>
-	private CameraDampMode cameraDampMode = CameraDampMode.ByTransform;
-	
-	private bool isShake = false;
+
+#region slow motion camera variables
+    /// <summary>
+    /// Define a couple of slow motion anchors, the camera will be alighed to the anchors when slow motion behavior starts.
+    /// </summary>
+    public Transform[] SlowMotionAnchors = new Transform[] { };
+    /// <summary>
+    /// The slowest time scale.
+    /// </summary>
+    public float SlowestTimeScale = 0.25f;
+    /// <summary>
+    /// Fade in time - how many seconds it takes to slow the time scale from 1 to %SlowestTimeScale%?
+    /// If SlowFadeInTime = 0, the timescale is set to %SlowestTimeScale% immediately.
+    /// </summary>
+    public float FadeInSlowMotionTime = 0.3f;
+
+    /// <summary>
+    /// Fade out time - how many seconds it takes to recover time sclae from %SlowestTimeScale% to 1?
+    /// If SlowFadeOutTime = 0, the timescale is set to 1 immediately.
+    /// </summary>
+    public float FadeOutSlowMotionTime = 1f;
+
+    private bool IsSlowMotion = false;
+
+#endregion
+
 	public float shake_decay = 0.002f;
 	public float shake_intensity = 1.0f;
 	public float shake_interval = 0.02f;
-    private Vector3 originPosition ;
-	enum CameraDampMode
-	{
-		ByParameter = 0,
-		ByTransform = 1
-	}
+
+    private bool isShaking = false;
+    private Vector3 originPosition;
+
+    //enum CameraDampMode
+    //{
+    //    ByParameter = 0,
+    //    ByTransform = 1
+    //}
 
 	void Awake ()
 	{
-		SetCameraModelByPredatorStatus ();
 	}
 
 	// Use this for initialization
@@ -67,25 +88,21 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
 	{
-        //if (Input.GetKey (KeyCode.F)) {
-        //    isShake = true;
-        //    StartCoroutine ("Shake");
-        //}
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            //isShake = true;
+            //StartCoroutine("Shake");
+            StartCoroutine("SlowMotion");
+        }
 	}
 
 	void LateUpdate ()
 	{
-		if (!isShake) {
-			if (cameraDampMode == CameraDampMode.ByTransform) {
-				//Position damping
-				PositionDampingByTransform ();
-				//Rotation damping
-				if (LookAt)
-					transform.LookAt (this.LookAt);
-			} else if (cameraDampMode == CameraDampMode.ByParameter) {
-				PositionDampingByParameter (true);
-			}
-		}
+        ShouldAutoAdjustCamera = !isShaking && !IsSlowMotion;
+        if (ShouldAutoAdjustCamera)
+        {
+            SetPosition (true);
+        }
 	}
 
 	private Vector3 GetCharacterCenter ()
@@ -93,7 +110,7 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour
 		return Character.transform.position + Character.center;
 	}
 
-	private void PositionDampingByParameter (bool smoothDamp)
+	private void SetPosition (bool smoothDamp)
 	{
 		Vector3 characterCeneter = GetCharacterCenter ();
 		//Vector3 newPosition = characterCeneter + Vector3.up * DynamicLockHeight;
@@ -107,16 +124,9 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour
 		newPosition = AdjustLineOfSight (newPosition, GetCharacterCenter ());
 		transform.position = newPosition;
 		//Debug.DrawRay(Character.transform.position + Character.center, backOffset,Color.red, 5);
+        //transform.LookAt(Character.center + Character.transform.position);
 	}
 
-	private void PositionDampingByTransform ()
-	{
-		Vector3 newPosition;
-		newPosition = Vector3.SmoothDamp (transform.position, PositionPivot.position, ref dampingVelocity, smoothLag);
-		//If the sight has been blocked by colliders, zoom in the camera to ensure the character's always visible
-		newPosition = AdjustLineOfSight (newPosition, Character.transform.position + Character.center);
-		transform.position = newPosition;
-	}
 
 	/// <summary>
 	/// If current camera sign being obstacled by object in layer, return the closet unhidden point
@@ -134,49 +144,55 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour
 		return newPosition;
 	}
 
-	private void SetCameraModelByPredatorStatus ()
-	{
-		switch (PredatorPlayerStatus.PlayerControlMode) {
-		case MovementControlMode.CameraRelative:
-			cameraDampMode = CameraDampMode.ByTransform;
-			break;
-		case MovementControlMode.CharacterRelative:
-		default:
-			cameraDampMode = CameraDampMode.ByParameter;
-			break;
-		}
-	}
-
 	void OnEnable ()
 	{
-		SetCameraModelByPredatorStatus ();
-		//Debug.Log("Camera mode:" + cameraDampMode);
-		//add 20121227
-		
-		if (cameraDampMode == CameraDampMode.ByTransform) {
-			transform.position = PositionPivot.position;
-			//Rotation damping
-			if (LookAt)
-				transform.LookAt (this.LookAt);
-		} else if (cameraDampMode == CameraDampMode.ByParameter) {
-			Debug.Log ("Position damp immediately!");
-			PositionDampingByParameter (false);
-			transform.LookAt (Character.center + Character.transform.position);
-		}
+		Debug.Log ("Position damp immediately!");
+		SetPosition (false);
+        transform.LookAt(Character.transform);
 	}
 	
 	/// <summary>
 	/// Shake from
 	/// </summary>
-	IEnumerator Shake ()
+	public IEnumerator Shake ()
 	{
+        isShaking = true;
 		if (shake_intensity > 0) {
 			transform.position = originPosition + Random.insideUnitSphere * shake_intensity;
 			shake_intensity -= shake_decay;
 		}
         yield return new WaitForSeconds(shake_interval);
-		isShake =false;
+		isShaking =false;
 	}
 
- 
+
+    public IEnumerator SlowMotion(Vector3 LookAtPoint)
+    {
+        GameObject temp = new GameObject();
+        temp.transform.position = transform.position;
+        temp.transform.rotation = transform.rotation;
+        //select random slow motion anchor:
+        Transform randomAnchor = Util.RandomFromArray<Transform>(SlowMotionAnchors);
+        IsSlowMotion = true;
+        //fade out slowmotion:
+        //yield return StartCoroutine(Util.AlighToward(transform, randomAnchor, FadeInSlowMotionTime));
+        transform.position = randomAnchor.position;
+        transform.rotation = randomAnchor.rotation;
+        Time.timeScale = SlowestTimeScale;
+        yield return new WaitForSeconds(FadeInSlowMotionTime);
+        Time.timeScale = 1;
+        transform.LookAt(LookAtPoint);
+        RaycastHit hitInfo;
+        if (Physics.Raycast(transform.position,
+                        LookAtPoint - transform.position,
+                        out hitInfo,
+                        Vector3.Distance(LookAtPoint, transform.position)))
+        {
+            transform.position = hitInfo.point;
+        }
+        yield return StartCoroutine(Util.AlighToward(transform, temp.transform, FadeOutSlowMotionTime));
+        IsSlowMotion = false;
+        Destroy(temp);
+    }
+
 }
