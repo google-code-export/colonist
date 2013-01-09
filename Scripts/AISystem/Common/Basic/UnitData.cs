@@ -68,6 +68,10 @@ public class ReceiveDamageData : UnitAnimationData
     /// EffectDataName - the effectdata will be created immediately when playing the animation.
     /// </summary>
     public string[] EffectDataName = new string[]{};
+    /// <summary>
+    /// DecalDataName - the decal object will be created when receiving damage
+    /// </summary>
+    public string[] DecalDataName = new string[] { };
 }
 /// <summary>
 /// The class wrap receive unit die data
@@ -83,6 +87,10 @@ public class DeathData : UnitAnimationData
     /// EffectDataName - the effectdata will be created immediately when playing the animation.
     /// </summary>
     public string[] EffectDataName = new string[] { };
+    /// <summary>
+    /// DecalDataName - the decal object will be created when die
+    /// </summary>
+    public string[] DecalDataName = new string[] { };
 
     public bool UseDieReplacement = false;
     /// <summary>
@@ -109,6 +117,12 @@ public class DeathData : UnitAnimationData
 public class EffectData
 {
     public string Name = string.Empty;
+    #region use global effect object
+    public bool UseGlobalEffect = true;
+    public GlobalEffectType GlobalType = GlobalEffectType.HumanBlood_Splatter;
+    #endregion
+
+    #region use custom effect object
     /// <summary>
     /// Instantiate the EffectObject at the position/rotation of the EffectObject
     /// </summary>
@@ -119,23 +133,42 @@ public class EffectData
     /// </summary>
     public bool DestoryInTimeOut = true;
     public float DestoryTimeOut = 1;
+    #endregion
 }
 
 
 /// <summary>
-/// The decal data - decal data will be created when receiving damage.
+/// The custom decal data - decal data will be created when receiving damage.
 /// </summary>
 [System.Serializable]
 public class DecalData
 {
     public string Name = string.Empty;
-    public GameObject DecalObject = null;
+
+#region use global decal object
+    public bool UseGlobalDecal = true;
+    public GlobalDecalType GlobalType = GlobalDecalType.HumanBlood_Splatter01_Static;
+#endregion
+
+#region use custom decal object
+    /// <summary>
+    /// An array here. Randomly select one when creating.
+    /// </summary>
+    public Object[] DecalObjects = new Object[]{};
+    /// <summary>
+    /// ProjectDirection:
+    /// Vertical = Decal create on ground.
+    /// Horizontal = Decal create on wall.
+    /// </summary>
+    public HorizontalOrVertical ProjectDirection = HorizontalOrVertical.Vertical;
     /// <summary>
     /// if DestoryInTimeOut = true, the EffectObject will be destory in %DestoryTimeOut% seconds.
     /// </summary>
     public bool DestoryInTimeOut = true;
-    public float DestoryTimeOut = 1;
-    public LayerMask CreateOnLayer;
+    public float DestoryTimeOut = 30;
+    public float ScaleRate = 1;
+    public LayerMask ApplicableLayer;
+#endregion
 }
 
 /// <summary>
