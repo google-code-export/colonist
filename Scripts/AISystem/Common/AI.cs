@@ -1093,6 +1093,33 @@ public class AI : UnitHealth , I_AIBehaviorHandler{
 
 #endregion
 
+#region Visual Effect
+
+    /// <summary>
+    /// Create a effect object.
+    /// Note: the %name% MUST BE an effective name in the key set of Unit.EffectDataDict
+    /// </summary>
+    /// <param name="name"></param>
+    public virtual void CreateEffect(string name)
+    {
+        if (Unit.EffectDataDict.Keys.Contains(name) == false)
+        {
+            Debug.LogError("There is no such effect:" + name + " gameobject-" + gameObject.name);
+        }
+        else
+        {
+            EffectData data = Unit.EffectDataDict[name];
+            Object effectObject = Object.Instantiate(data.EffectObject, data.Anchor.position, data.Anchor.rotation);
+            if (data.DestoryInTimeOut)
+            {
+                Destroy(effectObject, data.DestoryTimeOut);
+            }
+        }
+    }
+
+    
+
+#endregion
 
 #region Receive Damage and Die
     public override IEnumerator ApplyDamage(DamageParameter damageParam)
