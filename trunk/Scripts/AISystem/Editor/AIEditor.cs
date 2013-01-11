@@ -221,8 +221,8 @@ public class AIEditor : EditorWindow
 				switch (AttackData.Type) {
 				case AIAttackType.Instant:
 					AttackData.HitTime = EditorGUILayout.FloatField (new GUIContent ("Hit time:",
-                            @"Èç¹û¹¥»÷ÀàÐÍ = Instant,ŽÓ¿ªÊŒ²¥·Å¹¥»÷¶¯»­ËãÆð,·¢ËÍApply DamageµÄÑÓÊ±;
-Èç¹û¹¥»÷ÀàÐÍ = Projectile, ŽÓ¿ªÊŒ²¥·Å¹¥»÷¶¯»­ËãÆð, ŽŽœšProjectile¶ÔÏóµÄÑÓÊ±."),
+                            @"如果AttackType = Instant,HitTime表示发送Apply Damage的时间;
+如果AttackType = Projectile, 表示创建Projectile的时间."),
                             AttackData.HitTime);
 					AttackData.HitTestType = (HitTestType)EditorGUILayout.EnumPopup (new GUIContent ("*Hit Test Type:", "命中检测方式 - 一定命中/百分率/碰撞器校验/距离校验"), AttackData.HitTestType);
 					switch (AttackData.HitTestType) {
@@ -421,7 +421,8 @@ public class AIEditor : EditorWindow
 				}
 				string[] effectDataNameArray = AI.Unit.EffectData.Select (x => x.Name).ToArray<string> ();
 				DeathData.EffectDataName = EditStringArray ("--------- Edit death effect data-----", DeathData.EffectDataName, effectDataNameArray);
-
+				string[] decalDataNameArray = AI.Unit.DecalData.Select (x => x.Name).ToArray<string> ();
+				DeathData.DecalDataName = EditStringArray ("--------- Edit death decal data-----", DeathData.DecalDataName, decalDataNameArray);
 				//Delete DeathData
 				if (GUILayout.Button ("Delete DeathData:" + DeathData.Name)) {
 					IList<DeathData> l = AI.Unit.DeathData.ToList<DeathData> ();
@@ -675,7 +676,7 @@ public class AIEditor : EditorWindow
 		return index;
 	}
 
-	public Object[] EditObjectArray (string label, Object[] Array)
+	public static Object[] EditObjectArray (string label, Object[] Array)
 	{
 		EditorGUILayout.LabelField (label);
 		Object[] newArray = Array;
