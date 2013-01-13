@@ -38,18 +38,18 @@ public class Predator3rdPersonKeyboardManager : MonoBehaviour {
     private void HandleKeyboardInput()
     {
         //Movement
-        if (Input.GetButton("Vertical"))
-        {
-            PredatorMovementController.MoveForwardModifier = Input.GetAxis("Vertical");
-        }
-        if (Input.GetButton("Horizontal"))
-        {
-            PredatorMovementController.MoveRightModifier = Input.GetAxis("Horizontal");
-        }
-        if (Input.GetButton("Jump"))
-        {
-            PredatorMovementController.MoveRightModifier = PredatorMovementController.MoveForwardModifier = 0;
-        }
+        //if (Input.GetButton("Vertical"))
+        //{
+        //    PredatorMovementController.MoveForwardModifier = Input.GetAxis("Vertical");
+        //}
+        //if (Input.GetButton("Horizontal"))
+        //{
+        //    PredatorMovementController.MoveRightModifier = Input.GetAxis("Horizontal");
+        //}
+        //if (Input.GetButton("Jump"))
+        //{
+        //    PredatorMovementController.MoveRightModifier = PredatorMovementController.MoveForwardModifier = 0;
+        //}
 
         //Rotate
          PredatorMovementController.RotateRightModifier = Input.GetAxis("Rotate");

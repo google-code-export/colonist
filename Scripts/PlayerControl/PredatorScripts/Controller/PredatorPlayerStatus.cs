@@ -32,6 +32,9 @@ public class PredatorPlayerStatus : MonoBehaviour{
     public LayerMask WallLayer;
     public LayerMask JumpoverObstacleLayer;
     public LayerMask EnemyLayer;
+	
+	public AudioData[] AudioData = new AudioData[]{};
+	
     /// <summary>
     /// When DisableUserMovement = true, the movement controller will ignore the user movement command in Update()
     /// </summary>
@@ -98,10 +101,8 @@ public class PredatorPlayerStatus : MonoBehaviour{
     private void UpdateStatus()
     {
         isAttacking = attackController.IsPlayingAttack() || fetchController.isPlayingFetchAnimation();
-        isMoving = !(Mathf.Approximately(movementController.MoveDirection_CharacterRelative.magnitude,0) &&
-                   Mathf.Approximately(movementController.MoveForwardModifier, 0) &&
-                   Mathf.Approximately(movementController.MoveRightModifier, 0) &&
-                   Mathf.Approximately(movementController.RotateRightModifier, 0));
+        isMoving = !Mathf.Approximately(movementController.MoveDirection.magnitude, 0);
+                  
         isFetching = fetchController.HasFetchSomething;
         isJumping = JumpController.IsJumping;
     }
@@ -110,4 +111,15 @@ public class PredatorPlayerStatus : MonoBehaviour{
     {
         UpdateStatus();
     }
+	
+	public void PlaySound(string name)
+	{
+		foreach(AudioData data in this.AudioData)
+		{
+			if(data.Name == name)
+			{
+				AudioSource.PlayClipAtPoint(data.audioClip, transform.position);
+			}
+		}
+	}
 }
