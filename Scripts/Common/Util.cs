@@ -214,6 +214,18 @@ public class Util : MonoBehaviour {
         }
     }
 
+    public static Transform GetTopestParent(Transform transform)
+    {
+        if (transform.parent != null)
+        {
+            return GetTopestParent(transform.parent);
+        }
+        else
+        {
+            return transform;
+        }
+    }
+
     public static Collider findClosest(Vector3 pos, IList<Collider> colliders)
     {
         float d = 0f;
@@ -382,6 +394,15 @@ public class Util : MonoBehaviour {
         return colliders;
     }
 
+    public static Vector3 RandomVector(Vector3 min, Vector3 max)
+    {
+        Random.seed = System.DateTime.Now.Millisecond;
+        return new Vector3(
+            Random.Range(min.x, max.x),
+            Random.Range(min.y, max.y),
+            Random.Range(min.z, max.z));
+    }
+
     public static T RandomFromArray<T>(T[] array)
     {
         int idx = Random.Range(0, array.Length);
@@ -472,13 +493,17 @@ public class Util : MonoBehaviour {
         }
         return screenInput;
     }
-
+	
+	/// <summary>
+	/// Puts a transform to ground, with height = %OffsetHeight%
+	/// </summary>
     public static void PutToGround(Transform transform,LayerMask terrainLayer, float OffsetHeight)
     {
         RaycastHit hitInfo = new RaycastHit();
         if (Physics.Raycast(transform.position, Vector3.down, out hitInfo, 9999, terrainLayer))
         {
-            transform.position = new Vector3(hitInfo.point.x, hitInfo.point.y + OffsetHeight, hitInfo.point.z);
+			Vector3 newPos = new Vector3(hitInfo.point.x, hitInfo.point.y + OffsetHeight, hitInfo.point.z);
+            transform.position = newPos;
         }
     }
 
@@ -550,34 +575,30 @@ public class Util : MonoBehaviour {
             transform.rotation = Quaternion.LookRotation(direction);
         }
     }
+    
     /// <summary>
-    /// Align From to To, if smoothAligh = false, aligns immediately, and the speed parameters are ignored
+    /// Aligh transform From to transform To, in totalTime.
     /// </summary>
     /// <param name="from"></param>
     /// <param name="to"></param>
-    /// <param name="smoothAligh"></param>
-    /// <param name="movementSpeed"></param>
-    /// <param name="rotationSpeed"></param>
-    public static void AlighToward(Transform from, Transform to, bool smoothAligh, float movementSpeed, float rotationSpeed)
+    /// <param name="totalTime"></param>
+    public static IEnumerator AlighToward(Transform From, Transform To, float totalTime)
     {
-        if (smoothAligh)
+        float Distance = Vector3.Distance(From.position, To.position);
+        float AngluarDistance = Quaternion.Angle(To.rotation, From.rotation);
+        float MovementSpeed = Distance / totalTime;
+        float AngularSpeed = AngluarDistance / totalTime;
+        Vector3 velocity = (To.position - From.position).normalized * MovementSpeed;
+        //Debug.Break();
+        //Debug.DrawLine(From.position, To.position);
+        //Debug.DrawRay(From.position, velocity * 3, Color.gray);
+        float _t = Time.time;
+        while ((Time.time - _t) <= totalTime)
         {
-            from.position = Vector3.Lerp(from.position, to.position, movementSpeed * Time.deltaTime);
-            from.rotation = Quaternion.Lerp(from.rotation, to.rotation, rotationSpeed * Time.deltaTime);
+            From.rotation = Quaternion.RotateTowards(From.rotation, To.rotation, AngularSpeed * Time.deltaTime);
+            From.position += velocity * Time.deltaTime;
+            yield return null;
         }
-        else
-        {
-            from.position = to.position;
-            from.rotation = to.rotation;
-        }
-    }
-
-    private static Vector3 AlighingVel = new Vector3();
-    public static void AlighToward(Transform from, Transform to, float OverTime)
-    {
-        //from.position = Vector3.SmoothDamp(from.position, to.position, ref AlighingVel, OverTime);
-        from.position = Vector3.Lerp(from.position, to.position, Mathf.Clamp01(1 / OverTime) * Time.deltaTime);
-        from.rotation = Quaternion.Lerp(from.rotation, to.rotation, Mathf.Clamp01(1 / OverTime) * Time.deltaTime);
     }
 
     public static void ChangeGameObjectLayer(GameObject gameObject, int layer, bool recusiveChange)
