@@ -44,6 +44,12 @@ public enum GestureType
     //Fixed_Slice = 8
 }
 
+public enum HorizontalOrVertical
+{
+    Horizontal = 0,
+    Vertical = 1,
+}
+
 /// <summary>
 /// Approximate direction
 /// </summary>
