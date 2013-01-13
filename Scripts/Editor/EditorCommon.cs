@@ -27,6 +27,12 @@ public class EditorCommon
 		GUILayout.Label (new GUIContent ("Enemy layer:", ""));
 		unit.EnemyLayer = EditorGUILayoutx.LayerMaskField ("", unit.EnemyLayer, true);
 		GUILayout.EndHorizontal ();
+		GUILayout.BeginHorizontal ();
+		GUILayout.Label (new GUIContent ("Ground layer:", ""));
+		unit.GroundLayer = EditorGUILayoutx.LayerMaskField ("", unit.GroundLayer, true);
+		GUILayout.Label (new GUIContent ("Wall layer:", ""));
+		unit.WallLayer = EditorGUILayoutx.LayerMaskField ("", unit.WallLayer, true);
+		GUILayout.EndHorizontal ();
 		return unit;
 	}
 	
