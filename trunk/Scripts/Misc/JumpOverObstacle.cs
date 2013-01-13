@@ -59,7 +59,7 @@ public class JumpOverObstacle : MonoBehaviour {
             HeightPosition = hitInfo.point + new Vector3(0, GetHeight(), 0);
             if (transfromJumpOver.GetComponent<CharacterController>() != null)
             {
-                HeightPosition.y += transfromJumpOver.GetComponent<CharacterController>().radius;
+                HeightPosition.y += transfromJumpOver.GetComponent<CharacterController>().height;
             }
             
             //Calculate ground point :
