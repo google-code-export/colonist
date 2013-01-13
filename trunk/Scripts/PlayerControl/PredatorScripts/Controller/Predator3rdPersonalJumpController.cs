@@ -72,7 +72,7 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
         {
             Vector3 HeightPoint , GroundPoint;
             obstacle.GetJumpOverTrack(transform, out HeightPoint, out GroundPoint);
-            yield return StartCoroutine(JumpOver(HeightPoint, GroundPoint));
+            yield return StartCoroutine(JumpOverSmoothly(HeightPoint, GroundPoint));
         }
         //Else, jump forward
         else
@@ -116,6 +116,42 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
         Debug.Log("JumpForwardEnd");
     }
 
+    IEnumerator JumpOverSmoothly(Vector3 HeightPoint, Vector3 GroundPoint)
+    {
+        float Distance = Vector3.Distance(GroundPoint, transform.position);
+        float totalTime = Distance / JumpOverSpeed;
+        float Height = HeightPoint.y - transform.position.y;
+
+        //Debug.DrawLine(transform.position, HeightPoint);
+        //Debug.Break();
+
+        float RisingTime = totalTime / 2;
+        float upwardInitalSpeed, gravity = 0;//V = gravity * RisingTime
+        //gravity * RisingTime * RisingTime + 0.5 * gravity * RisingTime * RisingTime = Height
+        gravity = (float)(Height / (1.5 * RisingTime * RisingTime));
+        upwardInitalSpeed = gravity * RisingTime;
+        Vector3 forwardVelocity = (GroundPoint - transform.position).normalized * JumpOverSpeed;
+        Vector3 velocity = forwardVelocity;
+        velocity.y = upwardInitalSpeed;
+        IsJumping = true;
+
+        animation.Play(PrejumpAnimation);
+        yield return new WaitForSeconds(animation[PrejumpAnimation].length);
+
+        float StartTime = Time.time;
+        animation.CrossFade(JumpingAnimation);
+        while ((Time.time - StartTime) <= totalTime)
+        {
+            transform.position += velocity * Time.deltaTime;
+            velocity.y -= gravity * Time.deltaTime;
+            yield return null;
+        }
+        transform.position = GroundPoint + Vector3.up * 0.3f;
+        IsJumping = false;
+        //Grounding animation is optional - player may skip this part 
+        animation.CrossFade(JumpToGroundAnimation);
+    }
+
     /// <summary>
     /// Move up to a height position, then move to GroundPoint, at JumpingSpeed
     /// </summary>
@@ -153,12 +189,12 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
             yield return null;
         }
         //In case the contoller grounding lower than terrain collider, force the position a little bit upper 
-        transform.position = GroundPoint + Vector3.up * 0.1f;
+        transform.position = GroundPoint + Vector3.up * 0.3f;
 
         IsJumping = false;
         //Grounding animation is optional - player may skip this part 
         animation.CrossFade(JumpToGroundAnimation);
-        yield return new WaitForSeconds(animation[JumpToGroundAnimation].length);
+        //yield return new WaitForSeconds(animation[JumpToGroundAnimation].length);
     }
 
     /// <summary>

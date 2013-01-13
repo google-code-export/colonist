@@ -28,7 +28,7 @@ public class Predator3rdPersonalApplyDamage : UnitHealth {
         return HP;
     }
 
-    public override IEnumerator ApplyDamage(DamageParameter param)
+    public virtual IEnumerator ApplyDamage(DamageParameter param)
     {
         HP -= param.damagePoint;
         //Debug.Log("Predator HP:" + HP);
@@ -50,7 +50,7 @@ public class Predator3rdPersonalApplyDamage : UnitHealth {
     }
 
 
-    public override IEnumerator Die(DamageParameter param)
+    public virtual IEnumerator Die(DamageParameter param)
     {
         Destroy(this.transform.root.gameObject);
         yield return null;

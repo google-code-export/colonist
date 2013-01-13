@@ -135,15 +135,6 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
 
     void Update()
     {
-        //if (Input.GetKeyDown("t"))
-        //{
-        //    Vector3 dir = transform.rotation * new Vector3(0, 0, -10);//transform.TransformDirection(0,0,1);
-        //    //transform.rotation = newRotation;
-        //    Debug.DrawLine(transform.position, transform.position + dir, Color.red, 5);
-        //    Quaternion.LookRotation(dir).SetEulerAngles(Quaternion.LookRotation(dir).eulerAngles - dis);
-        //    Vector3 newEuler = Quaternion.LookRotation(dir).eulerAngles - dis;
-        //    predatorStatus.body.rotation = Quaternion.Euler(newEuler);
-        //}
         //when BlockUserGestureInput = true, block the player's gesture input
         if (BlockUserGestureInput && UnprocessGestureList.Count > 0)
         {
@@ -275,7 +266,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
             {
                 yield return StartCoroutine(RushTo(target.transform,0.3f));
             }
-            StartCoroutine(SendHitMessage(combat.damageForm, target, 10, animation[attackAnimation].length / 2));
+            StartCoroutine(SendHitMessage(combat.damageForm, target, combat.HitPoint, animation[attackAnimation].length / 2));
         }
         animation.CrossFade(attackAnimation);
         //Send hit message in 1/2 time of animation
@@ -418,14 +409,14 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     {
         Vector3 direction = target.position - transform.position;
         Vector3 position = target.position;
-		float distance = Util.DistanceOfCharacters(this.gameObject, target.gameObject);
+		float distance = Util.DistanceOfCharacters(this.gameObject, target.gameObject) - ClawRadius +0.8f;
         float _start = Time.time;
-        Vector3 Speed = direction / time;
+        Vector3 velocity = direction.normalized *( distance / time);
         predatorStatus.DisableUserMovement = true;
         while ((Time.time - _start) <= time)
         {
             Util.RotateToward(transform, position, false, 0);
-            this.controller.SimpleMove(Speed);
+            this.controller.SimpleMove(velocity);
             yield return null;
         }
         predatorStatus.DisableUserMovement = false;
@@ -437,6 +428,15 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
         {
             yield break;
         }
+        float health = enemy.GetComponent<UnitHealth>().GetCurrentHP();
+        if ((health - HitPoint) <= 0)
+        {
+            Transform topestParent = Util.GetTopestParent(transform);
+            topestParent.BroadcastMessage("SlowMotion",
+                enemy.transform.position + enemy.GetComponent<CharacterController>().center,
+                SendMessageOptions.DontRequireReceiver);
+        }
+
         if (Mathf.Approximately(lagTime, 0) == false)
         {
             yield return new WaitForSeconds(lagTime);
@@ -444,18 +444,24 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
         float distance = Util.DistanceOfCharacters(enemy, this.gameObject);
         if (distance <= ClawRadius)
         {
+            if (enemy == null)
+            {
+                yield break;
+            }
             DamageParameter damageParam = new DamageParameter(this.gameObject, DamageForm, HitPoint);
-            try
+            enemy.SendMessage("ApplyDamage", damageParam);
+            health = enemy.GetComponent<UnitHealth>().GetCurrentHP();
+            if ((health - HitPoint) <= 0)
             {
-                enemy.SendMessage("ApplyDamage", damageParam);
+                Transform topestParent = Util.GetTopestParent(transform);
+                topestParent.BroadcastMessage("SlowMotion",
+                    enemy.transform.position + enemy.GetComponent<CharacterController>().center,
+                    SendMessageOptions.DontRequireReceiver);
             }
-            catch (Exception exc)
-            {
-                Debug.LogError(exc.Message + " object receiver:" + enemy.name);
-                
-            }
+            
         }
     }
+
 
     public bool IsPlayingAttack()
     {
@@ -533,6 +539,10 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
         if(enemy == null)
         {
             enemy = _FindEnemy(Radius, out distance);
+        }
+        if (enemy != null)
+        {
+            distance = Util.DistanceOfCharacters(gameObject, enemy);
         }
         return enemy;
     }
