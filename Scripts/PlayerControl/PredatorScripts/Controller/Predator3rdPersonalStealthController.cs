@@ -9,7 +9,7 @@ public class Predator3rdPersonalStealthController : MonoBehaviour
     public Material SkinMaterial;
     public Material CloakSkinMaterial;
     public GameObject Projector;
-    public float AnimationTime = 0.2f;
+    public float FadeTime = 0.2f;
     public string NormalLayer = "xenz-player";
     public string CloakLayer = "xenz-cloak";
     const float OutlineWidth = 0.0085f;
@@ -20,7 +20,7 @@ public class Predator3rdPersonalStealthController : MonoBehaviour
     {
        // OutlineWidth = SkinMaterial.GetFloat("_Outline");
         //divide animation into three(reduce _Outline,increase _ClipValue,decrease _Alpha)
-        singleAnimation = AnimationTime / 3;
+        singleAnimation = FadeTime / 3;
     }
 
     // Use this for initialization

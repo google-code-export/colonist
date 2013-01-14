@@ -52,7 +52,7 @@ public class Predator3rdPersonKeyboardManager : MonoBehaviour {
         //}
 
         //Rotate
-         PredatorMovementController.RotateRightModifier = Input.GetAxis("Rotate");
+        // PredatorMovementController.RotateRightModifier = Input.GetAxis("Rotate");
 
         //Attacking
          if ((Input.GetKey("i") || Input.GetKey("j") 

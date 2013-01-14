@@ -1,57 +1,49 @@
 using UnityEngine;
 using System.Collections;
 
-[@RequireComponent(typeof (PredatorPlayerStatus))]
+
 [@RequireComponent(typeof(Predator3rdPersonVisualEffectController))]
+[RequireComponent(typeof(Predator3rdPersonalUnit))]
 public class Predator3rdPersonalJumpController : MonoBehaviour {
 
-    public string JumpToGroundAnimation = "jumpToGround";
-    public string JumpingAnimation = "jumping";
-    public string PrejumpAnimation = "prejump";
-    public int JumpAnimationLayer = 3;
-
-    public float JumpOverSpeed = 10f;
-    public float JumpoverCheckDistance = 3;
-    
-    public float ForwardJumpTime = 0.5f;
-    public float ForwardJumpSpeed = 12f;
     [HideInInspector]
     public bool IsJumping = false;
 
     [HideInInspector]
     public bool checkJump = true;
 
+    private float ForwardJumpTime = 0.5f;
+    private float ForwardJumpSpeed = 12f;
+    private float JumpOverSpeed = 10f;
+    private float JumpoverCheckDistance = 3;
+    private string JumpingAnimation = "jumping";
+    private string GroundingAnimation = "jumpToGround";
+    private string PrejumpAnimation = "prejump";
+
     private CharacterController controller;
-    private PredatorPlayerStatus PredatorStatus;
     private LayerMask GroundLayer;
     private LayerMask JumpOverObstacleLayer;
     private Predator3rdPersonVisualEffectController ClawEffectController;
+    private Predator3rdPersonalUnit PredatorPlayerUnit = null;
+
     void Awake()
     {
         controller = GetComponent<CharacterController>();
-        animation[PrejumpAnimation].layer = JumpAnimationLayer;
-        PredatorStatus = GetComponent<PredatorPlayerStatus>();
         ClawEffectController = GetComponent<Predator3rdPersonVisualEffectController>();
-        GroundLayer = PredatorStatus.GroundLayer;
-        JumpOverObstacleLayer = PredatorStatus.JumpoverObstacleLayer;
-    }
+        PredatorPlayerUnit = this.GetComponent<Predator3rdPersonalUnit>();
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-    bool JumpToGroundTrigger = false;
-	float JumpValue = 0;
-	Vector3 JumpDirection = Vector3.zero;
-	void Update () {
-	}
+        GroundLayer = PredatorPlayerUnit.GroundLayer;
+        JumpOverObstacleLayer = PredatorPlayerUnit.JumpData.ObstacleToJumpOver;
 
-    void Grounding()
-    {
-        animation.CrossFade(JumpToGroundAnimation); 
-        checkJump = false;
+        PrejumpAnimation = PredatorPlayerUnit.JumpData.PreJumpAnimation;
+        GroundingAnimation = PredatorPlayerUnit.JumpData.GroundingAnimation;
+        JumpingAnimation = PredatorPlayerUnit.JumpData.JumpingAnimation;
+
+        JumpOverSpeed = PredatorPlayerUnit.JumpData.JumpOverSpeed;
+        JumpoverCheckDistance = PredatorPlayerUnit.JumpData.JumpOverCheckDistance;
+
+        ForwardJumpTime = PredatorPlayerUnit.JumpData.JumpForwardTime;
+        ForwardJumpSpeed = PredatorPlayerUnit.JumpData.JumpForwardSpeed;
     }
 
     /// <summary>
@@ -111,11 +103,17 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
         }
         IsJumping = false;
         //Grounding animation is optional - player may skip this part 
-        animation.Play(JumpToGroundAnimation);
-        yield return new WaitForSeconds(animation[JumpToGroundAnimation].length);
+        animation.Play(GroundingAnimation);
+        yield return new WaitForSeconds(animation[GroundingAnimation].length);
         Debug.Log("JumpForwardEnd");
     }
 
+    /// <summary>
+    /// Move over a jump over obstacle along parabola line.
+    /// </summary>
+    /// <param name="HeightPoint"></param>
+    /// <param name="GroundPoint"></param>
+    /// <returns></returns>
     IEnumerator JumpOverSmoothly(Vector3 HeightPoint, Vector3 GroundPoint)
     {
         float Distance = Vector3.Distance(GroundPoint, transform.position);
@@ -149,52 +147,7 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
         transform.position = GroundPoint + Vector3.up * 0.3f;
         IsJumping = false;
         //Grounding animation is optional - player may skip this part 
-        animation.CrossFade(JumpToGroundAnimation);
-    }
-
-    /// <summary>
-    /// Move up to a height position, then move to GroundPoint, at JumpingSpeed
-    /// </summary>
-    /// <param name="HeightPoint"></param>
-    /// <param name="GroundPoint"></param>
-    /// <returns></returns>
-    IEnumerator JumpOver(Vector3 HeightPoint, Vector3 GroundPoint)
-    {
-        //Play prejump
-        IsJumping = true;
-        animation.Play(PrejumpAnimation);
-        yield return new WaitForSeconds(animation[PrejumpAnimation].length);
-        //Before jumping up, adjust facing direction:
-        transform.LookAt(new Vector3(GroundPoint.x, transform.position.y, GroundPoint.z));
-        //jump to height point
-        Vector3 distanceUp = HeightPoint - transform.position;
-        Vector3 jumpUpVelocity = distanceUp.normalized * JumpOverSpeed;
-        float overtimeUp = distanceUp.magnitude / JumpOverSpeed;
-        float _time = Time.time;
-        animation.CrossFade(JumpingAnimation);
-        while ((Time.time - _time) <= overtimeUp)
-        {
-            transform.position += jumpUpVelocity * Time.deltaTime;
-            yield return null;
-        }
-        //Then down to GroundPoint
-        Vector3 distanceDown = GroundPoint - transform.position;
-        Vector3 jumpDownVelocity = distanceDown.normalized * JumpOverSpeed;
-        float overtimeDown = distanceDown.magnitude / JumpOverSpeed;
-        _time = Time.time;
-        animation.CrossFade(JumpingAnimation);
-        while ((Time.time - _time) <= overtimeDown)
-        {
-            transform.position += jumpDownVelocity * Time.deltaTime;
-            yield return null;
-        }
-        //In case the contoller grounding lower than terrain collider, force the position a little bit upper 
-        transform.position = GroundPoint + Vector3.up * 0.3f;
-
-        IsJumping = false;
-        //Grounding animation is optional - player may skip this part 
-        animation.CrossFade(JumpToGroundAnimation);
-        //yield return new WaitForSeconds(animation[JumpToGroundAnimation].length);
+        animation.CrossFade(GroundingAnimation);
     }
 
     /// <summary>
@@ -225,7 +178,7 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
         RaycastHit hitInfo;
         if (Physics.Raycast(transform.position, Vector3.down, out hitInfo, 999, GroundLayer))
         {
-            Debug.Log("Ground at:" + hitInfo.point);
+            //Debug.Log("Ground at:" + hitInfo.point);
             transform.position = hitInfo.point;
         }
     }
