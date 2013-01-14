@@ -115,7 +115,7 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour
 		Vector3 characterCeneter = GetCharacterCenter ();
 		//Vector3 newPosition = characterCeneter + Vector3.up * DynamicLockHeight;
 		//Vector3 NewPositionOffset = Character.transform.TransformDirection(Vector3.back) * Mathf.Abs(DynamicLockDistance);
-		Vector3 NewPositionOffset = LevelManager.Instance.ControlDirectionPivot.TransformDirection (Vector3.back) * Mathf.Abs (DynamicDistance);
+		Vector3 NewPositionOffset = LevelManager.Instance.ControlDirectionPivot.TransformDirection (Vector3.back) * DynamicDistance;
 		NewPositionOffset += Vector3.up * DynamicHeight;
 		Vector3 newPosition = (smoothDamp) ?
             Vector3.SmoothDamp (transform.position, GetCharacterCenter () + NewPositionOffset, ref dampingVelocity, smoothLag) 
@@ -168,29 +168,30 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour
 
     public IEnumerator SlowMotion(Vector3 LookAtPoint)
     {
+        if (IsSlowMotion)
+            yield break;
+        IsSlowMotion = true;
         GameObject temp = new GameObject();
         temp.transform.position = transform.position;
         temp.transform.rotation = transform.rotation;
         //select random slow motion anchor:
         Transform randomAnchor = Util.RandomFromArray<Transform>(SlowMotionAnchors);
-        IsSlowMotion = true;
+        
         //fade out slowmotion:
         //yield return StartCoroutine(Util.AlighToward(transform, randomAnchor, FadeInSlowMotionTime));
         transform.position = randomAnchor.position;
         transform.rotation = randomAnchor.rotation;
+
+        transform.LookAt(LookAtPoint);
+        transform.position = AdjustLineOfSight(transform.position, LookAtPoint);
+
         Time.timeScale = SlowestTimeScale;
         yield return new WaitForSeconds(FadeInSlowMotionTime);
         Time.timeScale = 1;
-        transform.LookAt(LookAtPoint);
-        RaycastHit hitInfo;
-        if (Physics.Raycast(transform.position,
-                        LookAtPoint - transform.position,
-                        out hitInfo,
-                        Vector3.Distance(LookAtPoint, transform.position)))
-        {
-            transform.position = hitInfo.point;
-        }
+        
         yield return StartCoroutine(Util.AlighToward(transform, temp.transform, FadeOutSlowMotionTime));
+        SetPosition(false);
+        transform.LookAt(this.Character.transform);
         IsSlowMotion = false;
         Destroy(temp);
     }

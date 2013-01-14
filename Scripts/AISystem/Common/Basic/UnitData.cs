@@ -27,8 +27,8 @@ public class MoveData : UnitAnimationData
     /// SmoothRotate = true = rotating is smoothly and the rotate angular speed = RotateAngularSpeed
     /// </summary>
     public bool CanRotate = true;
-    public bool SmoothRotate = false;
-    public float RotateAngularSpeed = 10;
+    public bool SmoothRotate = true;
+    public float RotateAngularSpeed = 30;
 }
 
 /// <summary>
@@ -181,12 +181,16 @@ public class AttackData : UnitAnimationData
     /// Attack type - the type of attack beheavior
     /// </summary>
     public AIAttackType Type = AIAttackType.Instant;
-
+	
     /// <summary>
     /// DamageForm - the damage form in sending "ApplyDamage" interface
     /// </summary>
-    public DamageForm DamageForm = DamageForm.Collision;
-
+    public DamageForm DamageForm = DamageForm.Common;
+	/// <summary>
+	/// WeaponType - WeaponType + Target's armor type = audio to play
+	/// </summary>
+	public WeaponType WeaponType = WeaponType.Default;
+	
     /// <summary>
     /// The HitTestType. Used only when Type = Instant
     /// </summary>
@@ -256,4 +260,10 @@ public class AttackData : UnitAnimationData
     {
         return new DamageParameter(DamageSource, this.DamageForm, DamagePointBase + Random.Range(MinDamageBonus, MaxDamageBonus));
     }
+}
+[System.Serializable]
+public class AudioData
+{
+    public string Name;
+    public AudioClip audioClip;
 }

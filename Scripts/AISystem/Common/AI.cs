@@ -11,7 +11,7 @@ using Pathfinding;
 [RequireComponent(typeof(Seeker))]
 [RequireComponent(typeof(Unit))]
 [RequireComponent(typeof(CharacterController))]
-public class AI : UnitHealth , I_AIBehaviorHandler{
+public class AI : MonoBehaviour, I_AIBehaviorHandler{
 
     [HideInInspector]
     public Unit Unit;
@@ -418,25 +418,6 @@ public class AI : UnitHealth , I_AIBehaviorHandler{
     }
 
 #endregion
-
-#region implement UnitHealth interface
-    public override void SetCurrentHP(float value)
-    {
-        Unit.HP = value;
-    }
-    public override void SetMaxHP(float value)
-    {
-        Unit.MaxHP = value;
-    }
-    public override float GetCurrentHP()
-    {
-        return Unit.HP;
-    }
-    public override float GetMaxHP()
-    {
-        return Unit.MaxHP;
-    }
-    #endregion
 
 #region A* pathfind navigation functions - thanks to A* pathfinding team
 
@@ -1121,8 +1102,12 @@ public class AI : UnitHealth , I_AIBehaviorHandler{
 
 #endregion
 
-#region Receive Damage and Die
-    public override IEnumerator ApplyDamage(DamageParameter damageParam)
+#region Audio playing
+    
+#endregion
+
+    #region Receive Damage and Die
+    public virtual IEnumerator ApplyDamage(DamageParameter damageParam)
     {
         if (Unit.IsDead)
         {
@@ -1195,7 +1180,7 @@ public class AI : UnitHealth , I_AIBehaviorHandler{
         }
     }
 
-    public override IEnumerator Die(DamageParameter DamageParameter)
+    public virtual IEnumerator Die(DamageParameter DamageParameter)
     {
         //Basic death processing.
         controller.enabled = false;
@@ -1214,6 +1199,26 @@ public class AI : UnitHealth , I_AIBehaviorHandler{
         {
             DeathData = Util.RandomFromList<DeathData>( Unit.DeathDataDict[DamageForm.Common]);
         }
+
+        //Create effect data 
+        if (DeathData.EffectDataName != null && DeathData.EffectDataName.Length > 0)
+        {
+            foreach (string effectDataName in DeathData.EffectDataName)
+            {
+                EffectData EffectData = Unit.EffectDataDict[effectDataName];
+                GlobalBloodEffectDecalSystem.CreateBloodEffect(transform.position + controller.center, EffectData);
+            }
+        }
+        //Create blood decal:
+        if (DeathData.DecalDataName != null && DeathData.DecalDataName.Length > 0)
+        {
+            foreach (string decalName in DeathData.DecalDataName)
+            {
+                DecalData DecalData = Unit.DecalDataDict[decalName];
+                GlobalBloodEffectDecalSystem.CreateBloodDecal(transform.position + controller.center, DecalData);
+            }
+        }
+
 
         if(DeathData.UseDieReplacement)
         {

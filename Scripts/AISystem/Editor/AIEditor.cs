@@ -50,26 +50,60 @@ public class AIEditor : EditorWindow
 #region Edit Unit
 		EnableEditUnit = EditorGUILayout.BeginToggleGroup ("Edit Unit", EnableEditUnit);
 		if (EnableEditUnit) {
-			EditBasicUnitProperty ();
+			//EditBasicUnitProperty ();
+			AI.Unit = (Unit)EditorCommon.EditBasicUnitProperty(AI.Unit);
 			//Edit Idle Data 
-			EditIdleData ();
-
+			if(EnableEditIdleData = EditorGUILayout.BeginToggleGroup ("---Edit Idle Data", EnableEditIdleData))
+			{
+			   AI.Unit.IdleData = EditorCommon.EditIdleDataArray(AI.Unit.gameObject,
+				                                              AI.Unit.IdleData);
+			}
+			EditorGUILayout.EndToggleGroup();
+			
 			//Edit Move Data 
-			EditMoveData ();
+			if(EnableEditMoveData = EditorGUILayout.BeginToggleGroup ("---Edit Move Data", EnableEditMoveData))
+			{
+			   AI.Unit.MoveData = EditorCommon.EditMoveDataArray(AI.Unit.gameObject,
+				                                              AI.Unit.MoveData);
+			}
+			EditorGUILayout.EndToggleGroup();
 
 			//Edit attack data
-			EditAttackData ();
+			if(EnableEditAttackData = EditorGUILayout.BeginToggleGroup ("---Edit Attack Data---", EnableEditAttackData))
+			{
+			   AI.Unit.AttackData = EditorCommon.EditAttackData(AI.Unit,
+				                                                AI.Unit.AttackData);
+			}
+			EditorGUILayout.EndToggleGroup();
 
 			//Edit Effect Data
-			EditEffectData ();
-
+			if(EnableEditEffectData = EditorGUILayout.BeginToggleGroup ("---Edit Effect Data---", EnableEditEffectData))
+			{
+			   AI.Unit.EffectData = EditorCommon.EditEffectData(AI.Unit.EffectData);
+			}
+			EditorGUILayout.EndToggleGroup();
+			
 			//Edit Decal data
-			EditDecalData ();
+			if(EnableEditDecalData = EditorGUILayout.BeginToggleGroup ("---Edit Decal Data---", EnableEditDecalData))
+			{
+				 AI.Unit.DecalData = EditorCommon.EditDecalData(AI.Unit.DecalData);
+			}
+			EditorGUILayout.EndToggleGroup();
 			//Edit receive damage data:
-			EditReceiveDamageData ();
+			if(EnableEditReceiveDamageData = EditorGUILayout.BeginToggleGroup ("---Edit ReceiveDamage Data---", EnableEditReceiveDamageData))
+			{
+			   AI.Unit.ReceiveDamageData = EditorCommon.EditReceiveDamageData(AI.Unit,
+				                                                              AI.Unit.ReceiveDamageData);
+			}
+			EditorGUILayout.EndToggleGroup();
+			
 
 			//Edit death data
-			EditDeathData ();
+			if(EnableEditDeathData = EditorGUILayout.BeginToggleGroup ("---Edit Death Data---", EnableEditDeathData))
+			{
+			   AI.Unit.DeathData = EditorCommon.EditDeathData(AI.Unit, AI.Unit.DeathData);
+			}
+			EditorGUILayout.EndToggleGroup();
 		}
 		EditorGUILayout.EndToggleGroup ();
         #endregion
@@ -94,348 +128,6 @@ public class AIEditor : EditorWindow
 #endregion
 		EditorGUILayout.EndScrollView ();
 	}
-
-    #region Edit Unit property
-	public virtual void EditBasicUnitProperty ()
-	{
-		GUILayout.Label (new GUIContent ("Edit Unit Basic Property------------------------------------------", "在此编辑单位的基础属	性"));
-		GUILayout.BeginHorizontal ();
-		GUILayout.Label ("Unit name:");
-		AI.Unit.Name = GUILayout.TextField (AI.Unit.Name); 
-		GUILayout.EndHorizontal ();
-		AI.Unit.MaxHP = EditorGUILayout.FloatField (new GUIContent ("Max HP:", "这个单位的最大生命值"), AI.Unit.MaxHP);
-		GUILayout.BeginHorizontal ();
-		GUILayout.Label (new GUIContent ("Enemy layer:", "所有处于在EnemyLayer层的单位能被这个单位检测到."));
-		AI.Unit.EnemyLayer = EditorGUILayoutx.LayerMaskField ("", AI.Unit.EnemyLayer, true);
-		GUILayout.EndHorizontal ();
-	}
-
-	public virtual void EditBasicAnimationData (string StartLabel, UnitAnimationData AnimationData)
-	{
-		EditorGUILayout.Space ();
-		GUILayout.Label (StartLabel);
-		AnimationData.Name = EditorGUILayout.TextField (new GUIContent ("Name:", ""), AnimationData.Name);
-		if (AnimationData.AnimationName == string.Empty) {
-			string[] array = GetAnimationNames (AI.gameObject);
-			int index = 0;
-			index = EditorGUILayout.Popup ("Animation:", index, array);
-			AnimationData.AnimationName = array [index];
-		} else {
-			int index = 0;
-			string[] array = GetAnimationNames (AI.gameObject, AnimationData.AnimationName, out index);
-			index = EditorGUILayout.Popup ("Animation:", index, array);
-			AnimationData.AnimationName = array [index];
-			EditorGUILayout.LabelField (new GUIContent ("Animation length:         " + AI.animation [AnimationData.AnimationName].length + " seconds.", "动画时长"));
-		}
-		AnimationData.AnimationLayer = EditorGUILayout.IntField (new GUIContent ("Animation Layer", "在此编辑这个Idle动画的层"), AnimationData.AnimationLayer);
-		AnimationData.AnimationSpeed = EditorGUILayout.FloatField (new GUIContent ("Animation Speed", "在此编辑这个Idle动画的播放速度"), AnimationData.AnimationSpeed);
-		AnimationData.AnimationWrapMode = (WrapMode)EditorGUILayout.EnumPopup (new GUIContent ("WrapMode:", "动画的WrapMode"), AnimationData.AnimationWrapMode);
-	}
-
-	public virtual void EditIdleData ()
-	{
-		EnableEditIdleData = EditorGUILayout.BeginToggleGroup ("---Edit Idle Data", EnableEditIdleData);
-		if (EnableEditIdleData) {
-			if (GUILayout.Button ("Add Idle data")) {
-				IdleData IdleData = new IdleData ();
-				IList<IdleData> l = AI.Unit.IdleData.ToList<IdleData> ();
-				l.Add (IdleData);
-				AI.Unit.IdleData = l.ToArray<IdleData> ();
-			}
-			UnitAnimationData[] UnitAnimationDataArray = AI.Unit.IdleData.ToArray<UnitAnimationData> ();
-			for (int i = 0; i < AI.Unit.IdleData.Length; i++) {
-				IdleData IdleData = AI.Unit.IdleData [i];
-				EditBasicAnimationData (string.Format (" ---------------------- {0}", IdleData.Name), IdleData as UnitAnimationData);
-
-				//Delete this data
-				if (GUILayout.Button ("Delete " + IdleData.Name)) {
-					IList<IdleData> l = AI.Unit.IdleData.ToList<IdleData> ();
-					l.Remove (IdleData);
-					AI.Unit.IdleData = l.ToArray<IdleData> ();
-				}
-				EditorGUILayout.Space ();
-			}
-		}
-		EditorGUILayout.EndToggleGroup ();
-	}
-
-	public virtual void EditMoveData ()
-	{
-		EnableEditMoveData = EditorGUILayout.BeginToggleGroup ("---Edit Move Data", EnableEditMoveData);
-		if (EnableEditMoveData) {
-			if (GUILayout.Button ("Add Move data")) {
-				MoveData MoveData = new MoveData ();
-				IList<MoveData> l = AI.Unit.MoveData.ToList<MoveData> ();
-				l.Add (MoveData);
-				AI.Unit.MoveData = l.ToArray<MoveData> ();
-			}
-			for (int i = 0; i < AI.Unit.MoveData.Length; i++) {
-				MoveData MoveData = AI.Unit.MoveData [i];
-				EditBasicAnimationData (string.Format (" ---------------------- {0}", MoveData.Name), MoveData as UnitAnimationData);
-				MoveData.MoveSpeed = EditorGUILayout.FloatField (new GUIContent ("Speed:", "单位移动速度"), MoveData.MoveSpeed);
-				MoveData.CanRotate = EditorGUILayout.Toggle (new GUIContent ("CanRotate:", "单位移动的时候,是否朝向前进方向"), MoveData.CanRotate);
-				if (MoveData.CanRotate) {
-					MoveData.SmoothRotate = EditorGUILayout.Toggle (new GUIContent ("SmoothRotate:", "单位移动转向的时候,是否用角速度自动平滑转向动作."), MoveData.SmoothRotate);
-					if (MoveData.SmoothRotate) {
-						MoveData.RotateAngularSpeed = EditorGUILayout.FloatField (new GUIContent ("Angular Speed:", "单位旋转角速度"), MoveData.RotateAngularSpeed);
-					}
-				}
-				//Delete this move data
-				if (GUILayout.Button ("Delete " + MoveData.Name)) {
-					IList<MoveData> l = AI.Unit.MoveData.ToList<MoveData> ();
-					l.Remove (MoveData);
-					AI.Unit.MoveData = l.ToArray<MoveData> ();
-				}
-			}
-		}
-		EditorGUILayout.EndToggleGroup ();
-	}
-
-	public virtual void EditAttackData ()
-	{
-		EnableEditAttackData = EditorGUILayout.BeginToggleGroup ("---Edit Attack Data", EnableEditAttackData);
-		if (EnableEditAttackData) {
-			if (GUILayout.Button ("Add Attack data")) {
-				AttackData AttackData = new AttackData ();
-				IList<AttackData> l = AI.Unit.AttackData.ToList<AttackData> ();
-				l.Add (AttackData);
-				AI.Unit.AttackData = l.ToArray<AttackData> ();
-			}
-			for (int i = 0; i < AI.Unit.AttackData.Length; i++) {
-				AttackData AttackData = AI.Unit.AttackData [i];
-				EditBasicAnimationData (string.Format (" ---------------------- {0}", AttackData.Name), AttackData as UnitAnimationData);
-				AttackData.DamageForm = (DamageForm)EditorGUILayout.EnumPopup (new GUIContent ("Damage Form:", "伤害类型"), AttackData.DamageForm);
-				AttackData.AttackableRange = EditorGUILayout.FloatField (new GUIContent ("Attack range:", "攻击范围"), AttackData.AttackableRange);
-				AttackData.AttackInterval = EditorGUILayout.FloatField (new GUIContent ("Attack Interval", "攻击间隔"), AttackData.AttackInterval);
-				AttackData.DamagePointBase = EditorGUILayout.FloatField (new GUIContent ("Base Damage Point:", "基础伤害点数"), AttackData.DamagePointBase);
-				EditorGUILayout.BeginHorizontal ();
-				AttackData.MinDamageBonus = EditorGUILayout.FloatField (new GUIContent ("Min Damage Point Bonus:", "最低伤害加成"), AttackData.MinDamageBonus);
-				AttackData.MaxDamageBonus = AttackData.MaxDamageBonus >= AttackData.MinDamageBonus ?
-                    AttackData.MaxDamageBonus : AttackData.MinDamageBonus;
-				AttackData.MaxDamageBonus = EditorGUILayout.FloatField (new GUIContent ("Max Damage Point Bonus:", "最高伤害加成"), AttackData.MaxDamageBonus);
-				EditorGUILayout.EndHorizontal ();
-				string DamageRange = (AttackData.DamagePointBase + AttackData.MinDamageBonus).ToString ()
-                    + " ~ " + (AttackData.DamagePointBase + AttackData.MaxDamageBonus).ToString ();
-				EditorGUILayout.LabelField (new GUIContent ("Damage range:" + DamageRange, "伤害点数范围"));
-				AttackData.Type = (AIAttackType)EditorGUILayout.EnumPopup (new GUIContent ("AI Attack Type:", "攻击类型 - 立刻的/投射/区域"), AttackData.Type);
-				switch (AttackData.Type) {
-				case AIAttackType.Instant:
-					AttackData.HitTime = EditorGUILayout.FloatField (new GUIContent ("Hit time:",
-                            @"如果AttackType = Instant,HitTime表示发送Apply Damage的时间;
-如果AttackType = Projectile, 表示创建Projectile的时间."),
-                            AttackData.HitTime);
-					AttackData.HitTestType = (HitTestType)EditorGUILayout.EnumPopup (new GUIContent ("*Hit Test Type:", "命中检测方式 - 一定命中/百分率/碰撞器校验/距离校验"), AttackData.HitTestType);
-					switch (AttackData.HitTestType) {
-					case HitTestType.AlwaysTrue:
-						break;
-					case HitTestType.HitRate:
-						AttackData.HitRate = EditorGUILayout.FloatField (new GUIContent ("*Hit Rate:", "命中率: 0 - 1"), AttackData.HitRate);
-						AttackData.HitRate = Mathf.Clamp01 (AttackData.HitRate);
-						break;
-					case HitTestType.CollisionTest:
-						AttackData.HitTestCollider = (Collider)EditorGUILayout.ObjectField (new GUIContent ("*Hit Test Collider:", "命中校验碰撞器"), AttackData.HitTestCollider, typeof(Collider));
-						break;
-					case HitTestType.DistanceTest:
-						AttackData.HitTestDistance = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Distance:", "命中校验距离: "), AttackData.HitTestDistance);
-						break;
-					default:
-						break;
-					}
-					break;
-				case AIAttackType.Projectile:
-					AttackData.Projectile = (Projectile)EditorGUILayout.ObjectField (new GUIContent ("*Projectile:", "射弹对象"), AttackData.Projectile, typeof(Projectile));
-					AttackData.ProjectileInstantiateAnchor = (Transform)EditorGUILayout.ObjectField (new GUIContent ("*Projectile Instantiate Anchor :", "ŽŽœšÉäµ¯¶ÔÏóµÄTransform"), AttackData.ProjectileInstantiateAnchor, typeof(Transform));
-					break;
-				case AIAttackType.Regional:
-					EditorGUILayout.BeginHorizontal ();
-					EditorGUILayout.LabelField (new GUIContent ("HitTestType:", "Regional 攻击方式的命中检测必须是CollisionTest:"));
-					AttackData.HitTestType = (HitTestType)EditorGUILayout.EnumPopup (AttackData.HitTestType);
-					AttackData.HitTestType = HitTestType.CollisionTest;
-					EditorGUILayout.EndHorizontal ();
-					AttackData.HitTestCollider = (Collider)EditorGUILayout.ObjectField (new GUIContent ("*Hit Test Collider:", "命中校验碰撞器"), AttackData.HitTestCollider, typeof(Collider));
-					AttackData.HitTestDistance = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Distance:", "在此距离内的敌人会被碰撞器校验: "), AttackData.HitTestDistance);
-					break;
-				}
-				AttackData.ScriptObjectAttachToTarget = (MonoBehaviour)EditorGUILayout.ObjectField (new GUIContent ("Script attach to target:", "造成伤害时,自动附加该脚本组件."), AttackData.ScriptObjectAttachToTarget, typeof(MonoBehaviour));
-
-				//Delete this attack data
-				if (GUILayout.Button ("Delete " + AttackData.Name)) {
-					IList<AttackData> l = AI.Unit.AttackData.ToList<AttackData> ();
-					l.Remove (AttackData);
-					AI.Unit.AttackData = l.ToArray<AttackData> ();
-				}
-			}
-		}
-		EditorGUILayout.EndToggleGroup ();
-	}
-
-	public virtual void EditDecalData ()
-	{
-		EnableEditDecalData = EditorGUILayout.BeginToggleGroup ("---Edit Decal Data", EnableEditDecalData);
-		if (EnableEditDecalData) {
-			if (GUILayout.Button ("Add Decal data")) {
-				DecalData DecalData = new DecalData ();
-				IList<DecalData> l = AI.Unit.DecalData.ToList<DecalData> ();
-				l.Add (DecalData);
-				AI.Unit.DecalData = l.ToArray<DecalData> ();
-			}
-			for (int i = 0; i < AI.Unit.DecalData.Length; i++) {
-				DecalData DecalData = AI.Unit.DecalData [i];
-				EditorGUILayout.LabelField ("------------------------ " + DecalData.Name);
-				DecalData.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), DecalData.Name); 
-				DecalData.UseGlobalDecal = EditorGUILayout.Toggle (new GUIContent ("UseGlobalDecal?", "使用全局Decal设定?"), DecalData.UseGlobalDecal);
-				if (DecalData.UseGlobalDecal) {
-					DecalData.GlobalType = (GlobalDecalType)EditorGUILayout.EnumPopup (new GUIContent ("Global decal type:", ""), DecalData.GlobalType);
-				} else {
-					DecalData.DestoryInTimeOut = EditorGUILayout.Toggle (new GUIContent ("Destory this decal in timeout?", "Decal是否有Lifetime?"), DecalData.DestoryInTimeOut);
-					if (DecalData.DestoryInTimeOut) {
-						DecalData.DestoryTimeOut = EditorGUILayout.FloatField (new GUIContent ("Destory Timeout:", ""), DecalData.DestoryTimeOut);
-					}
-					DecalData.ProjectDirection = (HorizontalOrVertical)EditorGUILayout.EnumPopup (new GUIContent ("Decal Project Direction", "创建Decal的投射方向,对于地上的Decal,投射方向是Vertical,对于墙上的Decal,投射方向是Horizontal."), DecalData.ProjectDirection);
-					DecalData.ApplicableLayer = EditorGUILayoutx.LayerMaskField ("ApplicableLayer", DecalData.ApplicableLayer);
-					DecalData.DecalObjects = EditObjectArray ("--------------Edit Decal object ------", DecalData.DecalObjects);
-					DecalData.ScaleRate = EditorGUILayout.FloatField (new GUIContent ("Scale rate:", "Final scale = initial scale * ScaleRate"), DecalData.ScaleRate);
-					//Delete this DecalData
-					if (GUILayout.Button ("Delete DecalData:" + DecalData.Name)) {
-						IList<DecalData> l = AI.Unit.DecalData.ToList<DecalData> ();
-						l.Remove (DecalData);
-						AI.Unit.DecalData = l.ToArray<DecalData> ();
-					}
-				}
-				EditorGUILayout.Space ();
-			}
-		}
-		EditorGUILayout.EndToggleGroup ();
-	}
-
-	public virtual void EditEffectData ()
-	{
-		EnableEditEffectData = EditorGUILayout.BeginToggleGroup ("---Edit Effect Data", EnableEditEffectData);
-		if (EnableEditEffectData) {
-			if (GUILayout.Button ("Add Effect data")) {
-				EffectData EffectData = new EffectData ();
-				IList<EffectData> l = AI.Unit.EffectData.ToList<EffectData> ();
-				l.Add (EffectData);
-				AI.Unit.EffectData = l.ToArray<EffectData> ();
-			}
-			for (int i = 0; i < AI.Unit.EffectData.Length; i++) {
-				EffectData EffectData = AI.Unit.EffectData [i];
-				EditorGUILayout.LabelField ("------------------------ " + EffectData.Name);
-				EffectData.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), EffectData.Name);
-				
-				EffectData.UseGlobalEffect = EditorGUILayout.Toggle (new GUIContent ("Use global effect?", "是否使用全局Effect?"), EffectData.UseGlobalEffect);
-				if(EffectData.UseGlobalEffect)
-				{
-					EffectData.GlobalType = (GlobalEffectType)EditorGUILayout.EnumPopup(new GUIContent ("Global effect type", "是全局Effect类型"),
-						EffectData.GlobalType);
-				}
-				else {
-				  EffectData.DestoryInTimeOut = EditorGUILayout.Toggle (new GUIContent ("Destory this effect in timeout?", "是否在N秒内删除这个效果?"), EffectData.DestoryInTimeOut);
-				  if (EffectData.DestoryInTimeOut) {
-				    	EffectData.DestoryTimeOut = EditorGUILayout.FloatField (new GUIContent ("Destory Timeout:", ""), EffectData.DestoryTimeOut);
-				  }
-				  EffectData.EffectObject = (GameObject)EditorGUILayout.ObjectField (new GUIContent ("Effect object", "特效对象"), EffectData.EffectObject, typeof(GameObject));
-				  EffectData.Anchor = (Transform)EditorGUILayout.ObjectField (new GUIContent ("Effect creation anchor", "创建特效对象的锚点"), EffectData.Anchor, typeof(Transform));
-				  //Delete this attack data
-				  if (GUILayout.Button ("Delete EffectData:" + EffectData.Name)) {
-  					  IList<EffectData> l = AI.Unit.EffectData.ToList<EffectData> ();  
-					  l.Remove (EffectData);
-				  	  AI.Unit.EffectData = l.ToArray<EffectData> ();
-				  }
-				}
-				EditorGUILayout.Space ();
-			}
-		}
-		EditorGUILayout.EndToggleGroup ();
-	}
-
-	public virtual void EditReceiveDamageData ()
-	{
-		EnableEditReceiveDamageData = EditorGUILayout.BeginToggleGroup ("---Edit Receive Damage Data", EnableEditReceiveDamageData);
-		if (EnableEditReceiveDamageData) {
-			if (GUILayout.Button ("Add ReceiveDamage data")) {
-				ReceiveDamageData receiveDamageData = new ReceiveDamageData ();
-				IList<ReceiveDamageData> l = AI.Unit.ReceiveDamageData.ToList<ReceiveDamageData> ();
-				l.Add (receiveDamageData);
-				AI.Unit.ReceiveDamageData = l.ToArray<ReceiveDamageData> ();
-			}
-			for (int i = 0; i < AI.Unit.ReceiveDamageData.Length; i++) {
-				ReceiveDamageData ReceiveDamageData = AI.Unit.ReceiveDamageData [i];
-				if (ReceiveDamageData.HaltAI) {
-					EditBasicAnimationData (string.Format (" ---------------------- {0}", ReceiveDamageData.Name), ReceiveDamageData as UnitAnimationData);
-				} else {
-					GUILayout.Label (string.Format (" ---------------------- {0}", ReceiveDamageData.Name));
-					ReceiveDamageData.Name = EditorGUILayout.TextField (new GUIContent ("Name:", ""), ReceiveDamageData.Name);
-				}
-				ReceiveDamageData.HaltAI = EditorGUILayout.Toggle (new GUIContent ("HaltAI", "受到伤害时,是否停止AI,播放受伤动画?"), ReceiveDamageData.HaltAI);
-				ReceiveDamageData.DamageForm = (DamageForm)EditorGUILayout.EnumPopup (new GUIContent ("Damage Form", "触发这个ReceiveDamage的DamageForm, Common类型是默认数据."), ReceiveDamageData.DamageForm);
-				string[] effectDataNameArray = AI.Unit.EffectData.Select (x => x.Name).ToArray<string> ();
-				ReceiveDamageData.EffectDataName = EditStringArray ("--------- Edit receive damage effect data-----", ReceiveDamageData.EffectDataName, effectDataNameArray);
-
-				if (AI.Unit.DecalData != null && AI.Unit.DecalData.Length > 0) {
-					string[] decalDataNameArray = AI.Unit.DecalData.Select (x => x.Name).ToArray<string> ();
-					ReceiveDamageData.DecalDataName = EditStringArray ("--------- Edit receive damage decal data-----", ReceiveDamageData.DecalDataName, decalDataNameArray);
-				}
-                
-                
-				AI.Unit.ReceiveDamageData [i] = ReceiveDamageData;
-				//Delete ReceiveDamageData
-				if (GUILayout.Button ("Delete ReceiveDamageData:" + ReceiveDamageData.Name)) {
-					IList<ReceiveDamageData> l = AI.Unit.ReceiveDamageData.ToList<ReceiveDamageData> ();
-					l.Remove (ReceiveDamageData);
-					AI.Unit.ReceiveDamageData = l.ToArray<ReceiveDamageData> ();
-				}
-				EditorGUILayout.Space ();
-			}
-		}
-		EditorGUILayout.EndToggleGroup ();
-	}
-
-	public virtual void EditDeathData ()
-	{
-		EnableEditDeathData = EditorGUILayout.BeginToggleGroup ("---Edit Death Data", EnableEditDeathData);
-		if (EnableEditDeathData) {
-			if (GUILayout.Button ("Add death data")) {
-				DeathData DeathData = new DeathData ();
-				IList<DeathData> l = AI.Unit.DeathData.ToList<DeathData> ();
-				l.Add (DeathData);
-				AI.Unit.DeathData = l.ToArray<DeathData> ();
-			}
-			for (int i = 0; i < AI.Unit.DeathData.Length; i++) {
-				DeathData DeathData = AI.Unit.DeathData [i];
-				//Death animation is used only when: 1. there is no ragdoll, or 2.create ragdoll, after animation finishes.
-				if (DeathData.UseDieReplacement == false ||
-                   (DeathData.UseDieReplacement == true &&
-                    DeathData.ReplaceAfterAnimationFinish == true)) {
-					EditBasicAnimationData (string.Format (" ---------------------- {0}", DeathData.Name), DeathData as UnitAnimationData);
-				} else {
-					GUILayout.Label (string.Format (" ---------------------- {0}", DeathData.Name));
-					DeathData.Name = EditorGUILayout.TextField (new GUIContent ("Name:", ""), DeathData.Name);
-				}
-				DeathData.DamageForm = (DamageForm)EditorGUILayout.EnumPopup (new GUIContent ("Damage Form", "触发这个DeathData的DamageForm, Common类型是默认数据."), DeathData.DamageForm);
-				DeathData.UseDieReplacement = EditorGUILayout.Toggle (new GUIContent ("Use Die replacement:", "死亡时,是否创建替代布娃娃?"), DeathData.UseDieReplacement);
-				if (DeathData.UseDieReplacement) {
-					DeathData.ReplaceAfterAnimationFinish = EditorGUILayout.Toggle (new GUIContent ("Create replacement following animation", "ÊÇ·ñÔÚ¶¯»­œáÊøÖ®ºóŽŽœšÌæŽúÎï?"), DeathData.ReplaceAfterAnimationFinish);
-					DeathData.DieReplacement = (GameObject)EditorGUILayout.ObjectField (new GUIContent ("Die replacement:", ""), DeathData.DieReplacement, typeof(GameObject));
-					DeathData.CopyChildrenTransformToDieReplacement = EditorGUILayout.Toggle (new GUIContent ("Copy transform?", "是否把替代物的关节位置调整到和死亡单位一致?"), DeathData.CopyChildrenTransformToDieReplacement);
-				}
-				string[] effectDataNameArray = AI.Unit.EffectData.Select (x => x.Name).ToArray<string> ();
-				DeathData.EffectDataName = EditStringArray ("--------- Edit death effect data-----", DeathData.EffectDataName, effectDataNameArray);
-				string[] decalDataNameArray = AI.Unit.DecalData.Select (x => x.Name).ToArray<string> ();
-				DeathData.DecalDataName = EditStringArray ("--------- Edit death decal data-----", DeathData.DecalDataName, decalDataNameArray);
-				//Delete DeathData
-				if (GUILayout.Button ("Delete DeathData:" + DeathData.Name)) {
-					IList<DeathData> l = AI.Unit.DeathData.ToList<DeathData> ();
-					l.Remove (DeathData);
-					AI.Unit.DeathData = l.ToArray<DeathData> ();
-				}
-
-			}
-		}
-		EditorGUILayout.EndToggleGroup ();
-	}
-
-    #endregion
 
     #region Edit AI Behavior property
 

@@ -5,20 +5,9 @@ using System.Collections;
 /// The class represents a basic Unit in the game
 /// </summary>
 [System.Serializable]
-public class Unit : MonoBehaviour
+public class Unit : UnitBase
 {
-    public string Name = "Default Name";
-    /// <summary>
-    /// What's the layer of the enemy
-    /// </summary>
-    public LayerMask EnemyLayer;
 
-    /// <summary>
-    /// Health point.
-    /// </summary>
-    public float MaxHP = 100;
-
-    public float HP = 100;
     [HideInInspector]
     public bool IsDead = false;
 
@@ -69,6 +58,8 @@ public class Unit : MonoBehaviour
 
     public DecalData[] DecalData = new DecalData[] { };
     public System.Collections.Generic.IDictionary<string, DecalData> DecalDataDict = new System.Collections.Generic.Dictionary<string, DecalData>();
+
+    public AudioData[] AudioData = new AudioData[] { };
 
     void Awake()
     {
@@ -153,4 +144,23 @@ public class Unit : MonoBehaviour
             }
         }
     }
+	
+	#region implement UnitHealth interface
+    public override void SetCurrentHP(float value)
+    {
+        HP = value;
+    }
+    public override void SetMaxHP(float value)
+    {
+        MaxHP = value;
+    }
+    public override float GetCurrentHP()
+    {
+        return HP;
+    }
+    public override float GetMaxHP()
+    {
+        return MaxHP;
+    }
+    #endregion
 }

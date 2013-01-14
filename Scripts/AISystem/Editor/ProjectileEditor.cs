@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,13 +8,14 @@ public class ProjectileEditor : EditorWindow
 {
 
     [MenuItem("Component/AI/Projectile Editor")]
-    public static void EditAI()
+    public static void EditProjectile()
     {
         EditorWindow.GetWindow(typeof(ProjectileEditor));
     }
     float MainWindowWidth, MainWindowHeight = 0;
     Projectile Projectile;
     Vector2 ScrollPosition = Vector2.zero;
+	
     void OnGUI()
     {
         MainWindowWidth = position.width;
@@ -43,35 +44,35 @@ public class ProjectileEditor : EditorWindow
         }
 
         ScrollPosition = EditorGUILayout.BeginScrollView(ScrollPosition, false, true, null);
-        EditProjectile();
+        EditProjectileObject();
         EditorGUILayout.EndScrollView();
 
     }
 
-    public virtual void EditProjectile()
+    public virtual void EditProjectileObject()
     {
-        Projectile.AttackType = (ProjectileAttackType)EditorGUILayout.EnumPopup(new GUIContent("Attack Type:", "Éäµ¯ÉËº¦ÀàĞÍ: Î¨Ò»Ä¿±ê/±¬Õ¨·¶Î§ÉËº¦"), Projectile.AttackType);
-        Projectile.MovementMode = (ProjectileMovementMode)EditorGUILayout.EnumPopup(new GUIContent("Movement mode:", "Éäµ¯ÒÆ¶¯ÀàĞÍ: Ö±ÏßÇ°½ø/Ö±ÏßÏòÌØ¶¨µØµã/Å×ÎïÏß"), Projectile.MovementMode);
+        Projectile.AttackType = (ProjectileAttackType)EditorGUILayout.EnumPopup(new GUIContent("Attack Type:", "å°„å¼¹æ”»å‡»ç±»å‹"), Projectile.AttackType);
+        Projectile.MovementMode = (ProjectileMovementMode)EditorGUILayout.EnumPopup(new GUIContent("Movement mode:", "ç§»åŠ¨ç±»å‹- ç›´çº¿å‰è¿›/ç›´çº¿å§‹ç»ˆ/æŠ›ç‰©çº¿"), Projectile.MovementMode);
         Projectile.Speed = EditorGUILayout.FloatField(new GUIContent("Speed:", ""), Projectile.Speed);
-        Projectile.LifeTime = EditorGUILayout.FloatField(new GUIContent("LifeTime:", "Éäµ¯ÉúÃüÊ±¼ä. Èç¹ûÉäµ¯Ò»Ö±Ã»ÓĞ»÷ÖĞÄ¿±ê,ÔòÔÚÉúÃüÊ±¼äµ½´ïºó»á×Ô¶¯Ïú»Ù¶ÔÏó."), Projectile.LifeTime);
+        Projectile.LifeTime = EditorGUILayout.FloatField(new GUIContent("LifeTime:", "å°„å¼¹ç”Ÿå‘½å‘¨æœŸ"), Projectile.LifeTime);
         Projectile.AttackableLayer = EditorGUILayoutx.LayerMaskField("Target Unit layer:", Projectile.AttackableLayer, false);
         if (Projectile.MovementMode == ProjectileMovementMode.Parabola || Projectile.MovementMode == ProjectileMovementMode.StraightLineToPosition)
         {
-            Projectile.SelfGuide = EditorGUILayout.Toggle(new GUIContent("Selfguided:", "Éäµ¯×Ôµ¼?"), Projectile.SelfGuide);
+            Projectile.SelfGuide = EditorGUILayout.Toggle(new GUIContent("Selfguided:", "å°„å¼¹è‡ªå¯¼?"), Projectile.SelfGuide);
         }
         if (Projectile.MovementMode == ProjectileMovementMode.Parabola)
         {
-            Projectile.Radian = EditorGUILayout.FloatField(new GUIContent("Radian:", "Éäµ¯»¡¶È - »¡¶È=0Ê±Éäµ¯Ö±ÏßÇ°½ø, »¡¶È=1Ê±Éäµ¯Å×ÎïÏß×î¸ßµãµÈÓÚÇ°½ø×Ü³¤¶È."), Projectile.Radian);
+            Projectile.Radian = EditorGUILayout.FloatField(new GUIContent("Radian:", "å°„å¼¹å¼§åº¦."), Projectile.Radian);
         }
         if (Projectile.AttackType == ProjectileAttackType.Explosion)
         {
-            Projectile.ExplosiveRange = EditorGUILayout.FloatField(new GUIContent("Explosive range:", "±¬Õ¨·¶Î§."), Projectile.ExplosiveRange);
-            Projectile.IsExplosiveDamping = EditorGUILayout.Toggle(new GUIContent("Damp explosive damage:", "±¬Õ¨ÉËº¦ÊÇ·ñ»áËæ×Å¾àÀëË¥¼õ,Ä¬ÈÏË¥¼õËã·¨ÊÇÏßĞÔËã·¨."), Projectile.IsExplosiveDamping);
+            Projectile.ExplosiveRange = EditorGUILayout.FloatField(new GUIContent("Explosive range:", "çˆ†ç‚¸èŒƒå›´."), Projectile.ExplosiveRange);
+            Projectile.IsExplosiveDamping = EditorGUILayout.Toggle(new GUIContent("Damp explosive damage:", "çˆ†ç‚¸è¡°å‡."), Projectile.IsExplosiveDamping);
         }
-        Projectile.HitEffect = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Hit Effect:", "ÃüÖĞÄ¿±êºó´´½¨µÄĞ§¹û¶ÔÏó"), Projectile.HitEffect,typeof(GameObject));
+        Projectile.HitEffect = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Hit Effect:", "å‘½ä¸­ç‰¹æ•ˆ."), Projectile.HitEffect,typeof(GameObject));
         if (Projectile.HitEffect != null)
         {
-            Projectile.HitEffectTimeout = EditorGUILayout.FloatField(new GUIContent("Effect timeout:", "HitEffectÔÚTimeoutºóÏú»Ù"), Projectile.HitEffectTimeout);
+            Projectile.HitEffectTimeout = EditorGUILayout.FloatField(new GUIContent("Effect timeout:", "ç‰¹æ•ˆç”Ÿå‘½å‘¨æœŸ"), Projectile.HitEffectTimeout);
         }
     }
 }
