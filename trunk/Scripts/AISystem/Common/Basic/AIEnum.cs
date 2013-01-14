@@ -255,3 +255,43 @@ public enum AIValueComparisionCondition
 
 #endregion
 }
+
+/// <summary>
+/// Armor type is used when judging some combat details.
+/// Armor type is important for audio playing.
+/// </summary>
+public enum ArmorType
+{
+	Default = 0,
+	#region human 1~999
+	NoArmor_Human = 1,
+	LightArmor_Human = 2,
+	MiddleArmor_Human = 3,
+	HeavyArmor_Human = 4,
+    Metal_1 = 5,
+	Metal_2 = 6,
+	#endregion
+	
+	#region xenz 1000~1999
+	NoArmor_Xenz = 1000,
+	#endregion
+}
+
+/// <summary>
+/// Weapon type.
+/// When playing hit audio, [weapon type + armor type] determines what audio should be played.
+/// </summary>
+public enum WeaponType
+{
+	Default = 0,
+	#region human 1~999
+	Bullet = 1,
+	ElectricalWeapon = 2,
+	Incendiator = 3,
+	#endregion
+	
+	#region xenz 1000~1999
+	Predator_Spine = 1000,
+	GiantAnt_Flame = 1001,
+	#endregion
+}

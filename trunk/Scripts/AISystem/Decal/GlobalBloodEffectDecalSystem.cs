@@ -207,7 +207,7 @@ public class GlobalBloodEffectDecalSystem : MonoBehaviour {
 
         if (Physics.Raycast(random, Vector3.down, out hitInfo, 999, groundLayer))
         {
-            GameObject DecalObject = (GameObject)Object.Instantiate(decalObject, hitInfo.point + hitInfo.normal * 0.3f, Quaternion.identity);
+            GameObject DecalObject = (GameObject)Object.Instantiate(decalObject, hitInfo.point + hitInfo.normal * 0.1f, Quaternion.identity);
             DecalObject.transform.rotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal);
             DecalObject.transform.RotateAround(DecalObject.transform.up, Random.Range(0, 360));
             DecalObject.transform.localScale *= scaleRate;
@@ -229,7 +229,7 @@ public class GlobalBloodEffectDecalSystem : MonoBehaviour {
         {
             Collider wall = wallColliders[0];
             Vector3 closestPoints = wall.ClosestPointOnBounds(center);
-            closestPoints.y += 0.5f;
+            closestPoints.y += Random.Range(0.1f, 0.5f);
             //Randomize the point
             closestPoints += Random.onUnitSphere*1;
             RaycastHit hitInfo;
