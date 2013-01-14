@@ -3,7 +3,6 @@ using System.Collections;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(PredatorPlayerStatus))]
-[RequireComponent(typeof(Predator3rdPersonalJumpController))]
 [RequireComponent(typeof (Predator3rdPersonalUnit))]
 public class Predator3rdPersonMovementController : MonoBehaviour {
 
@@ -20,7 +19,6 @@ public class Predator3rdPersonMovementController : MonoBehaviour {
 
     private int movementAnimationLayer = 0;
     private PredatorPlayerStatus playerStatus = null;
-    private Predator3rdPersonalJumpController JumpController;
 	/// <summary>
 	/// The deceleration factor. When DecelerationFactor > 0, the movement speed = speed * (1-DecelerationFactor)
 	/// </summary>
@@ -36,8 +34,6 @@ public class Predator3rdPersonMovementController : MonoBehaviour {
 	void Awake () {
         characterController = this.GetComponent<CharacterController>();
         PredatorPlayerUnit = this.GetComponent<Predator3rdPersonalUnit>();
-
-        JumpController = GetComponent<Predator3rdPersonalJumpController>();
         playerStatus = GetComponent<PredatorPlayerStatus>();
 	}
 
@@ -72,7 +68,7 @@ public class Predator3rdPersonMovementController : MonoBehaviour {
     {
         if (Mathf.Approximately(MoveDirection.magnitude, 0))
         {
-			return;
+            return;
         }
         Vector3 direction = MoveDirection.normalized;
         direction.y = 0;

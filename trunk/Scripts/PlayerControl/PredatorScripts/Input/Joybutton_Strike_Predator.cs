@@ -39,10 +39,10 @@ public class Joybutton_Strike_Predator : JoyButton   {
     void Update()
     {
         //JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate(Location, JoyButtonSize);
-        if (this.hasFingerOnJoyButton)
-        {
-            PowerHUD.Value = Mathf.Clamp((PowerHUD.Value + (1f / attackController.PowerAccelerationTime) * Time.deltaTime), 0, PowerHUD.MaxValue);
-        }
+        //if (this.hasFingerOnJoyButton)
+        //{
+        //    PowerHUD.Value = Mathf.Clamp((PowerHUD.Value + (1f / attackController.PowerAccelerationTime) * Time.deltaTime), 0, PowerHUD.MaxValue);
+        //}
     }
 
     /// <summary>

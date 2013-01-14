@@ -16,23 +16,10 @@ public class PredatorPlayerJumpData
 	public float JumpForwardTime = 0.2f;
 	public float JumpOverSpeed = 30;
 	public float JumpOverCheckDistance = 4;
+    /// <summary>
+    /// The obstacle layer to let predator jump over.
+    /// </summary>
 	public LayerMask ObstacleToJumpOver;
-}
-
-/// <summary>
-/// Predator player effect data.
-/// When applying a damage form, the effect object will be created.
-/// </summary>
-[System.Serializable]
-public class PlayerEffectData : EffectData
-{
-	public DamageForm DamageForm = DamageForm.Common;
-	/// <summary>
-	/// If PlayParticle = true, then the particlesystem must not be null.
-	/// When receiving damage form attack, the particlesystem will play.
-	/// </summary>
-	public bool PlayParticle = false;
-	public ParticleSystem particlesystem = null;
 }
 
 /// <summary>
@@ -41,7 +28,7 @@ public class PlayerEffectData : EffectData
 /// </summary>
 public class Predator3rdPersonalUnit : UnitBase
 {
-	
+
 	#region variables for Idle
 	public IdleData IdleData = new IdleData();
 	#endregion
@@ -59,13 +46,21 @@ public class Predator3rdPersonalUnit : UnitBase
 	/// The attack radius.
 	/// </summary>
 	public float AttackRadius = 3;
-	public float CombatCooldown = 0.15f;
+
+    /// <summary>
+    /// When enemy within the radius, predator can move quickly to approach the enemy.
+    /// </summary>
+    public float OffenseRadius = 6;
+
+	public float CombatCoolDown = 0.15f;
+
+    public Combat DefaultCombat_Tap = new Combat();
+
+    public Combat DefaultCombat_Slice = new Combat();
+
 	public ComboCombat[] ComboCombat = new ComboCombat[]{};
 	public string[] AttackAnimations = new string[]{};
 	public int AttackAnimationLayer = 3;
-	public string[] LeftClawAttackDataName = new string[] { };
-	public string[] RightClawAttackDataName = new string[] { };
-	
 	#endregion
 	
 	/// <summary>
@@ -76,9 +71,26 @@ public class Predator3rdPersonalUnit : UnitBase
 	void Awake ()
 	{
 		HP = MaxHP;
+        //Initalize move animation:
+        animation[MoveData.AnimationName].layer = MoveData.AnimationLayer;
+
+        //Initalize jump animation:
+        animation[JumpData.JumpingAnimation].layer = JumpData.AnimationLayer;
+        animation[JumpData.PreJumpAnimation].layer = JumpData.AnimationLayer;
+        //animation[JumpData.GroundingAnimation].layer = JumpData.AnimationLayer;
+
+        //Initalize attack animation:
+        foreach (string attackAnimation in AttackAnimations)
+        {
+            animation[attackAnimation].layer = AttackAnimationLayer;
+        }
+        foreach (ComboCombat comboCombat in this.ComboCombat)
+        {
+            comboCombat.Init();
+        }
 	}
 	
-    #region implement UnitHealth abstract
+#region implement UnitHealth abstract
 	public override void SetCurrentHP (float value)
 	{
 		HP = value;
@@ -98,5 +110,13 @@ public class Predator3rdPersonalUnit : UnitBase
 	{
 		return MaxHP;
 	}
-    #endregion
+#endregion
+
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireSphere(transform.position, AttackRadius);
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, OffenseRadius);
+    }
 }

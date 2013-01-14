@@ -5,66 +5,34 @@ using System;
 
 
 [@RequireComponent(typeof (PredatorPlayerStatus))]
+[@RequireComponent(typeof(Predator3rdPersonalUnit))]
 public class Predator3rdPersonalAttackController : MonoBehaviour {
 
     /// <summary>
-    /// The length the claw can reach to
+    /// CombatHintHUD - the hint to be displayed on right-top screen. Offer a visual tips to player
+    /// the combat they have performed.
     /// </summary>
-    public float ClawRadius = 3f;
-
-    public float OffenseRadiusNear = 6;
-
-    public string PreAttackAnimation = "preattack_right";
-
-    public string PreAttackAnimation_Mixed = "preattack_right_mix";
-
-    public string[] Strike_SingleClaw = new string[]{
-        "attack_left_claw_spike-1", "attack_left_claw_spike-2",
-        "attack_right_claw_spike-1", "attack_right_claw_spike-2"
-    };
-    public string[] Strike_DualClaws = new string[]{
-        "attack_dual_claw_spike-1","attack_dual_claw_spike-2","attack_dual_claw_spike-3"
-    };
-    public string[] WavingClaw = new string[]{
-        "attack_left_claw_waving","attack_right_claw_waving"
-    };
-    public string[] ClampingClaws = new string[]{
-        "attack_clamp"
-    };
-    /// <summary>
-    /// The attack animation list
-    /// </summary>
-    private IList<string> FullAttackAnimation = new List<string>();
-
-    public float PowerAccelerationTime = 1.3333f;
-
-    /// <summary>
-    /// The gesture cool down time. Gesture process routine check user gesture input at every %GestureCooldown% seconds.
-    /// </summary>
-    public float CombatCooldown = 0.15f;
-    /// <summary>
-    /// The total time in seconds to accelerate to max strike power
-    /// The default value is 1.3333f, it takes 1.3333 seconds to achieve max strike power!
-    /// </summary>
-    public float TotalTimeOfAcceleration = 1.33f;
-
-    public PrograssBar PowerPrograss = null;
+    public GameObject CombatHintHUD;
 
     /// <summary>
     /// The default combat by tap or slice
     /// </summary>
-    public Combat defaultCombatTap;
-    public Combat defaultCombatSlice;
+    private Combat defaultCombatTap;
+    private Combat defaultCombatSlice;
     /// <summary>
     /// The ComboCombat in prefab which is to be setup by designer.
     /// </summary>
-	public ComboCombat[] ComboCombats;
-    public int AttackAnimationLayer = 3;
-	public GameObject CombatHintHUD;
+    private ComboCombat[] ComboCombats;
 
-    public float MaxStrikePower = 100f;
-    [HideInInspector]
-    public float strikePower = 0f;
+    /// <summary>
+    /// The length the predator's claw can reach
+    /// </summary>
+    private float AttackRadius;
+    /// <summary>
+    /// The gesture cool down time. 
+    /// Gesture process routine check user gesture input at every %GestureCooldown% seconds.
+    /// </summary>
+    private float CombatCooldown;
 
     /// <summary>
     /// Key = combo combat token
@@ -80,56 +48,29 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     /// When BlockUserGestureInput = true, the new coming player gesture will be dropped, and GestureList will be cleared per frame.
     /// </summary>
     private bool BlockUserGestureInput = false;
-    
-	void InitComboCombat()
-	{
-		foreach(ComboCombat comboCombat in ComboCombats)
-		{
-			comboCombat.Init();
-            ComboCombatTokenDict[comboCombat.token] = comboCombat;
-		}
-	}
-	
-	void InitAttackAnimation()
-	{
-        foreach (string ani in Strike_SingleClaw)
-        {
-            FullAttackAnimation.Add(ani);
-        }
-		foreach (string ani in Strike_DualClaws)
-        {
-            FullAttackAnimation.Add(ani);
-        }
-        foreach (string ani in WavingClaw)
-        {
-            FullAttackAnimation.Add(ani);
-        }
-        foreach (string ani in ClampingClaws)
-        {
-            FullAttackAnimation.Add(ani);
-        }
-        foreach (string attackAnimation in FullAttackAnimation)
-        {
-            animation[attackAnimation].layer = AttackAnimationLayer;
-        }
-	}
-	
-    Vector3 dis;
-    Quaternion qDis;
+    private Predator3rdPersonalUnit PredatorPlayerUnit;
+
     void Awake()
     {
-        InitAttackAnimation();
-		InitComboCombat();
         controller = this.GetComponent<CharacterController>();
         predatorStatus = GetComponent<PredatorPlayerStatus>();
-        dis = transform.rotation.eulerAngles - predatorStatus.body.rotation.eulerAngles;
-        qDis = Quaternion.FromToRotation(predatorStatus.body.forward, transform.forward);
-        EnemyLayer = predatorStatus.EnemyLayer;
+        PredatorPlayerUnit = GetComponent<Predator3rdPersonalUnit>();
+        EnemyLayer = PredatorPlayerUnit.EnemyLayer;
+        AttackRadius = PredatorPlayerUnit.AttackRadius;
+        CombatCooldown = PredatorPlayerUnit.CombatCoolDown;
+        
+        defaultCombatTap = PredatorPlayerUnit.DefaultCombat_Tap;
+        defaultCombatSlice = PredatorPlayerUnit.DefaultCombat_Slice;
+        ComboCombats = PredatorPlayerUnit.ComboCombat;
+        foreach (ComboCombat comboCombat in ComboCombats)
+        {
+            comboCombat.Init();
+            ComboCombatTokenDict[comboCombat.token] = comboCombat;
+        }
     }
 	
 	void Start()
 	{
-		//StartCoroutine(RepeatCheckUserGesture());
         StartCoroutine(RepeatCheckCombatList());
 	}
 
@@ -258,11 +199,11 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
         
         //Look for enemy - in near radius
         float DistanceToEnemy = 0;
-        GameObject target = LookforBestTarget(null, OffenseRadiusNear, out DistanceToEnemy);
+        GameObject target = LookforBestTarget(null, PredatorPlayerUnit.OffenseRadius, out DistanceToEnemy);
         if (target != null)
         {
             Util.RotateToward(transform, target.transform.position, false, 0);
-            if (DistanceToEnemy > ClawRadius)
+            if (DistanceToEnemy > AttackRadius)
             {
                 yield return StartCoroutine(RushTo(target.transform,0.3f));
             }
@@ -387,17 +328,6 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
 	}
 #endregion
 
-    /// <summary>
-    /// Crossfade PreAttack, accumluating power to perform a powerful strike!
-    /// </summary>
-    void StrikePowerUp()
-    {
-        string preattackAnim = (PredatorPlayerStatus.IsMoving) ? PreAttackAnimation_Mixed : PreAttackAnimation;
-        strikePower = Mathf.Clamp((strikePower + (MaxStrikePower / PowerAccelerationTime) * Time.deltaTime), 0, MaxStrikePower);
-        //Debug.Log("Strike power:" + strikePower);
-        animation.CrossFade(preattackAnim);
-    }
-
 
     /// <summary>
     /// Rush to a target, in %time%
@@ -409,7 +339,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
     {
         Vector3 direction = target.position - transform.position;
         Vector3 position = target.position;
-		float distance = Util.DistanceOfCharacters(this.gameObject, target.gameObject) - ClawRadius +0.8f;
+		float distance = Util.DistanceOfCharacters(this.gameObject, target.gameObject) - AttackRadius +0.8f;
         float _start = Time.time;
         Vector3 velocity = direction.normalized *( distance / time);
         predatorStatus.DisableUserMovement = true;
@@ -442,7 +372,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
             yield return new WaitForSeconds(lagTime);
         }
         float distance = Util.DistanceOfCharacters(enemy, this.gameObject);
-        if (distance <= ClawRadius)
+        if (distance <= AttackRadius)
         {
             if (enemy == null)
             {
@@ -462,10 +392,9 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
         }
     }
 
-
     public bool IsPlayingAttack()
     {
-        foreach (string attackAni in FullAttackAnimation)
+        foreach (string attackAni in PredatorPlayerUnit.AttackAnimations)
         {
             if (animation.IsPlaying(attackAni))
                 return true;
@@ -545,13 +474,5 @@ public class Predator3rdPersonalAttackController : MonoBehaviour {
             distance = Util.DistanceOfCharacters(gameObject, enemy);
         }
         return enemy;
-    }
-
-    void OnDrawGizmosSelected ()
-    {
-        Gizmos.color = Color.white;
-        Gizmos.DrawWireSphere(transform.position, ClawRadius);
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, OffenseRadiusNear);
     }
 }

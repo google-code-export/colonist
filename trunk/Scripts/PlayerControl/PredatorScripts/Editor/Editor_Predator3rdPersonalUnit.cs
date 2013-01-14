@@ -10,7 +10,14 @@ public class Editor_Predator3rdPersonalUnit : Editor
 	bool UseBaseInspector, UseAdvancedInspector;
 	bool EnableEditIdleData = false, EnableEditComboCombatData = false, EnableEditAttackData = false,
          EnableEditMoveData = false, EnableEditEffectData = false, EnableEditJumpData = false,
-	     EnableEditReceiveDamageData = false, EnableEditDecalData = false, EnableEditDeathData = false;
+	     EnableEditReceiveDamageData = false, EnableEditDecalData = false, EnableEditDeathData = false,
+	     EnableEditAttackAnimation = false;
+	bool EnableEditDefaultTapCombat = false, EnableEditDefaultSliceCombat = false;
+	static IDictionary<ComboCombat,bool> DynamicEditingComboCombatSwitch = new Dictionary<ComboCombat,bool> ();
+	
+	public Editor_Predator3rdPersonalUnit ()
+	{
+	}
 	
 	public override void OnInspectorGUI ()
 	{
@@ -46,10 +53,31 @@ public class Editor_Predator3rdPersonalUnit : Editor
 			if (EnableEditAttackData = EditorGUILayout.BeginToggleGroup ("---Edit attack variables", EnableEditAttackData)) {
 				PlayerPredatorUnit.AttackRadius = EditorGUILayout.FloatField ("Attack radius:", PlayerPredatorUnit.AttackRadius);
 				PlayerPredatorUnit.AttackAnimationLayer = EditorGUILayout.IntField ("Attack animation layer:", PlayerPredatorUnit.AttackAnimationLayer);
-				PlayerPredatorUnit.CombatCooldown = EditorGUILayout.FloatField ("common combat cooldown:", PlayerPredatorUnit.CombatCooldown);
-				PlayerPredatorUnit.AttackAnimations = EditorCommon.EditStringArray ("All attack animation:",
+				PlayerPredatorUnit.CombatCoolDown = EditorGUILayout.FloatField ("common combat cooldown:", PlayerPredatorUnit.CombatCoolDown);
+				//Edit attack animation array
+				if (EnableEditAttackAnimation = EditorGUILayout.BeginToggleGroup ("    ----- Edit attack animation string array ----", EnableEditAttackAnimation)) {
+					PlayerPredatorUnit.AttackAnimations = EditorCommon.EditStringArray ("All attack animation:",
 				                                                                    PlayerPredatorUnit.AttackAnimations,
 				                                                                    EditorCommon.GetAnimationNames (PlayerPredatorUnit.gameObject));
+				}
+				EditorGUILayout.EndToggleGroup ();
+
+				//Edit default combat - tap
+				if(EnableEditDefaultTapCombat = EditorGUILayout.BeginToggleGroup ("  ---Edit default combat : Tap", EnableEditDefaultTapCombat)) {
+				PlayerPredatorUnit.DefaultCombat_Tap = Editor_Predator3rdPersonalUnit.EditCombat (
+					                                                                 "Edit default tap combat:",
+					                                                                 PlayerPredatorUnit,
+					                                                                 PlayerPredatorUnit.DefaultCombat_Tap);
+				}
+				EditorGUILayout.EndToggleGroup();
+				
+				//Edit default combat - slice
+				if(EnableEditDefaultSliceCombat = EditorGUILayout.BeginToggleGroup ("  ---Edit default combat : Slice", EnableEditDefaultSliceCombat)) {
+				PlayerPredatorUnit.DefaultCombat_Slice = Editor_Predator3rdPersonalUnit.EditCombat (
+					"Edit default slice combat:", PlayerPredatorUnit, PlayerPredatorUnit.DefaultCombat_Slice);
+				}
+				EditorGUILayout.EndToggleGroup();
+				
 				//Edit ComboCombat Data
 				if (EnableEditComboCombatData = EditorGUILayout.BeginToggleGroup ("    ---Edit ComboCombat Data---", EnableEditComboCombatData)) {
 					PlayerPredatorUnit.ComboCombat = Editor_Predator3rdPersonalUnit.EditComboCombatData (
@@ -63,7 +91,7 @@ public class Editor_Predator3rdPersonalUnit : Editor
 
 			//Edit Effect Data
 			if (EnableEditEffectData = EditorGUILayout.BeginToggleGroup ("---Edit Effect Data---", EnableEditEffectData)) {
-  				PlayerPredatorUnit.EffectData = EditPlayerEffectDataArray (PlayerPredatorUnit.gameObject,
+				PlayerPredatorUnit.EffectData = EditPlayerEffectDataArray (PlayerPredatorUnit.gameObject,
 					                                                      PlayerPredatorUnit.EffectData);
 
 			}
@@ -81,18 +109,49 @@ public class Editor_Predator3rdPersonalUnit : Editor
 		}
 		for (int i=0; i<ComboCombatArray.Length; i++) {
 			ComboCombat ComboCombat = ComboCombatArray [i];
-			ComboCombat.comboName = EditorGUILayout.TextField ("Combo combat name:", ComboCombat.comboName);
-			ComboCombat.combat = EditCombatData (Unit, ComboCombat.combat);
-
-			if (GUILayout.Button ("Delete combo combat:" + ComboCombat.comboName)) {
-				ComboCombatArray = Util.CloneExcept<ComboCombat> (ComboCombatArray, ComboCombat);
+			
+			if (DynamicEditingComboCombatSwitch.ContainsKey (ComboCombat) == false) {
+				DynamicEditingComboCombatSwitch [ComboCombat] = false;
 			}
+			if (DynamicEditingComboCombatSwitch [ComboCombat] = EditorGUILayout.BeginToggleGroup (new GUIContent ("      ------- Edit combo combat:" + ComboCombat.comboName, ""),
+				       DynamicEditingComboCombatSwitch [ComboCombat])) {
+			
+				ComboCombat.comboName = EditorGUILayout.TextField ("Combo combat name:", ComboCombat.comboName);
+				ComboCombat.combat = EditCombatDataArray (Unit, ComboCombat.combat);
+
+				if (GUILayout.Button ("Delete combo combat:" + ComboCombat.comboName)) {
+					ComboCombatArray = Util.CloneExcept<ComboCombat> (ComboCombatArray, ComboCombat);
+				}
+			}
+			EditorGUILayout.EndToggleGroup ();
 			EditorGUILayout.Space ();
 		}
 		return ComboCombatArray;
 	}
 	
-	public static Combat[] EditCombatData (Predator3rdPersonalUnit Unit, 
+	public static Combat EditCombat (string label,
+		                            Predator3rdPersonalUnit Unit, 
+		                            Combat Combat)
+	{
+		EditorGUILayout.LabelField (label);
+		Combat.name = EditorGUILayout.TextField ("Combat name:", Combat.name);
+		Combat.damageForm = (DamageForm)EditorGUILayout.EnumPopup ("DamageForm:", Combat.damageForm);
+		Combat.gestureType = (GestureType)EditorGUILayout.EnumPopup (new GUIContent ("Gesture:", "The matched gesture trigger this combat?"), Combat.gestureType);
+		
+		EditorGUILayout.BeginHorizontal ();
+		Combat.WaitUntilAnimationReturn = EditorGUILayout.Toggle ("Pend for animation", Combat.WaitUntilAnimationReturn);
+		Combat.BlockPlayerInput = EditorGUILayout.Toggle ("Block player input", Combat.BlockPlayerInput);
+		EditorGUILayout.EndHorizontal ();
+		
+		Combat.HitPoint = EditorGUILayout.FloatField ("Hit point:", Combat.HitPoint);
+		Combat.specialCombatFunction = EditorGUILayout.TextField ("Special function:", Combat.specialCombatFunction);
+		Combat.specialAnimation = EditorCommon.EditStringArray ("Combat animation:",
+				                                                Combat.specialAnimation,
+				                                                EditorCommon.GetAnimationNames (Unit.gameObject));
+		return Combat;
+	}
+	
+	public static Combat[] EditCombatDataArray (Predator3rdPersonalUnit Unit, 
 		                                          Combat[] CombatArray)
 	{
 		if (GUILayout.Button ("Add Combat")) {
@@ -102,21 +161,7 @@ public class Editor_Predator3rdPersonalUnit : Editor
 		if (CombatArray != null) {
 			for (int i=0; i<CombatArray.Length; i++) {
 				Combat Combat = CombatArray [i];
-				EditorGUILayout.LabelField ("---------- Combat:" + Combat.name + "------------");
-				Combat.name = EditorGUILayout.TextField ("Combat name:", Combat.name);
-				Combat.damageForm = (DamageForm)EditorGUILayout.EnumPopup ("DamageForm:", Combat.damageForm);
-				Combat.gestureType = (GestureType)EditorGUILayout.EnumPopup (new GUIContent ("Gesture:", "The matched gesture trigger this combat?"), Combat.gestureType);
-				EditorGUILayout.BeginHorizontal ();
-	
-				Combat.WaitUntilAnimationReturn = EditorGUILayout.Toggle ("Pend for animation", Combat.WaitUntilAnimationReturn);
-				Combat.BlockPlayerInput = EditorGUILayout.Toggle ("Block player input", Combat.BlockPlayerInput);
-			
-				EditorGUILayout.EndHorizontal ();
-				Combat.HitPoint = EditorGUILayout.FloatField ("Hit point:", Combat.HitPoint);
-				Combat.specialCombatFunction = EditorGUILayout.TextField ("Special function:", Combat.specialCombatFunction);
-				Combat.specialAnimation = EditorCommon.EditStringArray ("Combat animation:",
-				                                                   Combat.specialAnimation,
-				                                                   EditorCommon.GetAnimationNames (Unit.gameObject));
+				Combat = EditCombat ("--- Edit combat:" + Combat.name, Unit, Combat);
 				if (GUILayout.Button ("Delete combat:" + Combat.name)) {
 					CombatArray = Util.CloneExcept<Combat> (CombatArray, Combat);
 				}
@@ -147,7 +192,7 @@ public class Editor_Predator3rdPersonalUnit : Editor
 		return jumpData;
 	}
 	
-	public static PlayerEffectData[] EditPlayerEffectDataArray ( GameObject gameObject,
+	public static PlayerEffectData[] EditPlayerEffectDataArray (GameObject gameObject,
 		                                                       PlayerEffectData[] PlayerEffectDataArray)
 	{
 		if (GUILayout.Button ("Add Effect data")) {
@@ -158,15 +203,14 @@ public class Editor_Predator3rdPersonalUnit : Editor
 			PlayerEffectData EffectData = PlayerEffectDataArray [i];
 			EditorGUILayout.LabelField ("------------------------ " + EffectData.Name);
 			EffectData.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), EffectData.Name);
-			EffectData.DamageForm = (DamageForm)EditorGUILayout.EnumPopup("Damage form:", EffectData.DamageForm );
+			EffectData.DamageForm = (DamageForm)EditorGUILayout.EnumPopup ("Damage form:", EffectData.DamageForm);
 			EffectData.UseGlobalEffect = EditorGUILayout.Toggle (new GUIContent ("Use global effect?", "是否使用全局Effect?"), EffectData.UseGlobalEffect);
 			
-			if(EffectData.PlayParticle = EditorGUILayout.BeginToggleGroup (new GUIContent ("Play local particle object?", ""), EffectData.PlayParticle))
-			{
-				EffectData.particlesystem = (ParticleSystem)EditorCommon.EditPopupOfTypeInChildren("Assign a particle object to play:",
-					EffectData.particlesystem , gameObject, typeof(ParticleSystem));
+			if (EffectData.PlayParticle = EditorGUILayout.BeginToggleGroup (new GUIContent ("Play local particle object?", ""), EffectData.PlayParticle)) {
+				EffectData.particlesystem = (ParticleSystem)EditorCommon.EditPopupOfTypeInChildren ("Assign a particle object to play:",
+					EffectData.particlesystem, gameObject, typeof(ParticleSystem));
 			}
-			EditorGUILayout.EndToggleGroup();
+			EditorGUILayout.EndToggleGroup ();
 			
 			if (EffectData.UseGlobalEffect) {
 				EffectData.GlobalType = (GlobalEffectType)EditorGUILayout.EnumPopup (new GUIContent ("Global effect type", "是全局Effect类型"),
