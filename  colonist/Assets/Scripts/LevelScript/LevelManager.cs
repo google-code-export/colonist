@@ -9,7 +9,7 @@ using System.Collections.Generic;
 public class LevelManager : MonoBehaviour {
 
     public static LevelManager Instance;
-
+	public LayerMask GroundLayer;
     public ScenEventListener EventListener;
 	public Transform ControlDirectionPivot;
 
