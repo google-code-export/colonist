@@ -339,7 +339,7 @@ public class AISoldier :AI {
         Debug.Log("Last hit wall time frame:" + lastHitWallTime + " " + Time.frameCount);
     }
 
-    public override void StopAI()
+    public override IEnumerator StopAI()
     {
         base.StopAI();
         StopAllCoroutines();
@@ -350,6 +350,7 @@ public class AISoldier :AI {
         controller.enabled = false;
         //Remove this monobeheavior
         //Destroy(this);
+        yield break;
     }
 
     void OnCollisionStay(Collision collisionInfo) 
