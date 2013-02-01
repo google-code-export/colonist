@@ -68,13 +68,14 @@ public class Projectile : MonoBehaviour {
 
     [HideInInspector]
     public DamageParameter DamageParameter;
-#endregion
 
     protected Vector3 StartPosition = Vector3.zero;
     /// <summary>
     /// Used in MovementMode = StarightForward.
     /// </summary>
     protected bool HitSomething = false;
+    protected GameObject HitObject = null;
+#endregion
 
     void Awake()
     {
@@ -146,9 +147,9 @@ public class Projectile : MonoBehaviour {
         switch (this.AttackType)
         {
             case ProjectileAttackType.SingleTarget:
-                if (Target != null)
+                if (HitSomething == true && HitObject != null)
                 {
-                    Target.SendMessage("ApplyDamage", DamageParameter);
+                    HitObject.SendMessage("ApplyDamage", DamageParameter);
                 }
                 break;
             case ProjectileAttackType.Explosion:
@@ -303,11 +304,11 @@ public class Projectile : MonoBehaviour {
 
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log("OnTriggerEnter Hit with:" + other.gameObject.name);
+        //Debug.Log("OnTriggerEnter Hit with:" + other.gameObject.name);
         HitSomething = true;
         if (Util.CheckLayerWithinMask(other.gameObject.layer, this.AttackableLayer))
         {
-            Target = other.gameObject;
+            HitObject = other.gameObject;
         }
     }
 
@@ -317,7 +318,7 @@ public class Projectile : MonoBehaviour {
         HitSomething = true;
         if (Util.CheckLayerWithinMask(other.gameObject.layer, this.AttackableLayer))
         {
-            Target = other.gameObject;
+            HitObject = other.gameObject;
         }
     }
 }
