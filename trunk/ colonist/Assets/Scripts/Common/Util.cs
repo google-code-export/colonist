@@ -77,6 +77,25 @@ public class Util : MonoBehaviour {
         return ret;
     }
 
+    /// <summary>
+    /// Check if src contains chk
+    /// </summary>
+    /// <returns></returns>
+    public static bool ArrayContains<T>(T[] src, T chk)
+    {
+        if (src != null && src.Length > 0)
+        {
+            foreach (T e in src)
+            {
+                if (e.Equals(chk))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 	public static void CloneArray<T>(T[] src, T[] dst)
 	{
 		for(int i=0;i<src.Length;i++)
@@ -216,14 +235,7 @@ public class Util : MonoBehaviour {
 
     public static Transform GetTopestParent(Transform transform)
     {
-        if (transform.parent != null)
-        {
-            return GetTopestParent(transform.parent);
-        }
-        else
-        {
-            return transform;
-        }
+        return transform.root;
     }
 
     public static Collider findClosest(Vector3 pos, IList<Collider> colliders)
