@@ -85,12 +85,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler{
 
     void Awake()
     {
-        seeker = GetComponent<Seeker>();
-        this.Unit = GetComponent<Unit>();
-        controller = GetComponent<CharacterController>();
         InitAI();
-        InitUnit();
-        StartAStarPathfind();
     }
 
     void Start()
@@ -124,8 +119,14 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler{
     /// Offspring should call InitAI() at Awake() 
     /// 3. Start RefreshCanSeeTarget() daemon coroutine
     /// </summary>
-    public void InitAI()
+    public virtual void InitAI()
     {
+        seeker = GetComponent<Seeker>();
+        this.Unit = GetComponent<Unit>();
+        controller = GetComponent<CharacterController>();
+        InitUnit();
+        StartAStarPathfind();
+
         LevelManager.RegisterAI(this);
         //Put the behavior into a sort list first, which sort the beheavior priority from lower to higher 
         SortedList<int,AIBehavior> tempList = new SortedList<int,AIBehavior>();
@@ -138,6 +139,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler{
         {
             BehaviorList_SortedPriority.Add(tempList.Values[i]);
         }
+        
     }
 
     /// <summary>
