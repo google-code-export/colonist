@@ -10,6 +10,8 @@ public interface I_AIBehaviorHandler {
 
     IEnumerator StopAI();
 
+    IEnumerator InitAI();
+
     /// <summary>
     /// Determine if the behavior can be executed.
     /// </summary>
