@@ -89,13 +89,13 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler{
         this.Unit = GetComponent<Unit>();
         controller = GetComponent<CharacterController>();
         InitAI();
+        InitUnit();
         StartAStarPathfind();
     }
 
     void Start()
     {
-        InitUnit();
-        StartCoroutine("AlterBehavior", AlterBehaviorInterval);
+        StartAI();
     }
 
     void Update()
@@ -110,6 +110,11 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler{
     {
         //Refresh CurrentTarget in every Time.fixDeltaTime seconds
         FindTarget(DetectiveRange);
+    }
+
+    public virtual void StartAI()
+    {
+        StartCoroutine("AlterBehavior", AlterBehaviorInterval);
     }
 
 #region initialization
@@ -1062,7 +1067,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler{
                     //scan enemy inside the HitTestDistance range:
                     foreach (Collider c in Physics.OverlapSphere(transform.position, attackData.HitTestDistance, Unit.EnemyLayer))
                     {
-                        StartCoroutine(SendHitmessage(CurrentTarget.gameObject, attackData));
+                        StartCoroutine(SendHitmessage(c.gameObject, attackData));
                     }
                     break;
                 default:

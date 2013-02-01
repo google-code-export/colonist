@@ -4,9 +4,11 @@ using System.Collections;
 public interface I_AIBehaviorHandler {
 
     /// <summary>
-    /// ALter current behavior at every %ScanBehaviorInterval% seconds
+    /// AI birth function
     /// </summary>
-    IEnumerator AlterBehavior(float ScanBehaviorInterval);
+    IEnumerator StartAI();
+
+    IEnumerator StopAI();
 
     /// <summary>
     /// Determine if the behavior can be executed.
