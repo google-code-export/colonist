@@ -9,34 +9,31 @@
 // correct overall FPS even if the interval renders something like
 // 5.5 frames.
 
-@script RequireComponent (GUIText)
+//@script RequireComponent (GUIText)
   
 var updateInterval = 0.5;
  
 private var accum = 0.0; // FPS accumulated over the interval
 private var frames = 0; // Frames drawn over the interval
 private var timeleft : float; // Left time for current interval
-
-
+private var textPos : Vector2 = Vector2();
+private var fps ="";
 function Awake()
 {
 }
 
 function Start()
 {
-	if( !guiText )
-	{
-		print ("FramesPerSecond needs a GUIText component!");
-		enabled = false;
-		return; 
-	}
 	timeleft = updateInterval;	
 }
 
 function FixedUpdate ()
 {
-	guiText.pixelOffset.x = -Screen.width/2;
-	guiText.pixelOffset.y = Screen.height/2;
+textPos = Vector2(0,0);
+//textPos.x = -Screen.width/2;
+//textPos.y = -Screen.height/2;
+	//guiText.pixelOffset.x = -Screen.width/2;
+	//guiText.pixelOffset.y = Screen.height/2;
 }
  
 function Update()
@@ -49,11 +46,17 @@ function Update()
 	if( timeleft <= 0.0 )
 	{
 		// display two fractional digits (f2 format)
-		guiText.text = "FPS:" + (accum/frames).ToString("f2");
+		//guiText.text = "FPS:" + (accum/frames).ToString("f2");
+		fps = "FPS:" + (accum/frames).ToString("f2");
 		timeleft = updateInterval;
 		accum = 0.0;
 		frames = 0;
 	} 
 }
 
-@script RequireComponent (GUIText) 
+function OnGUI()
+{
+    GUI.Label(Rect(textPos.x, textPos.y, 80,30), fps);
+}
+
+//@script RequireComponent (GUIText) 
