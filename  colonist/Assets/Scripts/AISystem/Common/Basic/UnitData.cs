@@ -29,6 +29,12 @@ public class MoveData : UnitAnimationData
     public bool CanRotate = true;
     public bool SmoothRotate = true;
     public float RotateAngularSpeed = 30;
+	
+	/// <summary>
+	/// The redirect target position interval.
+	/// This variable is only used in Attack behavior.
+	/// </summary>
+	public float RedirectTargetInterval = 0.15f;
 }
 
 /// <summary>
@@ -37,7 +43,15 @@ public class MoveData : UnitAnimationData
 [System.Serializable]
 public class RotateData : UnitAnimationData
 {
+	/// <summary>
+	/// The smooth rotate angular speed.
+	/// </summary>
     public float RotateAngularSpeed = 10;
+	/// <summary>
+	/// The rotate animation is played only PlayRotateAnimation = true
+	/// </summary>
+	public bool PlayRotateAnimation;
+	
 }
 
 
@@ -47,7 +61,16 @@ public class RotateData : UnitAnimationData
 [System.Serializable]
 public class IdleData : UnitAnimationData
 {
-
+	/// <summary>
+	/// If KeepFacingTarget = true, character will fact to current target during Idle.
+	/// </summary>
+	public bool KeepFacingTarget = true;
+	/// <summary>
+	/// if KeepFacingTarget = true, should the character rotate to facing target smoothly? If true, then the 
+	/// RotateDataName MUST be assigned.
+	/// </summary>
+	public bool SmoothRotate = false;
+	public string RotateDataName = "";
 }
 
 /// <summary>
@@ -207,12 +230,17 @@ public class AttackData : UnitAnimationData
     public Collider HitTestCollider;
 
     /// <summary>
-    /// Used when HitTestType = CollisionTest or DistanceTest.
+    /// Used when HitTestType = CollisionTest or DistanceTest, or AngleTest, or DistanceAndAngleTest
     /// When HitTestType = CollisionTest, HitTestDistance determines the scan enemy range.
-    /// When HitTestType = DistanceTest, HitTestDistance determine if the hit message should be sent to CurrentTarget.
+    /// When HitTestType = DistanceTest|AngleTest|DistanceAndAngleTest, HitTestDistance determine if the hit message should be sent to CurrentTarget.
     /// </summary>
     public float HitTestDistance = 3;
-
+	
+	/// <summary>
+	/// The hit test angular discrepancy.
+	/// </summary>
+	public float HitTestAngularDiscrepancy = 10;
+	
     /// <summary>
     /// When target distance lesser than AttackableRange, begin attack.
     /// </summary>
@@ -261,9 +289,14 @@ public class AttackData : UnitAnimationData
         return new DamageParameter(DamageSource, this.DamageForm, DamagePointBase + Random.Range(MinDamageBonus, MaxDamageBonus));
     }
 }
+
+/// <summary>
+/// One audio data can contains more than one audio clip, randomly select one when playing. 
+/// </summary>
 [System.Serializable]
 public class AudioData
 {
-    public string Name;
-    public AudioClip audioClip;
+    public string Name = "";
+    public AudioClip[] audioClip = new AudioClip[]{};
 }
+

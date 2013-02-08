@@ -34,7 +34,13 @@ public class Unit : UnitBase
     /// </summary>
     public EffectData[] EffectData = new EffectData[] { };
     public System.Collections.Generic.IDictionary<string, EffectData> EffectDataDict = new System.Collections.Generic.Dictionary<string, EffectData>();
-
+	
+	/// <summary>
+	/// Defines the rotate data of the unit
+	/// </summary>
+    public RotateData[] RotateData = new RotateData[] { };
+	public System.Collections.Generic.IDictionary<string, RotateData> RotateDataDict = new System.Collections.Generic.Dictionary<string, RotateData>();
+	
     /// <summary>
     /// There must be at least one ReceiveDamageData with DamageForm = Common, as the default receive damage data.
     /// </summary>
@@ -61,11 +67,12 @@ public class Unit : UnitBase
 
     public AudioData[] AudioData = new AudioData[] { };
 
-    void Awake()
+    public virtual void Awake()
     {
         InitUnit();
+		InitAnimation();
     }
-
+	
     /// <summary>
     /// Call InitUnit at Monobehavior.Awake().
     /// Put the MoveData/IdleData/AttakData in dictionary.
@@ -91,7 +98,6 @@ public class Unit : UnitBase
         {
             foreach (IdleData idleData in IdleData)
             {
-                Debug.Log("Adding IdleData:" + idleData.Name);
                 IdleDataDict.Add(idleData.Name, idleData);
             }
         }
@@ -102,6 +108,13 @@ public class Unit : UnitBase
                 EffectDataDict.Add(effectData.Name, effectData);
             }
         }
+		if(RotateData != null)
+		{
+            foreach (RotateData rotateData in RotateData)
+            {
+                RotateDataDict.Add(rotateData.Name, rotateData);
+            }
+		}
         if (ReceiveDamageData != null)
         {
             foreach (ReceiveDamageData receiveDamageData in ReceiveDamageData)
@@ -144,6 +157,35 @@ public class Unit : UnitBase
             }
         }
     }
+	
+    public void InitAnimation()
+	{
+        //Initialize the animation data:
+        foreach (UnitAnimationData data in IdleData)
+        {
+            animation[data.AnimationName].layer = data.AnimationLayer;
+            animation[data.AnimationName].wrapMode = data.AnimationWrapMode;
+            animation[data.AnimationName].speed = data.AnimationSpeed;
+        }
+        foreach (UnitAnimationData data in MoveData)
+        {
+            animation[data.AnimationName].layer = data.AnimationLayer;
+            animation[data.AnimationName].wrapMode = data.AnimationWrapMode;
+            animation[data.AnimationName].speed = data.AnimationSpeed;
+        }
+        foreach (UnitAnimationData data in AttackData)
+        {
+            animation[data.AnimationName].layer = data.AnimationLayer;
+            animation[data.AnimationName].wrapMode = data.AnimationWrapMode;
+            animation[data.AnimationName].speed = data.AnimationSpeed;
+        }
+		foreach(RotateData data in RotateData)
+		{
+            animation[data.AnimationName].layer = data.AnimationLayer;
+            animation[data.AnimationName].wrapMode = data.AnimationWrapMode;
+            animation[data.AnimationName].speed = data.AnimationSpeed;
+		}
+	}
 	
 	#region implement UnitHealth interface
     public override void SetCurrentHP(float value)

@@ -36,6 +36,12 @@ public class ConditionData
     /// Used only when ConditionType = Boolean, and BooleanCondition = CurrentTargetInLayer
     /// </summary>
     public LayerMask LayerMaskForComparision;
+	
+	/// <summary>
+	/// The string value.
+	/// Used when ConditionType = Boolean, and BooleanCondition = LatestBehaviorName
+	/// </summary>
+	public string StringValue = "";
 }
 
 [System.Serializable]
@@ -64,7 +70,7 @@ public class AIBehavior
     /// When two beheavior simultaneity matches condition, higher priority get executed first.
     /// </summary>
     public int Priority = 0;
-
+	
     public SelectTargetRule SelectTargetRule = SelectTargetRule.Default;
 
 #region variables for Start and End Condition
@@ -128,4 +134,7 @@ public class AIBehavior
     /// </summary>
     [HideInInspector]
     public float LastExecutionTime = 0;
+	
+	[HideInInspector]
+	public float StartTime = 0;
 }
