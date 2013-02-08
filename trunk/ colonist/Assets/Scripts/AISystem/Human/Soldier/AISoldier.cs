@@ -83,7 +83,7 @@ public class AISoldier :AI {
         animation[WalkBackwardAnimation].RemoveMixingTransform(Spine1);
     }
 
-    void Awake()
+    public override void Awake()
     {
         controller = GetComponent<CharacterController>();
         InitAnimation();
@@ -91,12 +91,13 @@ public class AISoldier :AI {
     }
 
 	// Use this for initialization
-	IEnumerator Start () {
-        if (StartWaypoint != null)
-        {
-            yield return StartCoroutine(WayPoint.AutoRoute(this, StartWaypoint, controller, MovementSpeed, WalkAnimation ));
-        }
+	public override void Start () {
+//        if (StartWaypoint != null)
+//        {
+//            yield return StartCoroutine(WayPoint.AutoRoute(this, StartWaypoint, controller, MovementSpeed, WalkAnimation ));
+//        }
         SendMessage("SearchAndKill");
+		
 	}
 
     void SetStartWaypoint(WayPoint wp)
@@ -105,7 +106,7 @@ public class AISoldier :AI {
     }
 	
 	// Update is called once per frame
-	void Update () {
+	public override void Update () {
         if (this.CurrentTarget != null && IsAnimatingAttack())
         {
             Util.RotateToward(transform, CurrentTarget.position, false, 0);
@@ -124,7 +125,7 @@ public class AISoldier :AI {
         }
 	}
 
-    void FixedUpdate()
+    public override void FixedUpdate()
     {
         CalculateFallbackParameter();
         if (HitWallTimeLength >= 1f)

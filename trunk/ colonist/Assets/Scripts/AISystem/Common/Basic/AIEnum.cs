@@ -14,28 +14,33 @@ public enum AIBehaviorType
     /// MoveAtDirection - move to a direction
     /// </summary>
     MoveAtDirection = 2,
-
+	
+	/// <summary>
+	/// Move to current target.
+	/// </summary>
+	MoveToCurrentTarget = 3,
+	
     /// <summary>
     /// Attack - find attackable target and start attacking
     /// </summary>
-    Attack = 3,
+    Attack = 4,
     /// <summary>
     /// Assault to a position.
     /// During the way to position, if AI meet a target, AI should turn to attack the target
     /// </summary>
-    AttackToPosition = 4,
+    AttackToPosition = 5,
 
     /// <summary>
     /// Assualt to direction.
     /// Move to a direction, if AI meet a target, AI should turn to attack the target.
     /// </summary>
-    AttackToDirection = 5,
+    AttackToDirection = 6,
 
     /// <summary>
     /// Holds in a position without leaving.
     /// In holding mode, AI attack enemy in sight. But not tracking the enemy.
     /// </summary>
-    HoldPosition = 6
+    HoldPosition = 7
     #endregion
 }
 
@@ -127,9 +132,19 @@ public enum HitTestType
     CollisionTest = 2,
 
     /// <summary>
-    /// If the target to AI distance within the HitTestDistance
+    /// If the target to AI distance within the HitTestDistance.
     /// </summary>
     DistanceTest = 3,
+	
+	/// <summary>
+	/// If the target to AI.transform.forward angular discrepancy within the HitTestAngle
+	/// </summary>
+	AngleTest = 4,
+	
+	/// <summary>
+	/// Combination of DistanceTest and AngleTest
+	/// </summary>
+	DistanceAndAngleTest = 5,
 }
 
 
@@ -211,7 +226,12 @@ public enum AIBooleanConditionEnum
     /// Is there any enemy in specified area ?
     /// </summary>
     EnemyInArea = 5,
-    
+	
+	/// <summary>
+	/// The latest running behavior's name is/is not %string value%
+	/// </summary>
+	LatestBehaviorNameIs = 6,
+   
 #endregion
 }
 
@@ -252,6 +272,11 @@ public enum AIValueComparisionCondition
     /// A random float value between 0 - 100
     /// </summary>
     RandomValue = 7,
+	
+    /// <summary>
+	/// How long has the behavior being executed
+	/// </summary>
+	BehaveTime = 8,
 
 #endregion
 }

@@ -1,109 +1,98 @@
-﻿using UnityEngine;
 using UnityEditor;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class AIEditor : EditorWindow
-{
-
-	[MenuItem("Component/AI/AIEditor")]	
-	public static void EditAI ()
-	{
-		EditorWindow.GetWindow (typeof(AIEditor));
-	}
-
+public class AIEditor {
+	
 	AI AI;
 	bool EnableEditUnit = false, EnableEditIdleData = false, EnableEditAttackData = false,
          EnableEditMoveData = false, EnableEditEffectData = false, EnableEditReceiveDamageData = false,
          EnableEditDecalData = false, EnableEditDeathData = false, EnableEditAIBehavior = false;
-	float MainWindowWidth, MainWindowHeight;
-	Vector2 ScrollPosition = Vector2.zero;
-
-	void OnGUI ()
+	
+	IDictionary<string, bool> AIBehaviorEnableEditFlags = new Dictionary<string,bool> ();
+	
+	public AIEditor(AI AI)
 	{
-		MainWindowWidth = position.width;
-		MainWindowHeight = position.height;
-		GameObject selectedGameObject = Selection.activeGameObject;
-		if (selectedGameObject == null) {
-			Debug.LogWarning ("No gameObject is selected.");
-			return;
-		}
-		//Attach AI script button
-		if (selectedGameObject.GetComponent<AI> () == null) {
-			Rect newAIScriptButton = new Rect (0, 0, MainWindowWidth - 10, 30);
-			if (GUI.Button (newAIScriptButton, "Attach AI script")) {
-				selectedGameObject.AddComponent<AI> ();
-			}
-			return;
-		}
-
+		this.AI = AI;
+	}
+	
+	public void Dispose()
+	{
+		//When close the window, reset all variables
+		EnableEditUnit = false;
+		EnableEditIdleData = false;
+		EnableEditAttackData = false;
+		EnableEditMoveData = false;
+		EnableEditEffectData = false;
+		EnableEditReceiveDamageData = false;
+		EnableEditDecalData = false;
+		EnableEditDeathData = false;
+		EnableEditAIBehavior = false;
+		AIBehaviorEnableEditFlags.Clear ();
+	}
+	
+	public void EditUnitAndAI()
+	{
 		if (GUILayout.Button ("Save object")) {
 			EditorUtility.SetDirty (AI);
 		}
-
-		AI = selectedGameObject.GetComponent<AI> ();
+		
 		if (AI.Unit == null) {
 			AI.Unit = AI.GetComponent<Unit> ();
 		}
-		ScrollPosition = EditorGUILayout.BeginScrollView (ScrollPosition, false, true, null);
+		
 #region Edit Unit
 		EnableEditUnit = EditorGUILayout.BeginToggleGroup ("Edit Unit", EnableEditUnit);
 		if (EnableEditUnit) {
 			//EditBasicUnitProperty ();
-			AI.Unit = (Unit)EditorCommon.EditBasicUnitProperty(AI.Unit);
+			AI.Unit = (Unit)EditorCommon.EditBasicUnitProperty (AI.Unit);
 			//Edit Idle Data 
-			if(EnableEditIdleData = EditorGUILayout.BeginToggleGroup ("---Edit Idle Data", EnableEditIdleData))
-			{
-			   AI.Unit.IdleData = EditorCommon.EditIdleDataArray(AI.Unit.gameObject,
+			if (EnableEditIdleData = EditorGUILayout.BeginToggleGroup ("---Edit Idle Data", EnableEditIdleData)) {
+				AI.Unit.IdleData = EditorCommon.EditIdleDataArray (AI.Unit.gameObject,
 				                                              AI.Unit.IdleData);
 			}
-			EditorGUILayout.EndToggleGroup();
+			EditorGUILayout.EndToggleGroup ();
 			
 			//Edit Move Data 
-			if(EnableEditMoveData = EditorGUILayout.BeginToggleGroup ("---Edit Move Data", EnableEditMoveData))
-			{
-			   AI.Unit.MoveData = EditorCommon.EditMoveDataArray(AI.Unit.gameObject,
+			if (EnableEditMoveData = EditorGUILayout.BeginToggleGroup ("---Edit Move Data", EnableEditMoveData)) {
+				AI.Unit.MoveData = EditorCommon.EditMoveDataArray (AI.Unit.gameObject,
 				                                              AI.Unit.MoveData);
 			}
-			EditorGUILayout.EndToggleGroup();
+			EditorGUILayout.EndToggleGroup ();
 
 			//Edit attack data
-			if(EnableEditAttackData = EditorGUILayout.BeginToggleGroup ("---Edit Attack Data---", EnableEditAttackData))
-			{
-			   AI.Unit.AttackData = EditorCommon.EditAttackData(AI.Unit,
+			if (EnableEditAttackData = EditorGUILayout.BeginToggleGroup ("---Edit Attack Data---", EnableEditAttackData)) {
+				AI.Unit.AttackData = EditorCommon.EditAttackDataArray (AI.Unit,
 				                                                AI.Unit.AttackData);
 			}
-			EditorGUILayout.EndToggleGroup();
+			EditorGUILayout.EndToggleGroup ();
 
 			//Edit Effect Data
-			if(EnableEditEffectData = EditorGUILayout.BeginToggleGroup ("---Edit Effect Data---", EnableEditEffectData))
-			{
-			   AI.Unit.EffectData = EditorCommon.EditEffectData(AI.Unit.EffectData);
+			if (EnableEditEffectData = EditorGUILayout.BeginToggleGroup ("---Edit Effect Data---", EnableEditEffectData)) {
+				AI.Unit.EffectData = EditorCommon.EditEffectData (AI.Unit.EffectData);
 			}
-			EditorGUILayout.EndToggleGroup();
+			EditorGUILayout.EndToggleGroup ();
 			
 			//Edit Decal data
-			if(EnableEditDecalData = EditorGUILayout.BeginToggleGroup ("---Edit Decal Data---", EnableEditDecalData))
-			{
-				 AI.Unit.DecalData = EditorCommon.EditDecalData(AI.Unit.DecalData);
+			if (EnableEditDecalData = EditorGUILayout.BeginToggleGroup ("---Edit Decal Data---", EnableEditDecalData)) {
+				AI.Unit.DecalData = EditorCommon.EditDecalData (AI.Unit.DecalData);
 			}
-			EditorGUILayout.EndToggleGroup();
+			EditorGUILayout.EndToggleGroup ();
 			//Edit receive damage data:
-			if(EnableEditReceiveDamageData = EditorGUILayout.BeginToggleGroup ("---Edit ReceiveDamage Data---", EnableEditReceiveDamageData))
-			{
-			   AI.Unit.ReceiveDamageData = EditorCommon.EditReceiveDamageData(AI.Unit,
+			if (EnableEditReceiveDamageData = EditorGUILayout.BeginToggleGroup ("---Edit ReceiveDamage Data---", EnableEditReceiveDamageData)) {
+				AI.Unit.ReceiveDamageData = EditorCommon.EditReceiveDamageData (AI.Unit,
 				                                                              AI.Unit.ReceiveDamageData);
 			}
-			EditorGUILayout.EndToggleGroup();
+			EditorGUILayout.EndToggleGroup ();
 			
 
 			//Edit death data
-			if(EnableEditDeathData = EditorGUILayout.BeginToggleGroup ("---Edit Death Data---", EnableEditDeathData))
-			{
-			   AI.Unit.DeathData = EditorCommon.EditDeathData(AI.Unit, AI.Unit.DeathData);
+			if (EnableEditDeathData = EditorGUILayout.BeginToggleGroup ("---Edit Death Data---", EnableEditDeathData)) {
+				AI.Unit.DeathData = EditorCommon.EditDeathData (AI.Unit, AI.Unit.DeathData);
 			}
-			EditorGUILayout.EndToggleGroup();
+			EditorGUILayout.EndToggleGroup ();
 		}
 		EditorGUILayout.EndToggleGroup ();
         #endregion
@@ -111,7 +100,7 @@ public class AIEditor : EditorWindow
 #region Edit AI
 		EnableEditAIBehavior = EditorGUILayout.BeginToggleGroup ("Edit AI", EnableEditAIBehavior);
 		if (EnableEditAIBehavior) {
-			EditBaseAIProperty ();
+			EditBaseAIProperty (AI);
 			EditorGUILayout.LabelField ("-------------------------Edit AI behavior---------------");
 			if (GUILayout.Button ("Add new AI behavior")) {
 				AIBehavior AIBehavior = new AIBehavior ();
@@ -126,14 +115,15 @@ public class AIEditor : EditorWindow
 		}
 		EditorGUILayout.EndToggleGroup ();
 #endregion
-		EditorGUILayout.EndScrollView ();
+		
 	}
-
+	
     #region Edit AI Behavior property
 
-	public virtual void EditBaseAIProperty ()
+	public virtual void EditBaseAIProperty (AI AI)
 	{
 		EditorGUILayout.LabelField (new GUIContent ("------------- AI Base property", ""));
+		AI.Name = EditorGUILayout.TextField (new GUIContent ("AI Name", "Name of this AI component."), AI.Name);
 		AI.OffensiveRange = EditorGUILayout.FloatField (new GUIContent ("AI Offensive range", "当敌人进入Offsensive range, AI会主动发起进攻."), AI.OffensiveRange);
 		AI.DetectiveRange = EditorGUILayout.FloatField (new GUIContent ("AI Detective range", "当敌人进入Detective range, AI会监测到这个敌人.DetectiveRange应该大于Offensive Range."), AI.DetectiveRange);
 		AI.DetectiveRange = AI.DetectiveRange >= AI.OffensiveRange ? AI.DetectiveRange : AI.OffensiveRange;
@@ -142,35 +132,44 @@ public class AIEditor : EditorWindow
 		AI.AttackObstacle = EditorGUILayoutx.LayerMaskField ("", AI.AttackObstacle);
 		EditorGUILayout.EndHorizontal ();
 		AI.AlterBehaviorInterval = EditorGUILayout.FloatField (new GUIContent ("Behavior alternation time",
-            "AIÐÐÎªÂÖÌæÖÜÆÚ,²»ÍÆŒöÐÞžÄÕâžöÖµ."), AI.AlterBehaviorInterval);
+            "Interval to alter behavior."), AI.AlterBehaviorInterval);
 	}
 
 	public virtual void EditAIBehavior (AIBehavior behavior)
 	{
-		EditorGUILayout.LabelField (new GUIContent ("------------- Edit AI Behavior: " + behavior.Name + " ----------------------", ""));
 		behavior.Name = EditorGUILayout.TextField (new GUIContent ("Behavior Name:", ""), behavior.Name);
-		behavior.Type = (AIBehaviorType)EditorGUILayout.EnumPopup (new GUIContent ("Behavior type:", ""), behavior.Type);
-		behavior.Priority = EditorGUILayout.IntField (new GUIContent ("Priority:", " 行为优先级,每个行为必须有独立的优先级,优先级不能冲突."), behavior.Priority);
-		if (AI.Behaviors.Where (x => x.Priority == behavior.Priority).Count () > 1) {
-			EditorGUILayout.LabelField (new GUIContent ("!!! You can not have more than one behavior in priority:" + behavior.Priority));
+		
+		if (AIBehaviorEnableEditFlags.ContainsKey (behavior.Name) == false) {
+			AIBehaviorEnableEditFlags [behavior.Name] = false;
 		}
-		behavior.SelectTargetRule = (SelectTargetRule)EditorGUILayout.EnumPopup (new GUIContent ("Select enemy rule:", "当这个行为生效的时候,选择敌人的规则, 默认是Closest,也就是选择最近的敌人做为当前目标."), behavior.SelectTargetRule);
-		//Edit behavior data
-		EditAIBehaviorData (behavior);
+		AIBehaviorEnableEditFlags [behavior.Name] = EditorGUILayout.BeginToggleGroup (new GUIContent ("------------- Edit AI Behavior: " + behavior.Name + " ----------------------", ""), AIBehaviorEnableEditFlags [behavior.Name]);
+		
+		if (AIBehaviorEnableEditFlags [behavior.Name]) {
+			behavior.Type = (AIBehaviorType)EditorGUILayout.EnumPopup (new GUIContent ("Behavior type:", ""), behavior.Type);
+			behavior.Priority = EditorGUILayout.IntField (new GUIContent ("Priority:", " 行为优先级,每个行为必须有独立的优先级,优先级不能冲突."), behavior.Priority);
+			if (AI.Behaviors.Where (x => x.Priority == behavior.Priority).Count () > 1) {
+				EditorGUILayout.LabelField (new GUIContent ("!!! You can not have more than one behavior in priority:" + behavior.Priority));
+			}
+			behavior.SelectTargetRule = (SelectTargetRule)EditorGUILayout.EnumPopup (new GUIContent ("Select enemy rule:", "当这个行为生效的时候,选择敌人的规则, 默认是Closest,也就是选择最近的敌人做为当前目标."), behavior.SelectTargetRule);
+			//Edit behavior data
+			EditAIBehaviorData (behavior);
 
-		//Edit Start condition
-		EditorGUILayout.LabelField (new GUIContent (" --- Edit Start Condition of behavior - " + behavior.Name, ""));
-		EditAIBehaviorCondition (behavior, behavior.StartCondition);
+			//Edit Start condition
+			EditorGUILayout.LabelField (new GUIContent (" --- Edit Start Condition of behavior - " + behavior.Name, ""));
+			EditAIBehaviorCondition (behavior, behavior.StartCondition);
+			EditorGUILayout.Space ();
+
+			//Edit End condition
+			EditorGUILayout.LabelField (new GUIContent (" --- Edit End Condition of behavior - " + behavior.Name, ""));
+			EditAIBehaviorCondition (behavior, behavior.EndCondition);
+			if (GUILayout.Button ("Delete " + behavior.Type.ToString () + " behavior: " + behavior.Name)) {
+				IList<AIBehavior> l = AI.Behaviors.ToList<AIBehavior> ();
+				l.Remove (behavior);
+				AI.Behaviors = l.ToArray<AIBehavior> ();
+			}
+		}
+		EditorGUILayout.EndToggleGroup ();
 		EditorGUILayout.Space ();
-
-		//Edit End condition
-		EditorGUILayout.LabelField (new GUIContent (" --- Edit End Condition of behavior - " + behavior.Name, ""));
-		EditAIBehaviorCondition (behavior, behavior.EndCondition);
-		if (GUILayout.Button ("Delete " + behavior.Type.ToString () + " behavior: " + behavior.Name)) {
-			IList<AIBehavior> l = AI.Behaviors.ToList<AIBehavior> ();
-			l.Remove (behavior);
-			AI.Behaviors = l.ToArray<AIBehavior> ();
-		}
 		EditorGUILayout.Space ();
 	}
 
@@ -212,6 +211,15 @@ public class AIEditor : EditorWindow
 				behavior.IsWorldDirection = EditorGUILayout.Toggle (new GUIContent ("Is world direction?", "Move at Direction 指定的方向,是世界方向还是局部方向?"), behavior.IsWorldDirection);
 			}
 			break;
+		case AIBehaviorType.MoveToCurrentTarget:
+			if (MoveDataName == null || MoveDataName.Length == 0) {
+				EditorGUILayout.LabelField ("!!!There is no Move Data defined in this Unit!!!");
+			} else {
+				idx = IndexOfArray<string> (MoveDataName, behavior.MoveDataName);
+				idx = EditorGUILayout.Popup ("Use Move data:", idx, MoveDataName);
+				behavior.MoveDataName = MoveDataName [idx];
+			}
+			break;
 		case AIBehaviorType.Attack:
 		case AIBehaviorType.AttackToPosition:
 		case AIBehaviorType.AttackToDirection:
@@ -224,11 +232,11 @@ public class AIEditor : EditorWindow
 				EditorGUILayout.LabelField ("!!!There is no Move Data defined in this Unit!!!");
 				return;
 			}
-                //Attack Data:
+            //Attack Data:
 			idx = IndexOfArray<string> (AttackDataName, behavior.AttackDataName);
 			idx = EditorGUILayout.Popup ("Attack data:", idx, AttackDataName);
 			behavior.AttackDataName = AttackDataName [idx];
-                // Move data:
+            // Move data:
 			idx = IndexOfArray<string> (MoveDataName, behavior.MoveDataName);
 			idx = EditorGUILayout.Popup ("Move data:", idx, MoveDataName);
 			behavior.MoveDataName = MoveDataName [idx];
@@ -239,10 +247,10 @@ public class AIEditor : EditorWindow
 			}
 			if (behavior.Type == AIBehaviorType.AttackToDirection) {
 				behavior.MoveDirection = EditorGUILayout.Vector3Field ("Move at direction", behavior.MoveDirection);
-				behavior.IsWorldDirection = EditorGUILayout.Toggle (new GUIContent ("Is world direction?", "Move at Direction Öž¶šµÄ·œÏò,ÊÇÊÀœç·œÏò»¹ÊÇŸÖ²¿·œÏò?"), behavior.IsWorldDirection);
+				behavior.IsWorldDirection = EditorGUILayout.Toggle (new GUIContent ("Is world direction?", "Move at Direction in world space or local space?"), behavior.IsWorldDirection);
 			}
 			if (behavior.Type == AIBehaviorType.HoldPosition) {
-				behavior.HoldRadius = EditorGUILayout.FloatField (new GUIContent ("Hold Position:", "ŒáÊØÕóµØµÄ·¶Î§"), behavior.HoldRadius);
+				behavior.HoldRadius = EditorGUILayout.FloatField (new GUIContent ("Hold Position:", "The position transform."), behavior.HoldRadius);
 			}
 			break;
 		}
@@ -297,6 +305,12 @@ public class AIEditor : EditorWindow
 		case AIBooleanConditionEnum.InArea:
 			EditorGUILayout.LabelField (new GUIContent ("Use inspector to assign Area !", "AIEditor 暂不支持编辑这个字段."));
 			break;
+		case AIBooleanConditionEnum.LatestBehaviorNameIs:
+			string[] AllBehaviorName = AI.Behaviors.Select (x => x.Name).ToArray ();
+			ConditionData.StringValue = EditorCommon.EditPopup ("behavior name:", ConditionData.StringValue
+				, AllBehaviorName);
+			
+			break;
 		}
 		EditorGUILayout.EndHorizontal ();
 	}
@@ -308,6 +322,7 @@ public class AIEditor : EditorWindow
 		ConditionData.ValueOperator = (ValueComparisionOperator)EditorGUILayout.EnumPopup (ConditionData.ValueOperator);
 		switch (ConditionData.ValueComparisionCondition) {
 		case AIValueComparisionCondition.BehaviorLastExecutionInterval:
+		case AIValueComparisionCondition.BehaveTime:
 		case AIValueComparisionCondition.CurrentTagetDistance:
 		case AIValueComparisionCondition.FarestEnemyDistance:
 		case AIValueComparisionCondition.NearestEnemyDistance:
