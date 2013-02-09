@@ -8,7 +8,8 @@ public class AIEditor {
 	
 	public AI AI;
 	bool EnableEditUnit = false, EnableEditIdleData = false, EnableEditAttackData = false,
-         EnableEditMoveData = false, EnableEditEffectData = false, EnableEditReceiveDamageData = false,
+         EnableEditMoveData = false, EnableEditEffectData = false, 
+	     EnableEditReceiveDamageData = false,EnableEditRotateData = false,
          EnableEditDecalData = false, EnableEditDeathData = false, EnableEditAIBehavior = false;
 	
 	IDictionary<string, bool> AIBehaviorEnableEditFlags = new Dictionary<string,bool> ();
@@ -51,6 +52,13 @@ public class AIEditor {
 			}
 			EditorGUILayout.EndToggleGroup ();
 			
+			//Edit rotate data
+			if(EnableEditRotateData = EditorGUILayout.BeginToggleGroup ("---Edit Rotate Data", EnableEditRotateData)) {
+				AI.Unit.RotateData = EditorCommon.EditRotateDataArray (AI.Unit.gameObject,
+				                                              AI.Unit.RotateData);
+			}
+			EditorGUILayout.EndToggleGroup ();
+			
 			//Edit Move Data 
 			if (EnableEditMoveData = EditorGUILayout.BeginToggleGroup ("---Edit Move Data", EnableEditMoveData)) {
 				AI.Unit.MoveData = EditorCommon.EditMoveDataArray (AI.Unit.gameObject,
@@ -64,6 +72,8 @@ public class AIEditor {
 				                                                AI.Unit.AttackData);
 			}
 			EditorGUILayout.EndToggleGroup ();
+			
+			
 
 			//Edit Effect Data
 			if (EnableEditEffectData = EditorGUILayout.BeginToggleGroup ("---Edit Effect Data---", EnableEditEffectData)) {
@@ -107,6 +117,7 @@ public class AIEditor {
 				l.Add (AIBehavior);
 				AI.Behaviors = l.ToArray<AIBehavior> ();
 			}
+			AI.Behaviors = AI.Behaviors.OrderBy(x=>x.Priority).ToArray();
 			for (int i = 0; i < AI.Behaviors.Length; i++) {
 				AIBehavior behavior = AI.Behaviors [i];
 				EditAIBehavior (behavior);
@@ -316,7 +327,13 @@ public class AIEditor {
 			string[] AllBehaviorName = AI.Behaviors.Select (x => x.Name).ToArray ();
 			ConditionData.StringValue = EditorCommon.EditPopup ("behavior name:", ConditionData.StringValue
 				, AllBehaviorName);
-			
+			break;
+		case AIBooleanConditionEnum.LastestBehaviorNameIsOneOf:
+			AllBehaviorName = AI.Behaviors.Select (x => x.Name).ToArray ();
+			EditorGUILayout.BeginVertical();
+			ConditionData.StringValueArray = EditorCommon.EditStringArray ("behavior name:", ConditionData.StringValueArray
+				, AllBehaviorName);
+			EditorGUILayout.EndVertical();
 			break;
 		}
 		EditorGUILayout.EndHorizontal ();

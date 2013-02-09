@@ -41,17 +41,25 @@ public class MoveData : UnitAnimationData
 /// The class wrap rotate data.
 /// </summary>
 [System.Serializable]
-public class RotateData : UnitAnimationData
+public class RotateData
 {
+	
+    public string Name = string.Empty;
+    public int AnimationLayer = 0;
+    public string RotateLeftAnimationName = string.Empty;
+	public string RotateRightAnimationName = string.Empty;
+    public WrapMode AnimationWrapMode = WrapMode.Default;
+    public float AnimationSpeed = 1;
+	
 	/// <summary>
 	/// The smooth rotate angular speed.
 	/// </summary>
     public float RotateAngularSpeed = 10;
-	/// <summary>
-	/// The rotate animation is played only PlayRotateAnimation = true
-	/// </summary>
-	public bool PlayRotateAnimation;
 	
+	/// <summary>
+	/// Only rotate to face target when forward direction and face to target direction's angle distance > AngleDistanceToStartRotate
+	/// </summary>
+	public float AngleDistanceToStartRotate = 3;
 }
 
 

@@ -50,6 +50,14 @@ public class AIEditorWindow : EditorWindow
 			  AIEditor_List.Add(new AIEditor(ai));
 		   }
 		}
+
+		if (GUILayout.Button ("Save object")) {
+			foreach(AIEditor aiEditor in AIEditor_List){
+				EditorUtility.SetDirty (aiEditor.AI.Unit);
+			   EditorUtility.SetDirty (aiEditor.AI);
+			}
+		}
+		
 		ScrollPosition = EditorGUILayout.BeginScrollView (ScrollPosition, false, true, null);
 		AIEditor_List[0].EditUnit();
 		foreach(AIEditor aiEditor in AIEditor_List)

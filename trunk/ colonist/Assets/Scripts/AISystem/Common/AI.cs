@@ -344,11 +344,11 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// <returns></returns>
     public virtual bool CanSeeTarget(GameObject Target, float MaxRange)
     {
-        if (Util.DistanceOfCharacters(gameObject, Target.gameObject) > MaxRange)
+        if (Target==null || Util.DistanceOfCharacters(gameObject, Target.gameObject) > MaxRange)
         {
             return false;
         }
-        if (Physics.Linecast(transform.position, CurrentTarget.position, AttackObstacle))
+        if (Target==null || Physics.Linecast(transform.position, CurrentTarget.position, AttackObstacle))
         {
             return false;
         }
@@ -468,7 +468,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 
 #region A* pathfind navigation functions - thanks to A* pathfinding team
 
-    Transform MoveToTarget; // the target where A* should navigate to
+    Transform NaivgateToTarget; // the target where A* should navigate to
     Path AStarPath; //the A* path calculated out
     bool AllowNavigate; //only navigate when AllowNavigate = true
     float LastPathingTime = 0; //last time of requesting pathing calculation
@@ -519,7 +519,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                     AStarPath = null;
                     AllowNavigate = false;
                     AutoRefreshPath = false;
-                    MoveToTarget = null;
+                    NaivgateToTarget = null;
                     NavigationMoveData = null;
                 }
                 continue;
@@ -536,7 +536,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     {
         while (true)
         {
-            if (AutoRefreshPath == false || MoveToTarget == null)
+            if (AutoRefreshPath == false || NaivgateToTarget == null)
             {
                 yield return null;
                 continue;
@@ -545,24 +545,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
             //Refresh path at every %RefreshPathInterval% seconds
             if ((Time.time - LastPathingTime) >= RefreshPathInterval)
             {
-                //Request AStar pathfind only when there's obstacle
-                if (CanSeeTarget(MoveToTarget.gameObject, 99999))
-                {
-                    AStarPath = new Path();
-                    AStarPath.vectorPath = new Vector3[2] { transform.position, MoveToTarget.position };
-                    AllowNavigate = true;
-                    CurrentPathNodeIndex = 0;
-                }
-                else
-                {
-					try{
-                       seeker.StartPath(transform.position, MoveToTarget.position, OnAStarPathComplete);
-					}
-					catch(System.Exception exc)
-					{
-						Debug.LogError(exc.Message);
-					}
-                }
+                FindPath(NaivgateToTarget);
                 LastPathingTime = Time.time;
             }
             yield return null;
@@ -580,7 +563,35 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         CurrentPathNodeIndex = 0;
         LastPathingTime = Time.time;
     }
-
+	
+	/// <summary>
+	/// Finds the path to Target.
+	/// If the Target is unseenable, require AStar Pathfind
+	/// Else if the target is seeable, build vector path directly.
+	/// </summary>
+	public void FindPath(Transform Target)
+	{
+		//Only require A* pathfind when the current target can't be seen
+		if(CanSeeTarget(Target.gameObject,999) == false)
+		{
+			try{
+	           seeker.StartPath(transform.position, Target.position, OnAStarPathComplete);
+			}
+			catch(System.Exception exc)
+			{
+//				Debug.LogError(exc.Message);
+			}
+		}
+		//the target is seeable, assign 
+		else 
+		{
+			AStarPath = new Path();
+			AStarPath.vectorPath = new Vector3[2] { transform.position, Target.position };
+			AllowNavigate = true;
+			CurrentPathNodeIndex = 0;
+		}
+	}
+	
     /// <summary>
     /// Call this routine to start navigation.
     /// Target - the target navigate to
@@ -591,16 +602,10 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// <param name="IsMovingTarget"></param>
     public void StartNavigation(Transform target, bool IsMovingTarget, MoveData MoveData)
     {
-		try{
-           seeker.StartPath(transform.position, target.position, OnAStarPathComplete);
-		}
-		catch(System.Exception exc)
-		{
-			//Debug.LogError(exc.Message);
-		}
+		FindPath(target);
         //If IsMovingTarget = false, means the target is static, no need to auto refresh path
         AutoRefreshPath = IsMovingTarget;
-        MoveToTarget = target;
+        NaivgateToTarget = target;
         NavigationMoveData = MoveData;
     }
 
@@ -612,7 +617,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         AStarPath = null;
         AllowNavigate = false;
         AutoRefreshPath = false;
-        MoveToTarget = null;
+        NaivgateToTarget = null;
         CurrentPathNodeIndex = 0;
     }
 
@@ -774,7 +779,9 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 		    case AIBooleanConditionEnum.LatestBehaviorNameIs:
 			    LeftValue = (AIBehaviorCondition.StringValue == this.CurrentBehavior.Name);
 			    break;
-			
+		case AIBooleanConditionEnum.LastestBehaviorNameIsOneOf:
+			    LeftValue = Util.ArrayContains<string>(AIBehaviorCondition.StringValueArray, this.CurrentBehavior.Name);
+			    break;
             default:
                 Debug.LogError("GameObject:" + this.gameObject.name + " - Unsupported boolean condition:" + AIBehaviorCondition.BooleanCondition.ToString());
                 break;
@@ -932,7 +939,13 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 					if(_IdleData.SmoothRotate)
 					{
 						RotateData rotateData = Unit.RotateDataDict[_IdleData.RotateDataName];
-						Util.RotateToward(transform, LookAtPosition, true, rotateData.RotateAngularSpeed);
+						//Calculate angle distance of forward direction and face to target direction.
+					    Vector3 toTargetDir = CurrentTarget.position - transform.position;
+						Vector3 faceDir = transform.forward;
+						if(Vector3.Angle(toTargetDir, faceDir) >= rotateData.AngleDistanceToStartRotate)
+						{
+						   Util.RotateToward(transform, LookAtPosition, true, rotateData.RotateAngularSpeed);
+						}
 					}
 					else 
 					{
@@ -1031,6 +1044,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
             }
 			if((Time.time - lastNavigationTime)>=refreshNavigationInterval)
 			{
+			   animation.CrossFade( MoveData.AnimationName);
 			   StartNavigation(CurrentTarget, true, MoveData);
 			   lastNavigationTime = Time.time;
 			}
@@ -1049,7 +1063,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 	{
         StopNavigation();
         MoveData MoveData = Unit.MoveDataDict[behavior.MoveDataName];
-        animation.Stop(MoveData.AnimationName);
+        //animation.Stop(MoveData.AnimationName);
         StopCoroutine("Start_MoveToCurrentTarget");
         yield return null;
 	}
