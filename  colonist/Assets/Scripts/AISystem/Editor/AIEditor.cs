@@ -6,7 +6,7 @@ using System.Linq;
 
 public class AIEditor {
 	
-	AI AI;
+	public AI AI;
 	bool EnableEditUnit = false, EnableEditIdleData = false, EnableEditAttackData = false,
          EnableEditMoveData = false, EnableEditEffectData = false, EnableEditReceiveDamageData = false,
          EnableEditDecalData = false, EnableEditDeathData = false, EnableEditAIBehavior = false;
@@ -33,18 +33,14 @@ public class AIEditor {
 		AIBehaviorEnableEditFlags.Clear ();
 	}
 	
-	public void EditUnitAndAI()
+	public void EditUnit()
 	{
-		if (GUILayout.Button ("Save object")) {
-			EditorUtility.SetDirty (AI);
-		}
-		
 		if (AI.Unit == null) {
 			AI.Unit = AI.GetComponent<Unit> ();
 		}
 		
 #region Edit Unit
-		EnableEditUnit = EditorGUILayout.BeginToggleGroup ("Edit Unit", EnableEditUnit);
+		EnableEditUnit = EditorGUILayout.BeginToggleGroup ("Edit Unit : " + AI.Unit.Name, EnableEditUnit);
 		if (EnableEditUnit) {
 			//EditBasicUnitProperty ();
 			AI.Unit = (Unit)EditorCommon.EditBasicUnitProperty (AI.Unit);
@@ -95,10 +91,13 @@ public class AIEditor {
 			EditorGUILayout.EndToggleGroup ();
 		}
 		EditorGUILayout.EndToggleGroup ();
-        #endregion
-        
+#endregion
+	}
+	
+	public void EditAI()
+	{
 #region Edit AI
-		EnableEditAIBehavior = EditorGUILayout.BeginToggleGroup ("Edit AI", EnableEditAIBehavior);
+		EnableEditAIBehavior = EditorGUILayout.BeginToggleGroup ("Edit AI : " + AI.Name, EnableEditAIBehavior);
 		if (EnableEditAIBehavior) {
 			EditBaseAIProperty (AI);
 			EditorGUILayout.LabelField ("-------------------------Edit AI behavior---------------");
@@ -115,7 +114,15 @@ public class AIEditor {
 		}
 		EditorGUILayout.EndToggleGroup ();
 #endregion
-		
+	}
+	
+	public void EditUnitAndAI()
+	{
+		if (GUILayout.Button ("Save object")) {
+			EditorUtility.SetDirty (AI);
+		}
+        EditUnit();
+		EditAI();
 	}
 	
     #region Edit AI Behavior property
