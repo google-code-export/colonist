@@ -56,10 +56,61 @@ public class EditorCommon
 			AnimationData.AnimationName = array [index];
 			EditorGUILayout.LabelField (new GUIContent ("Animation length: " + gameObject.animation [AnimationData.AnimationName].length + " seconds.", "动画时长"));
 		}
-		AnimationData.AnimationLayer = EditorGUILayout.IntField (new GUIContent ("Animation Layer", "在此编辑这个Idle动画的层"), AnimationData.AnimationLayer);
-		AnimationData.AnimationSpeed = EditorGUILayout.FloatField (new GUIContent ("Animation Speed", "在此编辑这个Idle动画的播放速度"), AnimationData.AnimationSpeed);
-		AnimationData.AnimationWrapMode = (WrapMode)EditorGUILayout.EnumPopup (new GUIContent ("WrapMode:", "动画的WrapMode"), AnimationData.AnimationWrapMode);
+		AnimationData.AnimationLayer = EditorGUILayout.IntField (new GUIContent ("Animation Layer", ""), AnimationData.AnimationLayer);
+		AnimationData.AnimationSpeed = EditorGUILayout.FloatField (new GUIContent ("Animation Speed", ""), AnimationData.AnimationSpeed);
+		AnimationData.AnimationWrapMode = (WrapMode)EditorGUILayout.EnumPopup (new GUIContent ("WrapMode:", ""), AnimationData.AnimationWrapMode);
 		return AnimationData;
+	}
+	
+	public static RotateData[] EditRotateDataArray (GameObject gameObject,
+		                                        RotateData[] RotateDataArray)
+	{
+		if (GUILayout.Button ("Add Rotate data")) {
+			RotateData RotateData = new RotateData ();
+			IList<RotateData> l = RotateDataArray.ToList<RotateData> ();
+			l.Add (RotateData);
+			RotateDataArray = l.ToArray<RotateData> ();
+		}
+		for (int i = 0; i <RotateDataArray.Length; i++) {
+			RotateData RotateData = RotateDataArray [i];
+			EditorGUILayout.Space ();
+			GUILayout.Label ("-------- Edit Rotate Data--");
+			RotateData.Name = EditorGUILayout.TextField (new GUIContent ("Name:", ""), RotateData.Name);
+			
+			int RotateLeftAnimationIndex = 0, RotateRightAnimationIndex = 0;
+			
+			string []array_left = GetAnimationNames(gameObject,RotateData.RotateLeftAnimationName, out RotateLeftAnimationIndex);
+			RotateLeftAnimationIndex = EditorGUILayout.Popup ("Rotate Left Animation:", RotateLeftAnimationIndex, array_left);
+			if(RotateLeftAnimationIndex >= 0)
+			{
+				RotateData.RotateLeftAnimationName = array_left[RotateLeftAnimationIndex];
+		        EditorGUILayout.LabelField (new GUIContent ("Animation length: " + gameObject.animation [RotateData.RotateLeftAnimationName].length + " seconds.", ""));
+			}
+			
+			string []array_right = GetAnimationNames(gameObject,RotateData.RotateRightAnimationName, out RotateRightAnimationIndex);
+			RotateRightAnimationIndex = EditorGUILayout.Popup ("Rotate Right Animation:", RotateRightAnimationIndex, array_right);
+			if(RotateRightAnimationIndex >= 0)
+			{
+				RotateData.RotateRightAnimationName = array_right[RotateRightAnimationIndex];
+		        EditorGUILayout.LabelField (new GUIContent ("Animation length: " + gameObject.animation [RotateData.RotateRightAnimationName].length + " seconds.", ""));
+			}
+			
+			RotateData.AnimationLayer = EditorGUILayout.IntField (new GUIContent ("Animation Layer", ""), RotateData.AnimationLayer);
+			RotateData.AnimationSpeed = EditorGUILayout.FloatField (new GUIContent ("Animation Speed", ""), RotateData.AnimationSpeed);
+			RotateData.AnimationWrapMode = (WrapMode)EditorGUILayout.EnumPopup (new GUIContent ("WrapMode:", ""), RotateData.AnimationWrapMode);
+			
+			RotateData.RotateAngularSpeed = EditorGUILayout.FloatField (new GUIContent ("Rotate angular speed", ""), RotateData.RotateAngularSpeed);
+			RotateData.AngleDistanceToStartRotate = EditorGUILayout.FloatField (
+				new GUIContent ("Angle distance to rotate:", "Only rotate to face target when forward direction and face to target direction's angle distance > AngleDistanceToStartRotate"), 
+				RotateData.AngleDistanceToStartRotate);
+			//Delete this data
+			if (GUILayout.Button ("Delete " + RotateData.Name)) {
+				RotateDataArray = Util.CloneExcept<RotateData> (RotateDataArray, RotateData);
+			}
+			EditorGUILayout.Space ();
+		}
+		return RotateDataArray;
+		
 	}
 	
 	/// <summary>
@@ -85,7 +136,17 @@ public class EditorCommon
 			EditBasicAnimationData (gameObject, 
 			                        string.Format (" ---------------------- {0}", IdleData.Name), 
 			                        IdleData as UnitAnimationData);
-
+			IdleData.KeepFacingTarget = EditorGUILayout.Toggle (new GUIContent ("Keep facing target:", ""), IdleData.KeepFacingTarget);
+			IdleData.SmoothRotate = EditorGUILayout.Toggle (new GUIContent ("Smooth rotate to facing target?", ""), IdleData.SmoothRotate);
+			if (IdleData.SmoothRotate) {
+				Unit unit = gameObject.GetComponent<Unit> ();
+				if (unit.RotateData.Length > 0) {
+					string[] rotateDataNameArray = unit.RotateData.Select (x => x.Name).ToArray ();
+					IdleData.RotateDataName = EditorCommon.EditPopup ("Choose a rotate data name:", IdleData.RotateDataName, rotateDataNameArray);
+				} else {
+					EditorGUILayout.LabelField ("Warning! There is no rotate data defined in this unit!");
+				}
+			}
 			//Delete this data
 			if (GUILayout.Button ("Delete " + IdleData.Name)) {
 				IdleDataArray = Util.CloneExcept<IdleData> (IdleDataArray, IdleData);
@@ -115,21 +176,11 @@ public class EditorCommon
 			MoveDataArray = Util.AddToArray<MoveData> (MoveData, MoveDataArray);
 		}
 		for (int i = 0; i < MoveDataArray.Length; i++) {
-			MoveData MoveData = MoveDataArray [i];
-			EditBasicAnimationData (gameObject,
-				                string.Format (" ---------------------- {0}", MoveData.Name), 
-				                MoveData as UnitAnimationData);
-			MoveData.MoveSpeed = EditorGUILayout.FloatField (new GUIContent ("Speed:", "单位移动速度"), MoveData.MoveSpeed);
-			MoveData.CanRotate = EditorGUILayout.Toggle (new GUIContent ("CanRotate:", "单位移动的时候,是否朝向前进方向"), MoveData.CanRotate);
-			if (MoveData.CanRotate) {
-				MoveData.SmoothRotate = EditorGUILayout.Toggle (new GUIContent ("SmoothRotate:", "单位移动转向的时候,是否用角速度自动平滑转向动作."), MoveData.SmoothRotate);
-				if (MoveData.SmoothRotate) {
-					MoveData.RotateAngularSpeed = EditorGUILayout.FloatField (new GUIContent ("Angular Speed:", "单位旋转角速度"), MoveData.RotateAngularSpeed);
-				}
-			}
+			MoveData _MoveData = MoveDataArray [i];
+			_MoveData = EditorCommon.EditMoveData (gameObject, _MoveData);
 			//Delete this move data
-			if (GUILayout.Button ("Delete " + MoveData.Name)) {
-				MoveDataArray = Util.CloneExcept<MoveData> (MoveDataArray, MoveData);
+			if (GUILayout.Button ("Delete " + _MoveData.Name)) {
+				MoveDataArray = Util.CloneExcept<MoveData> (MoveDataArray, _MoveData);
 			}
 		}
 		return MoveDataArray;
@@ -149,13 +200,14 @@ public class EditorCommon
 				MoveData.RotateAngularSpeed = EditorGUILayout.FloatField (new GUIContent ("Angular Speed:", "单位旋转角速度"), MoveData.RotateAngularSpeed);
 			}
 		}
+		MoveData.RedirectTargetInterval = EditorGUILayout.FloatField (new GUIContent ("Redirect target time interval:", "Only used in attack behavior. The time interval to redirect target position."), MoveData.RedirectTargetInterval);
 		return MoveData;
 	}
 	
 	/// <summary>
 	/// Edits the attack data.
 	/// </summary>
-	public static AttackData[] EditAttackData (Unit unit,
+	public static AttackData[] EditAttackDataArray (Unit unit,
 		                                  AttackData[] AttackDataArray)
 	{
 		if (GUILayout.Button ("Add Attack data")) {
@@ -200,6 +252,13 @@ public class EditorCommon
 					break;
 				case HitTestType.DistanceTest:
 					AttackData.HitTestDistance = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Distance:", "命中校验距离: "), AttackData.HitTestDistance);
+					break;
+				case HitTestType.AngleTest:
+					AttackData.HitTestAngularDiscrepancy = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Angular Distance:", "命中校验角差值范围: "), AttackData.HitTestAngularDiscrepancy);
+					break;
+				case HitTestType.DistanceAndAngleTest:
+					AttackData.HitTestDistance = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Distance:", "命中校验距离: "), AttackData.HitTestDistance);
+					AttackData.HitTestAngularDiscrepancy = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Angular Distance:", "命中校验角差值范围: "), AttackData.HitTestAngularDiscrepancy);
 					break;
 				default:
 					break;
@@ -393,7 +452,10 @@ public class EditorCommon
 		index = AnimationList.IndexOf (CurrentAnimationName);
 		return AnimationList.ToArray<string> ();
 	}
-
+	
+	/// <summary>
+	/// Return all animation state names in string array.
+	/// </summary>
 	public static string[] GetAnimationNames (GameObject gameObject)
 	{
 		IList<string> AnimationList = new List<string> ();
@@ -422,25 +484,51 @@ public class EditorCommon
 		return index;
 	}
 
-	public static Object[] EditObjectArray (string label, Object[] Array)
+	public static Object[] EditObjectArray (string label, Object[] OrigArray)
 	{
 		EditorGUILayout.LabelField (label);
-		Object[] newArray = Array;
+		Object[] newArray = OrigArray;
 		if (GUILayout.Button ("Add new object element")) {
-			Object element = new Object ();
-			newArray = Util.AddToArray<Object> (element, newArray);
+			//Object element = new Object ();
+			//newArray = Util.AddToArray<Object> (element, newArray);
+			newArray = Util.ExpandArray<Object> (OrigArray, 1);
 		}
-
-		for (int i = 0; i < Array.Length; i++) {
-			EditorGUILayout.BeginHorizontal ();
-			Object element = Array [i];
-			element = EditorGUILayout.ObjectField (element, typeof(Object));
-			if (GUILayout.Button ("Remove")) {
-				newArray = Util.CloneExcept<Object> (newArray, i);
-				break;
+		if (newArray != null && newArray.Length > 0) {
+			for (int i = 0; i < newArray.Length; i++) {
+				EditorGUILayout.BeginHorizontal ();
+				Object element = newArray [i];
+				element = EditorGUILayout.ObjectField (element, typeof(Object));
+				if (GUILayout.Button ("Remove")) {
+					newArray = Util.CloneExcept<Object> (newArray, i);
+					break;
+				}
+				newArray [i] = element;
+				EditorGUILayout.EndHorizontal ();
 			}
-			Array [i] = element;
-			EditorGUILayout.EndHorizontal ();
+		}
+		return newArray;
+	}
+	
+	public static AudioClip[] EditAudioClipArray (string label, AudioClip[] clipArray)
+	{
+		EditorGUILayout.LabelField (label);
+		AudioClip[] newArray = clipArray;
+		if (GUILayout.Button ("Add new audio clip element")) {
+			AudioClip element = null;
+			newArray = Util.AddToArray<AudioClip> (element, newArray);
+		}
+		if (newArray != null && newArray.Length > 0) {
+			for (int i = 0; i < newArray.Length; i++) {
+				EditorGUILayout.BeginHorizontal ();
+				AudioClip element = newArray [i];
+				element = (AudioClip)EditorGUILayout.ObjectField (element, typeof(AudioClip));
+				if (GUILayout.Button ("Remove")) {
+					newArray = Util.CloneExcept<AudioClip> (newArray, i);
+					break;
+				}
+				newArray [i] = element;
+				EditorGUILayout.EndHorizontal ();
+			}
 		}
 		return newArray;
 	}
@@ -482,23 +570,26 @@ public class EditorCommon
 		return array;
 	}
 	
-	public static string EditPopup(string label, string _value, string[] displayOption)
+	/// <summary>
+	/// Given a value, and a string array, let the value selected from the drop down list composed of displayOption.
+	/// </summary>
+	public static string EditPopup (string label, string _value, string[] displayOption)
 	{
-        int index = IndexOfArray<string>(displayOption,_value);
-        index = EditorGUILayout.Popup (label, index, displayOption);
-        return displayOption[index];
+		int index = IndexOfArray<string> (displayOption, _value);
+		index = EditorGUILayout.Popup (label, index, displayOption);
+		return displayOption [index];
 	}
 	
-	public static Object EditPopupOfTypeInChildren(string label, 
+	public static Object EditPopupOfTypeInChildren (string label, 
 		                                           Object _value, 
 		                                           GameObject gameObject, 
 		                                           System.Type Type)
 	{
-		Component[] co =  gameObject.GetComponentsInChildren(Type);
-		string[] names = co.Select(x=>x.gameObject.name).ToArray();
-		int index = (_value == null) ? 0 : IndexOfArray<string>(names,_value.name);
-		index = EditorGUILayout.Popup(index,names);
-		return co.Where(x=>x.name == names[index]).First();
+		Component[] co = gameObject.GetComponentsInChildren (Type);
+		string[] names = co.Select (x => x.gameObject.name).ToArray ();
+		int index = (_value == null) ? 0 : IndexOfArray<string> (names, _value.name);
+		index = EditorGUILayout.Popup (index, names);
+		return co.Where (x => x.name == names [index]).First ();
 	}
 	
     #endregion
