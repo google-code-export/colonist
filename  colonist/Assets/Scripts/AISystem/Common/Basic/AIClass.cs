@@ -39,9 +39,15 @@ public class ConditionData
 	
 	/// <summary>
 	/// The string value.
-	/// Used when ConditionType = Boolean, and BooleanCondition = LatestBehaviorName
+	/// Used in some condition case. for example, when ConditionType = Boolean, and BooleanCondition = LatestBehaviorNameIs
 	/// </summary>
 	public string StringValue = "";
+	
+	/// <summary>
+	/// The string array.
+	/// Used in some condition case. for example, when ConditionType = Boolean, and BooleanCondition = LatestBehaviorNameIsOneOf
+	/// </summary>
+	public string[] StringValueArray = new string[] {};
 }
 
 [System.Serializable]

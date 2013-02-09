@@ -181,9 +181,18 @@ public class Unit : UnitBase
         }
 		foreach(RotateData data in RotateData)
 		{
-            animation[data.AnimationName].layer = data.AnimationLayer;
-            animation[data.AnimationName].wrapMode = data.AnimationWrapMode;
-            animation[data.AnimationName].speed = data.AnimationSpeed;
+			if(animation[data.RotateLeftAnimationName] != null)
+			{
+              animation[data.RotateLeftAnimationName].layer = data.AnimationLayer;
+              animation[data.RotateLeftAnimationName].wrapMode = data.AnimationWrapMode;
+              animation[data.RotateLeftAnimationName].speed = data.AnimationSpeed;
+			}
+			if(animation[data.RotateRightAnimationName] != null)
+			{
+			  animation[data.RotateRightAnimationName].layer = data.AnimationLayer;
+              animation[data.RotateRightAnimationName].wrapMode = data.AnimationWrapMode;
+              animation[data.RotateRightAnimationName].speed = data.AnimationSpeed;
+			}
 		}
 	}
 	

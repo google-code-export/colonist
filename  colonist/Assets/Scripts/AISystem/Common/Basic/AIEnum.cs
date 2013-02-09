@@ -231,7 +231,11 @@ public enum AIBooleanConditionEnum
 	/// The latest running behavior's name is/is not %string value%
 	/// </summary>
 	LatestBehaviorNameIs = 6,
-   
+    
+	/// <summary>
+	/// Alike LatestBehaviorNameIs, can support more than one right value. The right value is %string array%.
+	/// </summary>
+	LastestBehaviorNameIsOneOf = 7,
 #endregion
 }
 
