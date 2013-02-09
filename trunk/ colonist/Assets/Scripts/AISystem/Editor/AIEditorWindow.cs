@@ -1,18 +1,21 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 
 /// <summary>
 /// AI editor window.
 /// Menu : Component -> AI -> Editor.
-/// Can only edit one AI component.
+/// Support edit multiple AI component.
 /// </summary>
 public class AIEditorWindow : EditorWindow
 {
 	float MainWindowWidth, MainWindowHeight;
 	Vector2 ScrollPosition = Vector2.zero;
 	
-	AIEditor AIEditor = null;
+	IList<AIEditor> AIEditor_List = null;
 	[MenuItem("Component/AI/Edit AI")]	
 	public static void init ()
 	{
@@ -37,21 +40,33 @@ public class AIEditorWindow : EditorWindow
 			return;
 		}
         
-		AI _AI = selectedGameObject.GetComponent<AI> ();
-		if(AIEditor == null)
+		IList<AI> _AIs = selectedGameObject.GetComponents<AI> ().ToList();
+		if(AIEditor_List == null || AIEditor_List.Count != _AIs.Count || AIEditor_List.Count(x=>x==null) > 0
+			|| AIEditor_List.Count(x=>(_AIs.Contains(x.AI)==false)) > 0  )
 		{
-		   AIEditor = new AIEditor(_AI);
+		   AIEditor_List = new List<AIEditor>();
+		   foreach(AI ai in _AIs)
+		   {
+			  AIEditor_List.Add(new AIEditor(ai));
+		   }
 		}
 		ScrollPosition = EditorGUILayout.BeginScrollView (ScrollPosition, false, true, null);
-		AIEditor.EditUnitAndAI();
+		AIEditor_List[0].EditUnit();
+		foreach(AIEditor aiEditor in AIEditor_List)
+		{
+		   aiEditor.EditAI();
+		}
 		EditorGUILayout.EndScrollView ();
 	}
 
     void OnDestroy ()
 	{
-		if(AIEditor!=null)
+		if(AIEditor_List != null)
 		{
-			AIEditor.Dispose();
+		  foreach(AIEditor aiEditor in AIEditor_List)
+		  {
+		    aiEditor.Dispose();
+		  }
 		}
 	}
 	
