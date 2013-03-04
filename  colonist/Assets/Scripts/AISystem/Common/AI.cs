@@ -6,7 +6,10 @@ using Pathfinding;
 
 /// <summary>
 /// Base AI.
-/// AI manages the beheavior of the NPC.
+/// AI manages the a set of beheavior of the NPC.
+/// Note that one game object can contains more than one AI component, however, there
+/// is usually one AI running at one time, so if you want to define more than one AI
+/// component in game object ,you need to use Character class to coordinate the AI components.
 /// </summary>
 [RequireComponent(typeof(Seeker))]
 [RequireComponent(typeof(Unit))]
@@ -15,7 +18,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 	/// <summary>
 	/// The name of this AI.
 	/// </summary>
-	public string Name; 
+	public string Name = ""; 
 	
     [HideInInspector]
     public Unit Unit;
@@ -40,18 +43,24 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// true = Halt
     /// false = No halt
     /// </summary>
-    [HideInInspector]
-    public bool Halt = false;
+    public bool Halt 
+	{
+		get
+		{
+			return this.Unit.Halt;
+		}
+	}
+	
     /// <summary>
     /// When current time >= ResetHaltTime, AI should reset Halt to false.
     /// </summary>
-    public float ResetHaltTime = 0;
+    [HideInInspector]
+	public float ResetHaltTime = 0;
 
     [HideInInspector]
     public Transform CurrentTarget = null;
     /// <summary>
-    /// canSeeTarget & refreshCanSeeTargetInterval - defines how long the daemon routine refresh the canSeeTarget variable.
-    /// TargetDistance = Distance between AI and target.
+    /// CanSeeCurrentTarget is refreshed in FixUpdate().FindTarget() routine.
     /// </summary>
     [HideInInspector]
     public bool CanSeeCurrentTarget = false;
@@ -62,6 +71,14 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// </summary>
     [HideInInspector]
     public float LastAttackTime = -999;
+	
+	/// <summary>
+	/// The flag to indicate if this frame need to alternate AIBehavior, ignore the scanning interval.
+	/// Usually, this flag is set true by events.
+	/// </summary>
+	[HideInInspector]
+	public bool AlternateBehaviorFlag = false;
+	
     /// <summary>
     /// The current executing behavior
     /// </summary>
@@ -73,7 +90,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 
     public Transform TestToPos = null;
 
-    public float AlterBehaviorInterval = 1;
+    public float AlterBehaviorInterval = 0.25f;
     /// <summary>
     /// Define the beheviors of the AI
     /// </summary>
@@ -85,7 +102,8 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     protected IList<AIBehavior> BehaviorList_SortedPriority = new List<AIBehavior>();
 
     protected CharacterController controller;
-    protected Seeker seeker;
+//    protected Seeker seeker;
+	protected Navigator navigator;
 	
 	/// <summary>
 	/// The switch to control print debug message.
@@ -104,10 +122,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 
     public virtual void Update()
     {
-        if (Time.time >= ResetHaltTime && Halt == true)
-        {
-            Halt = false;
-        }
+
     }
 
     public virtual void FixedUpdate()
@@ -116,33 +131,27 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         FindTarget(DetectiveRange);
     }
 
-    public virtual IEnumerator StartAI()
-    {
-        StartCoroutine("AlterBehavior", AlterBehaviorInterval);
-        yield break;
-    }
-
 #region initialization
     /// <summary>
-    /// 1. Register this AI to LevelManager
+    /// 
+    /// 1. Initialize variable.
     /// 2. Initalize behavior list. Sort the behavior from higher to lower priorty.
+    /// 
     /// Offspring should call InitAI() at Awake() 
-    /// 3. Start RefreshCanSeeTarget() daemon coroutine
     /// </summary>
     public virtual IEnumerator InitAI()
     {
-        seeker = GetComponent<Seeker>();
         this.Unit = GetComponent<Unit>();
         controller = GetComponent<CharacterController>();
-
-        StartAStarPathfind();
-
-        LevelManager.RegisterAI(this);
+		navigator = GetComponent<Navigator>();
+		
         //Put the behavior into a sort list first, which sort the beheavior priority from lower to higher 
         SortedList<int,AIBehavior> tempList = new SortedList<int,AIBehavior>();
         foreach (AIBehavior beheavior in Behaviors)
         {
             tempList.Add(beheavior.Priority,beheavior);
+			beheavior.StartConditionWrapper.InitDictionary();
+			beheavior.EndConditionWrapper.InitDictionary();
         }
         //Then insert the behavior from higher to lower priority
         for (int i = tempList.Count-1; i>=0; i--)
@@ -151,28 +160,29 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         }
         yield break;
     }
-
-    /// <summary>
-    /// If offspring do not need AStar pathfinding, don't call it at Awake()
-    /// </summary>
-    public void StartAStarPathfind()
+	
+	/// <summary>
+	/// 1. Start A* pathfind daemon routines.
+	/// 2. Start AlterBehavior daemon routine.
+	/// </summary>
+    public virtual IEnumerator StartAI()
     {
-        StartCoroutine("AStarNavigate");
-        StartCoroutine("RefreshAStarPath");
+        StartCoroutine("AlterBehavior", AlterBehaviorInterval);
+        yield break;
     }
 
 #endregion
 
 #region basic AI supporting functions
     /// <summary>
-    /// offspring should call StopAI() at offspring.StopAI()
+    /// Stop AI.
     /// </summary>
     public virtual IEnumerator StopAI()
     {
-        LevelManager.UnregisterAI(this);
+		StopAllCoroutines();
         yield break;
     }
-	 
+	
     /// <summary>
     /// Find Target in given range.
     /// 1. set CurrentTarget variable
@@ -344,11 +354,11 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// <returns></returns>
     public virtual bool CanSeeTarget(GameObject Target, float MaxRange)
     {
-        if (Target==null || Util.DistanceOfCharacters(gameObject, Target.gameObject) > MaxRange)
+        if (Target==null || Util.DistanceOfCharacters(gameObject, Target) > MaxRange)
         {
             return false;
         }
-        if (Target==null || Physics.Linecast(transform.position, CurrentTarget.position, AttackObstacle))
+        if (Target==null || Physics.Linecast(transform.position, Target.transform.position, AttackObstacle))
         {
             return false;
         }
@@ -418,7 +428,11 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         }
         bool ShouldSendHitMessage = CheckHitCondition(target, AttackData);
         if(ShouldSendHitMessage)
+		{
            target.SendMessage("ApplyDamage", AttackData.GetDamageParameter(gameObject));
+		   //Plus 1 to DoDamageCounter of Unit.
+		   Unit.DoDamageCounter ++;
+		}
     }
 	
 	/// <summary>
@@ -466,131 +480,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 	
 #endregion
 
-#region A* pathfind navigation functions - thanks to A* pathfinding team
-
-    Transform NaivgateToTarget; // the target where A* should navigate to
-    Path AStarPath; //the A* path calculated out
-    bool AllowNavigate; //only navigate when AllowNavigate = true
-    float LastPathingTime = 0; //last time of requesting pathing calculation
-    float AStarNodePathReachCheckDistance = 1f; //the distance valve to check if the path node point has been reached
-    int CurrentPathNodeIndex = 0; //the current path node index navigating to
-    float RefreshPathInterval = 1f; //how long should call A* pathfind again, when navigating to non-static target
-    bool AutoRefreshPath = false; //only auto refresh A* pathfind when AutoRefreshPath = true, for non-static target
-    MoveData NavigationMoveData;
-    /// <summary>
-    /// A daemon routine, as long as AllowNavigate is true and AStarPath is not null, navigate moving along
-    /// the AStarPath automatically
-    /// </summary>
-    /// <returns></returns>
-    public IEnumerator AStarNavigate()
-    {
-        while (true)
-        {
-            if (Halt == true || AllowNavigate == false || AStarPath == null || 
-                AStarPath.vectorPath == null || AStarPath.vectorPath.Length == 0)
-            {
-                yield return null;
-                continue;
-            }
-            if (Vector3.Distance(transform.position, AStarPath.vectorPath[CurrentPathNodeIndex]) >= AStarNodePathReachCheckDistance)
-            {
-                Vector3 direction = (AStarPath.vectorPath[CurrentPathNodeIndex] - transform.position);
-                float Speed = NavigationMoveData.MoveSpeed;
-                if (NavigationMoveData.CanRotate)
-                {
-                    if (NavigationMoveData.SmoothRotate)
-                        Util.MoveSmoothly(transform, direction.normalized * Speed, controller, NavigationMoveData.RotateAngularSpeed);
-                    else
-                        Util.MoveTowards(transform, transform.position + direction, controller, true, false, Speed, 0);
-                }
-                else
-                {
-                    Util.MoveTowards(transform, direction, controller, Speed);
-                }
-                animation.CrossFade(NavigationMoveData.AnimationName);
-            }
-            else //reach the current node
-            {
-                //move to next path point
-                CurrentPathNodeIndex++;
-                //reach the last node, reset navigation condition, and disable auto refresh pathing condition
-                if (CurrentPathNodeIndex >= AStarPath.vectorPath.Length)
-                {
-                    AStarPath = null;
-                    AllowNavigate = false;
-                    AutoRefreshPath = false;
-                    NaivgateToTarget = null;
-                    NavigationMoveData = null;
-                }
-                continue;
-            }
-            yield return null;
-        }
-    }
-
-    /// <summary>
-    /// Daemon routine, refresh AStar path at every %RefreshPathInterval% time.
-    /// </summary>
-    /// <returns></returns>
-    public IEnumerator RefreshAStarPath()
-    {
-        while (true)
-        {
-            if (AutoRefreshPath == false || NaivgateToTarget == null)
-            {
-                yield return null;
-                continue;
-            }
-            
-            //Refresh path at every %RefreshPathInterval% seconds
-            if ((Time.time - LastPathingTime) >= RefreshPathInterval)
-            {
-                FindPath(NaivgateToTarget);
-                LastPathingTime = Time.time;
-            }
-            yield return null;
-        }
-    }
-
-    /// <summary>
-    /// Callback delegate by A*.Seeker
-    /// </summary>
-    /// <param name="_path"></param>
-    public void OnAStarPathComplete(Path _path)
-    {
-        AStarPath = _path;
-        AllowNavigate = true;
-        CurrentPathNodeIndex = 0;
-        LastPathingTime = Time.time;
-    }
-	
-	/// <summary>
-	/// Finds the path to Target.
-	/// If the Target is unseenable, require AStar Pathfind
-	/// Else if the target is seeable, build vector path directly.
-	/// </summary>
-	public void FindPath(Transform Target)
-	{
-		//Only require A* pathfind when the current target can't be seen
-		if(CanSeeTarget(Target.gameObject,999) == false)
-		{
-			try{
-	           seeker.StartPath(transform.position, Target.position, OnAStarPathComplete);
-			}
-			catch(System.Exception exc)
-			{
-//				Debug.LogError(exc.Message);
-			}
-		}
-		//the target is seeable, assign 
-		else 
-		{
-			AStarPath = new Path();
-			AStarPath.vectorPath = new Vector3[2] { transform.position, Target.position };
-			AllowNavigate = true;
-			CurrentPathNodeIndex = 0;
-		}
-	}
+#region Navigation
 	
     /// <summary>
     /// Call this routine to start navigation.
@@ -602,11 +492,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// <param name="IsMovingTarget"></param>
     public void StartNavigation(Transform target, bool IsMovingTarget, MoveData MoveData)
     {
-		FindPath(target);
-        //If IsMovingTarget = false, means the target is static, no need to auto refresh path
-        AutoRefreshPath = IsMovingTarget;
-        NaivgateToTarget = target;
-        NavigationMoveData = MoveData;
+		navigator.StartNavigation(target, IsMovingTarget, MoveData);
     }
 
     /// <summary>
@@ -614,14 +500,10 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// </summary>
     public void StopNavigation()
     {
-        AStarPath = null;
-        AllowNavigate = false;
-        AutoRefreshPath = false;
-        NaivgateToTarget = null;
-        CurrentPathNodeIndex = 0;
+        navigator.StopNavigation();
     }
 
-    #endregion
+#endregion
 
 #region AI Behavior determination
 
@@ -630,20 +512,37 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// </summary>
     public virtual IEnumerator AlterBehavior(float Interval)
     {
+		float lastScanEndConditionTime = 0;
         while (true)
         {
+			if(this.Halt)
+			{
+				yield return null;
+				continue;
+			}
+			if(((Time.time - lastScanEndConditionTime) < Interval) && AlternateBehaviorFlag == false)
+			{
+				yield return null;
+				continue;
+			}
+			
+			if(AlternateBehaviorFlag)
+			{
+				AlternateBehaviorFlag = false;
+			}
             //if the current behavior is still running, check if it meets end condition.
 			// if the current behavior status is not running, it means it can stop at anytime
             if (CurrentBehavior != null && CurrentBehavior.Phase == AIBehaviorPhase.Running)
             {
+				lastScanEndConditionTime = Time.time;
                 //If CurrentBehavior's end condition = false, do nothing
-                if (IsConditionMatched(CurrentBehavior, CurrentBehavior.EndCondition) == false)
+				if(CheckConditionWrapper(CurrentBehavior.EndConditionWrapper, CurrentBehavior) == false)
                 {
 					if(PrintDebugMessage)
 					{
                        Debug.Log("Behavior:" + CurrentBehavior.Name + " do not meet end condition, not ended yet.");
 					}
-                    yield return new WaitForSeconds(Interval);
+                    yield return null;
                     continue;
                 }
             }
@@ -651,7 +550,9 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
             //Choose next behavior whose StartCondition = True
             foreach (AIBehavior behavior in BehaviorList_SortedPriority)
             {
-                if (IsConditionMatched(behavior, behavior.StartCondition))
+                if(behavior.Name=="WaitForAWhile") 
+					Debug.DebugBreak();
+				if(CheckConditionWrapper(behavior.StartConditionWrapper, behavior))
                 {
                     behaviorToGo = behavior;
                     break;
@@ -661,7 +562,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
             if (behaviorToGo == null)
             {
                 Debug.LogWarning("No behavior can start - " + gameObject.name);
-                yield return new WaitForSeconds(Interval);
+				yield return null;
                 continue;
             }
             //Good, there is a behavior can be started - behaviorToGo
@@ -678,17 +579,71 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                     if (CurrentBehavior != null)
                     {
                         this.StopBehavior(CurrentBehavior);
+						Debug.Log("Stop behavior:" + CurrentBehavior.Name + " and start behavior:" + behaviorToGo.Name);
                         //Wait one frame to let StopBehavior complete.
                         yield return null;
                     }
                     StartBehavior(behaviorToGo);
                     CurrentBehavior = behaviorToGo;
                 }
-                yield return new WaitForSeconds(Interval);
+                //yield return new WaitForSeconds(Interval);
+				yield return null;
             }
         }
     }
-
+	
+	public virtual bool CheckConditionWrapper(CompositeConditionWrapper compositeConditionWrapper,AIBehavior behavior)
+	{
+		bool ret = false;
+	    ret = IsCompositeConditionMatched(compositeConditionWrapper.RootCompositeCondition, 
+			                              compositeConditionWrapper, 
+			                              behavior);
+		return ret;
+	}
+	
+	public virtual bool IsCompositeConditionMatched(CompositeCondition compositeCondition,
+		                                            CompositeConditionWrapper compositeConditionWrapper,
+		                                            AIBehavior behavior)
+	{
+		bool ret = false;
+		switch(compositeCondition.Operator)
+		{
+		case LogicConjunction.None:
+			ret = IsConditionEntityMatched(compositeCondition.Entity1,compositeConditionWrapper,behavior);
+			break;
+		case LogicConjunction.And:
+			ret = IsConditionEntityMatched(compositeCondition.Entity1,compositeConditionWrapper,behavior);
+			if(ret)
+				ret = IsConditionEntityMatched(compositeCondition.Entity2,compositeConditionWrapper,behavior);
+			break;
+		case LogicConjunction.Or:
+			ret = IsConditionEntityMatched(compositeCondition.Entity2,compositeConditionWrapper,behavior); 
+			if(ret == false)
+				ret = IsConditionEntityMatched(compositeCondition.Entity2,compositeConditionWrapper,behavior);
+			break;
+		}
+		return ret;
+	}
+	
+	private bool IsConditionEntityMatched(ConditionEntity conditionEntity, 
+		                                  CompositeConditionWrapper compositeConditionWrapper,
+		                                  AIBehavior behavior)
+	{
+		bool ret = false;
+		switch(conditionEntity.EntityType)
+		{
+		case ConditionEntityType.AtomCondition:
+			AtomConditionData atomCondition = compositeConditionWrapper.AtomConditionDataDict[conditionEntity.EntityReferenceId];
+			ret = CheckAtomCondition(atomCondition, behavior);
+			break;
+		case ConditionEntityType.ReferenceToComposite:
+			CompositeCondition compositeCondition = compositeConditionWrapper.CompositeConditionDict[conditionEntity.EntityReferenceId];
+			ret = IsCompositeConditionMatched(compositeCondition, compositeConditionWrapper, behavior);
+			break;
+		}
+		return ret;
+	}
+	
     /// <summary>
     /// Determine if the behavior matches start condition.
     /// Return true/false.
@@ -702,20 +657,20 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         switch (AICondition.Conjunction)
         {
             case LogicConjunction.None:
-                ret = CheckCondition(AICondition.ConditionData1, Behavior);
+                ret = CheckAtomCondition(AICondition.ConditionData1, Behavior);
                 break;
             case LogicConjunction.And:
-                ret = CheckCondition(AICondition.ConditionData1, Behavior);
+                ret = CheckAtomCondition(AICondition.ConditionData1, Behavior);
                 if (ret == true)
                 {
-                    ret = ret && CheckCondition(AICondition.ConditionData2, Behavior);
+                    ret = ret && CheckAtomCondition(AICondition.ConditionData2, Behavior);
                 }
                 break;
             case LogicConjunction.Or:
-                ret = CheckCondition(AICondition.ConditionData1, Behavior);
+                ret = CheckAtomCondition(AICondition.ConditionData1, Behavior);
                 if (ret == false)
                 {
-                    ret = ret || CheckCondition(AICondition.ConditionData2, Behavior);
+                    ret = ret || CheckAtomCondition(AICondition.ConditionData2, Behavior);
                 }
                 break;
         }
@@ -727,7 +682,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// </summary>
     /// <param name="AIBehaviorCondition"></param>
     /// <returns></returns>
-    public virtual bool CheckCondition(ConditionData AIBehaviorCondition, AIBehavior behavior)
+    public virtual bool CheckAtomCondition(AtomConditionData AIBehaviorCondition, AIBehavior behavior)
     {
         bool ret = false;
         switch (AIBehaviorCondition.ConditionType)
@@ -748,7 +703,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// </summary>
     /// <param name="AIBehaviorCondition"></param>
     /// <returns></returns>
-    public virtual bool CheckBooleanCondition(ConditionData AIBehaviorCondition, AIBehavior behavior)
+    public virtual bool CheckBooleanCondition(AtomConditionData AIBehaviorCondition, AIBehavior behavior)
     {
         bool ret = false;
         bool LeftValue = false;
@@ -777,7 +732,10 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 break;
 			
 		    case AIBooleanConditionEnum.LatestBehaviorNameIs:
-			    LeftValue = (AIBehaviorCondition.StringValue == this.CurrentBehavior.Name);
+			    if(this.CurrentBehavior == null)
+				   LeftValue = false;
+			    else 
+			       LeftValue = (AIBehaviorCondition.StringValue == this.CurrentBehavior.Name);
 			    break;
 		case AIBooleanConditionEnum.LastestBehaviorNameIsOneOf:
 			    LeftValue = Util.ArrayContains<string>(AIBehaviorCondition.StringValueArray, this.CurrentBehavior.Name);
@@ -797,7 +755,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// </summary>
     /// <param name="AIBehaviorCondition"></param>
     /// <returns></returns>
-    public virtual bool CheckValueComparisionCondition(ConditionData AIBehaviorCondition, AIBehavior behavior)
+    public virtual bool CheckValueComparisionCondition(AtomConditionData AIBehaviorCondition, AIBehavior behavior)
     {
         bool ret = false;
         float LeftValue = 0;
@@ -829,6 +787,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                     Debug.Log("Left value:" + LeftValue + " rightValue:" + RightValue);
                 break;
             case AIValueComparisionCondition.BehaviorLastExecutionInterval:
+			    ShouldCompare = true;
                 float LastExecutionTimeInterval = Time.time - behavior.LastExecutionTime;
                 LeftValue = LastExecutionTimeInterval;
                 break;
@@ -849,7 +808,15 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 		    case AIValueComparisionCondition.BehaveTime:
                 ShouldCompare = true;
                 LeftValue = Time.time - behavior.StartTime;
-                break; 
+                break;
+		    case AIValueComparisionCondition.AttackCount:
+			    ShouldCompare = true;
+			    LeftValue = this.Unit.AttackCounter;
+			    break;
+		case AIValueComparisionCondition.DoDamageCount:
+			    ShouldCompare = true;
+			    LeftValue = this.Unit.DoDamageCounter;
+			    break;
             default:
                 Debug.LogError("GameObject:" + this.gameObject.name + " - unsupported value comparision condition:" + AIBehaviorCondition.ValueComparisionCondition.ToString());
                 break;
@@ -876,9 +843,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         //Rule: behavior start coroutine = "Start_" + BehaviorType
         string Coroutine = "Start_" + behavior.Type.ToString();
         behavior.ExecutionCounter++;
-		//remember the last start time
-        behavior.LastExecutionTime = behavior.StartTime;
-		//remember the start time
+		//preserve the start time
 		behavior.StartTime = Time.time;
 		
         //By defaut, set the behavior phase = running at StartBehavior()
@@ -899,6 +864,8 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// 
     public virtual void StopBehavior(AIBehavior behavior)
     {
+	    //preserve the last start time
+        behavior.LastExecutionTime = Time.time;
         string Coroutine = "Stop_" + behavior.Type.ToString();
         //By defaut, set the behavior phase = sleeping at StopBehavior()
         behavior.Phase = AIBehaviorPhase.Sleeping;
@@ -987,7 +954,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 continue;
             }
             float distance = Util.DistanceOfCharacters(gameObject, behavior.MoveToTarget.gameObject);
-            if (distance <= this.AStarNodePathReachCheckDistance)
+            if (distance <= 1)
             {
                 break;
             }
@@ -1050,7 +1017,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 			}
 			
             float distance = Util.DistanceOfCharacters(gameObject, CurrentTarget.gameObject);
-            if (distance <= this.AStarNodePathReachCheckDistance)
+            if (distance <= 1)
             {
                 break;
             }
@@ -1087,7 +1054,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// <returns></returns>
     public virtual IEnumerator Start_Attack(AIBehavior behavior)
     {
-
+		AttackData attackData = null;
         while (true)
         {
             //If no target is found, do nothing
@@ -1097,7 +1064,25 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 continue;
             }
             //Get attack data
-            AttackData attackData = Unit.AttackDataDict[behavior.AttackDataName];
+
+			if(behavior.UseRandomAttackData == false)
+			{
+			   attackData = Unit.AttackDataDict[behavior.AttackDataName];
+			}
+			else 
+			{
+				if(attackData != null)
+				{
+				  //Exclude the previous attack data - to make attack animation different each time.
+			      string attackDataName = Util.RandomFromArray<string>( behavior.AttackDataNameArray, attackData.Name);
+			      attackData = Unit.AttackDataDict[attackDataName];
+				}
+				else
+				{
+					string attackDataName = Util.RandomFromArray<string>(behavior.AttackDataNameArray);
+					attackData = Unit.AttackDataDict[attackDataName];
+				}
+			}
             string AttackAnimationName = attackData.AnimationName;
             //If can see target, and target distance <= AttackableRange, do this:
             //1. Face to target
@@ -1106,7 +1091,9 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
             if (this.CanSeeCurrentTarget && CurrentTargetDistance <= attackData.AttackableRange)
             {
                 transform.LookAt(new Vector3(CurrentTarget.position.x, transform.position.y, CurrentTarget.position.z));
-                DoAttack(attackData);
+                yield return StartCoroutine("DoAttack_Block",attackData);
+				//yield return new WaitForSeconds(animation[attackData.AnimationName].length);
+				continue;
             }
             else if (animation.IsPlaying(attackData.AnimationName))
             {
@@ -1137,10 +1124,11 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 
     public virtual IEnumerator Stop_Attack(AIBehavior behavior)
     {
-        AttackData attackData = Unit.AttackDataDict[behavior.AttackDataName];
-        MoveData moveData = Unit.MoveDataDict[behavior.MoveDataName];
-        animation.Stop(moveData.AnimationName);
-        animation.Stop(attackData.AnimationName);
+//        AttackData attackData = Unit.AttackDataDict[behavior.AttackDataName];
+//        MoveData moveData = Unit.MoveDataDict[behavior.MoveDataName];
+//        animation.Stop(moveData.AnimationName);
+//        animation.Stop(attackData.AnimationName);
+		
         StopNavigation();
         StopCoroutine("Start_Attack");
         yield return null;
@@ -1227,6 +1215,8 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                     Debug.Log("Unsupported attack type:" + attackData.Type.ToString() + " at object:" + gameObject.name);
                     break;
         }
+		//plus 1 to Attack counter of Unit.
+		Unit.AttackCounter++;
 	}
 	
 #endregion
@@ -1263,162 +1253,19 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     
 #endregion
 
-#region Receive Damage and Die
-    public virtual IEnumerator ApplyDamage(DamageParameter damageParam)
-    {
-        if (Unit.IsDead)
-        {
-            yield break;
-        }
-        //Minus HP:
-        Unit.HP -= damageParam.damagePoint;
-        if (Unit.HP <= 0)
-        {
-            StartCoroutine("Die", damageParam);
-            yield break;
-        }
-        else
-        {
-            StartCoroutine("ReceiveDamage", damageParam);
-            yield break;
-        }
-        
-    }
-
-    public virtual IEnumerator ReceiveDamage(DamageParameter damageParam)
-    {
-        //Get the right ReceiveDamageData
-        ReceiveDamageData ReceiveDamageData = null;
-        if (Unit.ReceiveDamageDataDict.ContainsKey(damageParam.damageForm))
-        {
-            if (Unit.ReceiveDamageDataDict[damageParam.damageForm].Count == 1)
-            {
-                ReceiveDamageData = Unit.ReceiveDamageDataDict[damageParam.damageForm][0];
-            }
-            else
-            {
-                int RandomIndex = Random.Range(0, Unit.ReceiveDamageDataDict[damageParam.damageForm].Count);
-                ReceiveDamageData = Unit.ReceiveDamageDataDict[damageParam.damageForm][RandomIndex];
-            }
-        }
-        //If ReceiveDamageDataDict[DamageForm.Common] = null or Count ==0, will have error!
-        //So make sure you have assign a Common receive damage data!
-        else
-        {
-            ReceiveDamageData = Unit.ReceiveDamageDataDict[DamageForm.Common][0];
-        }
-        //Create effect data
-        if (ReceiveDamageData.EffectDataName != null && ReceiveDamageData.EffectDataName.Length > 0)
-        {
-            foreach (string effectDataName in ReceiveDamageData.EffectDataName)
-            {
-                EffectData EffectData = Unit.EffectDataDict[effectDataName];
-                GlobalBloodEffectDecalSystem.CreateBloodEffect(transform.position + controller.center, EffectData);
-            }
-        }
-        //Create blood decal:
-        if (ReceiveDamageData.DecalDataName != null && ReceiveDamageData.DecalDataName.Length > 0)
-        {
-            foreach (string decalName in ReceiveDamageData.DecalDataName)
-            {
-                DecalData DecalData = Unit.DecalDataDict[decalName];
-                GlobalBloodEffectDecalSystem.CreateBloodDecal(transform.position + controller.center, DecalData);
-            }
-        }
-
-        //Halt AI if set true
-        if (ReceiveDamageData.HaltAI)
-        {
-            animation.Rewind(ReceiveDamageData.AnimationName);
-            animation.CrossFade(ReceiveDamageData.AnimationName);
-            Halt = true;
-            ResetHaltTime = Time.time + animation[ReceiveDamageData.AnimationName].length;
-            yield return new WaitForSeconds(animation[ReceiveDamageData.AnimationName].length);
-        }
-    }
-
-    public virtual IEnumerator Die(DamageParameter DamageParameter)
-    {
-        //Basic death processing.
-        controller.enabled = false;
-        Unit.IsDead = true;
-        StopAllCoroutines();
-        animation.Stop();
-
-        //Handle setting - DeathData:
-        DeathData DeathData = null;
-        if(Unit.DeathDataDict.ContainsKey(DamageParameter.damageForm))
-        {
-            IList<DeathData> DeathDataList = Unit.DeathDataDict[DamageParameter.damageForm];
-            DeathData = Util.RandomFromList(DeathDataList);
-        }
-        else 
-        {
-            DeathData = Util.RandomFromList<DeathData>( Unit.DeathDataDict[DamageForm.Common]);
-        }
-
-        //Create effect data 
-        if (DeathData.EffectDataName != null && DeathData.EffectDataName.Length > 0)
-        {
-            foreach (string effectDataName in DeathData.EffectDataName)
-            {
-                EffectData EffectData = Unit.EffectDataDict[effectDataName];
-                GlobalBloodEffectDecalSystem.CreateBloodEffect(transform.position + controller.center, EffectData);
-            }
-        }
-        //Create blood decal:
-        if (DeathData.DecalDataName != null && DeathData.DecalDataName.Length > 0)
-        {
-            foreach (string decalName in DeathData.DecalDataName)
-            {
-                DecalData DecalData = Unit.DecalDataDict[decalName];
-                GlobalBloodEffectDecalSystem.CreateBloodDecal(transform.position + controller.center, DecalData);
-            }
-        }
-
-
-        if(DeathData.UseDieReplacement)
-        {
-            if(DeathData.ReplaceAfterAnimationFinish)
-            {
-                animation.CrossFade(DeathData.AnimationName);
-                yield return new WaitForSeconds(animation[DeathData.AnimationName].length);
-            }
-            GameObject DieReplacement = (GameObject)Object.Instantiate(DeathData.DieReplacement, transform.position, transform.rotation);
-            Debug.Log("Creating replacement:" + DieReplacement.name);
-            if(DeathData.CopyChildrenTransformToDieReplacement)
-            {
-                Util.CopyTransform(transform, DieReplacement.transform);
-            }
-            Destroy(gameObject);
-        }
-        else 
-        {
-            animation.CrossFade(DeathData.AnimationName);
-        }
-        
-    }
-
-    public void CreateDecal()
-    {
-        //Locate the place to create decal:
-
-    }
+#region Internal AI event listener
+//	void OnAttackComplete()
+//	{
+//         this.AlternateBehaviorFlag = true;
+//	}
 #endregion
-
+	
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, OffensiveRange);
         Gizmos.color = Color.white;
         Gizmos.DrawWireSphere(transform.position, DetectiveRange);
-        if (AStarPath != null && AStarPath.vectorPath != null)
-        {
-            for(int i=0; i<AStarPath.vectorPath.Length; i++)
-            {
-                if(i!=AStarPath.vectorPath.Length-1)
-                   Gizmos.DrawLine(AStarPath.vectorPath[i], AStarPath.vectorPath[i+1]);
-            }
-        }
+
     }
 }

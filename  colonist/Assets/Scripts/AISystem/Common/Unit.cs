@@ -1,16 +1,20 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
-/// The class represents a basic Unit in the game
+/// The class represents a basic Unit in the game.
+/// Unit responsibility:
+/// 1. Contains data definition.
+/// 2. In the case of more than one AI component, switch AI in real time, according to condition data.
 /// </summary>
 [System.Serializable]
-public class Unit : UnitBase
+public class Unit : UnitBase , I_GameEventReceiver
 {
 
     [HideInInspector]
     public bool IsDead = false;
-
+#region Unit Data definition
     /// <summary>
     /// Defines the attack data of the unit.
     /// </summary>
@@ -66,18 +70,70 @@ public class Unit : UnitBase
     public System.Collections.Generic.IDictionary<string, DecalData> DecalDataDict = new System.Collections.Generic.Dictionary<string, DecalData>();
 
     public AudioData[] AudioData = new AudioData[] { };
+	
+	/// <summary>
+	/// The attack counter indicates how many times the Unit has attacked.
+	/// Note: not necessary for every attack to do actual damage.
+	/// </summary>
+	[HideInInspector]
+	public int AttackCounter = 0;
+	/// <summary>
+	/// The do damage counter indicates how many time the Unit has do damage to other units.
+	/// </summary>
+	[HideInInspector]
+	public int DoDamageCounter = 0;
+	
+	/// <summary>
+	/// The halt flat.
+	/// If halt = true, the AI component should Halt its behavior according to this flag.
+	/// </summary>
+	[HideInInspector]
+	public bool Halt = false;
+	float ResetHaltTime = 0;
+#endregion
 
-    public virtual void Awake()
+#region Unit AI definition
+	
+	/// <summary>
+	/// The name of the start AI.
+	/// If StartAIName = "", it will be assigned to the first AI component's name by default.
+	/// </summary>
+	public string StartAIName = "";
+	
+	IList<AI> AIList = new List<AI>();
+	
+	/// <summary>
+	/// The current running AI.
+	/// </summary>
+	[HideInInspector]
+	public AI CurrentAI = null;
+	
+#endregion
+	
+
+	CharacterController controller = null;
+	
+	
+    void Awake()
     {
-        InitUnit();
+        InitUnitData();
 		InitAnimation();
+        InitUnitAI();
     }
+	
+	public void Update()
+	{
+        if (Time.time >= ResetHaltTime && Halt == true)
+        {
+            Halt = false;
+        }
+	}
 	
     /// <summary>
     /// Call InitUnit at Monobehavior.Awake().
-    /// Put the MoveData/IdleData/AttakData in dictionary.
+    /// Put all kinds of data into dictionary.
     /// </summary>
-    public void InitUnit()
+    public void InitUnitData()
     {
         HP = MaxHP;
         if (AttackData != null)
@@ -194,9 +250,44 @@ public class Unit : UnitBase
               animation[data.RotateRightAnimationName].speed = data.AnimationSpeed;
 			}
 		}
+		foreach(ReceiveDamageData data in ReceiveDamageData)
+		{
+            animation[data.AnimationName].layer = data.AnimationLayer;
+            animation[data.AnimationName].wrapMode = data.AnimationWrapMode;
+            animation[data.AnimationName].speed = data.AnimationSpeed;
+		}
 	}
 	
-	#region implement UnitHealth interface
+	/// <summary>
+	/// Inits the unit's AI related variables.
+	/// </summary>
+	public void InitUnitAI()
+	{
+		if(StartAIName == "")
+		{
+			StartAIName = GetComponent<AI>().Name;
+		}
+		foreach(AI _AI in GetComponents<AI>())
+		{
+			AIList.Add(_AI);
+		}
+		
+		//Disable the non-first AI
+//	    foreach(AI _AI in AIList)
+//		{
+//			if(_AI.Name == StartAIName)
+//			{
+//				_AI.enabled = true;
+//			}
+//			else {
+//				_AI.enabled = false;
+//			}
+//		}
+		controller = GetComponent<CharacterController>();
+		LevelManager.RegisterUnit(this);
+	}
+	
+#region implement UnitHealth interface
     public override void SetCurrentHP(float value)
     {
         HP = value;
@@ -214,4 +305,38 @@ public class Unit : UnitBase
         return MaxHP;
     }
     #endregion
+	
+		
+#region Event listener
+	public virtual IEnumerator OnGameEvent(GameEvent _event)
+	{
+		switch(_event.type)
+		{
+		    case GameEventType.ApplyDamage:
+			    DamageParameter dp = (DamageParameter)_event.parameters[GameEventParameter.DamageParameter];
+			    SendMessage("ApplyDamage", dp);
+			    break;
+		    default:
+			    break;
+		}
+		yield break;
+	}
+	
+	public void ResetAttackCounter()
+	{
+		this.AttackCounter = 0;
+		this.DoDamageCounter = 0;
+	}
+	
+	/// <summary>
+	/// Sets the halt to true in next %duration% seconds
+	/// </summary>
+	public void HaltUnit(float duration)
+	{
+		Halt = true;
+		ResetHaltTime = Time.time + duration;
+	}
+#endregion
+	
+
 }

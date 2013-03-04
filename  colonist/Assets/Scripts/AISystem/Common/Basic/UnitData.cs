@@ -252,7 +252,7 @@ public class AttackData : UnitAnimationData
     /// <summary>
     /// When target distance lesser than AttackableRange, begin attack.
     /// </summary>
-    public float AttackableRange;
+    public float AttackableRange = 3;
 
     /// <summary>
     /// If attack type = combat - The time to send hit message.

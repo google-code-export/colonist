@@ -259,7 +259,7 @@ public enum AIValueComparisionCondition
     /// </summary>
     CurrentTargetHPPercentage = 3,
     /// <summary>
-    /// Last execution time of this behavior to current time.
+    /// The time from last execution end time to now.
     /// </summary>
     BehaviorLastExecutionInterval = 4,
     /// <summary>
@@ -281,6 +281,15 @@ public enum AIValueComparisionCondition
 	/// How long has the behavior being executed
 	/// </summary>
 	BehaveTime = 8,
+	
+	/// <summary>
+	/// Attack counter value of the Unit.
+	/// </summary>
+	AttackCount = 9,
+	/// <summary>
+	/// DoDamage counter value of the Unit.
+	/// </summary>
+	DoDamageCount = 10,
 
 #endregion
 }
