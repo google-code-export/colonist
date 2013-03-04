@@ -23,12 +23,18 @@ public enum ScreenOccupancy
     FullScreen = 2
 }
 
-public enum GestureType
+public enum UserInputType
 {
-
-    Single_Slice = 0,
-    Single_Tap = 1,
-	Single_Curve = 2,
+	None = 0,
+    Single_Slice = 1,
+    Single_Tap = 2,
+	Single_Curve = 3,
+	Button_Left_Claw_Tap = 4,
+	Button_Left_Claw_Hold = 5,
+	Button_Right_Claw_Tap = 6,
+	Button_Right_Claw_Hold = 7,
+	Button_Dual_Claw_Tap = 8,
+	Button_Dual_Claw_Hold = 9,
    // Double_Silce = 3,
     // ->  <-
    // Horizontal_ZoomIn = 4,
@@ -103,6 +109,7 @@ public enum DamageForm
      Collision = 2,
      Punctured = 3,
      Flame = 4,
+	 LaserSword = 5,
 #endregion
 
 #region PredatorPlayer 1000 ~ 1999
@@ -112,6 +119,9 @@ public enum DamageForm
      Predator_Strike_Dual_Claw = 1003,
      Predator_Puncture = 1004,
 #endregion
+
+
+
 }
 
 /// <summary>
@@ -179,9 +189,19 @@ public enum GameEventType
     NPCReceiveDamage = 204,
     NPCKill = 205,
     NPCAttack = 206,//Event when player perform an attack
-    NPCReloading = 207
+    NPCReloading = 207,
+	
+	//Object communication event
+	ApplyDamage = 300,
 }
 
+/// <summary>
+/// Define the event parameter key list.
+/// </summary>
+public enum GameEventParameter
+{
+	DamageParameter = 0,
+}
 
 
 /// <summary>

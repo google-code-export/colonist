@@ -48,6 +48,23 @@ public class Util : MonoBehaviour {
         return worldDirection.normalized;
     }
 	
+	/// <summary>
+	/// Adds empty slot to array. And return the new expanded array.
+	/// </summary>
+	public static T[] ExpandArray<T>(T[] OrigArray, int slotCount)
+	{
+		T[] newArray;
+		if(OrigArray == null || OrigArray.Length == 0 )
+		{
+			newArray = new T[1];
+		}
+		else {
+		   newArray = new T[OrigArray.Length + slotCount];
+		   Util.CloneArray<T>(OrigArray, newArray); 
+		}
+		return newArray;
+	}
+	
     /// <summary>
     /// Copy an object to the last element of an existing array.
     /// Warning - potential performance impact!! Don't call this function in frame-frequent function with large Array!
@@ -118,16 +135,18 @@ public class Util : MonoBehaviour {
     /// <returns></returns>
 	public static T[] CloneExcept<T>(T[] array, T except)
     {
-        T[] ret = new T[]{};
-        for(int i=0;i<array.Length;i++)
-        {
-			T o = array[i];
-            if(!o.Equals(except))
-            {
-                ret = AddToArray(o, ret);
-            }
-        }
-        return ret;
+		IList<T> ret = new List<T>();
+		for(int i=0; i<array.Length; i++)
+		{
+			if(array[i].Equals(except) == false)
+			{
+				ret.Add(array[i]);
+			}
+		}
+		T[] newArray;
+		newArray = new T[ret.Count];
+        ret.CopyTo(newArray, 0);
+		return newArray;
     }
 
     /// <summary>
@@ -420,7 +439,24 @@ public class Util : MonoBehaviour {
         int idx = Random.Range(0, array.Length);
         return array[idx];
     }
-
+	
+	/// <summary>
+	/// Get a random value from array, the result will exclude %excludeValue% for sure.
+	/// If the array has only one element, then there is no choice - result will be the only element.
+	/// </summary>
+	public static T RandomFromArray<T>(T[] array, T ExcludedValue)
+    {
+		if(array.Length == 1)
+		{
+          return array[0];
+		}
+		else {
+          T[] newArray = Util.CloneExcept<T>(array, ExcludedValue);
+          int idx = Random.Range(0, newArray.Length);
+          return newArray[idx];
+		}
+    }
+	
     public static T RandomFromList<T>(IList<T> list)
     {
         if (list.Count == 1)
@@ -558,9 +594,9 @@ public class Util : MonoBehaviour {
         return rotation;
     }
 
-    public static void RotateToward(Transform transform, Vector3 pos, bool smoothRotate, float rotationSpeed)
+    public static void RotateToward(Transform transform, Vector3 FaceToPosition, bool smoothRotate, float rotationSpeed)
     {
-        RotateToward(transform, pos, smoothRotate, rotationSpeed, Vector3.up);
+        RotateToward(transform, FaceToPosition, smoothRotate, rotationSpeed, Vector3.up);
     }
 
     /// <summary>

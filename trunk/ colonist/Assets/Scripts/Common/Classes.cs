@@ -2,13 +2,18 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class GestureInfomation
+/// <summary>
+/// Gesture infomation.
+/// GestureInfomation wraps user input data.
+/// 
+/// </summary>
+public class UserInputData
 {
-    public GestureType Type;
+    public UserInputType Type;
     public float StartTime;
     public float EndTime;
     public Vector2? gestureDirection;
-    public GestureInfomation(GestureType _Type, Vector2? direction, float _StartTime, float _EndTime)
+    public UserInputData(UserInputType _Type, Vector2? direction, float _StartTime, float _EndTime)
     {
         Type = _Type;
         gestureDirection = direction;
@@ -370,12 +375,22 @@ public class GameEvent
 {
     public GameEventType type;
     public GameObject sender;
-    public Hashtable parameters;
+	
+	public const string Parameter_Apply_Damage = "DamageParameter";
+	
+    public IDictionary<GameEventParameter, object> parameters = new Dictionary<GameEventParameter,object>();
 
     public GameEvent(GameEventType type, GameObject sender)
     {
         this.type = type;
         this.sender = sender;
+    }
+	
+    public GameEvent(GameEventType type, GameObject sender, DamageParameter dp)
+    {
+        this.type = type;
+        this.sender = sender;
+		this.parameters[GameEventParameter.DamageParameter] = dp;
     }
 }
 
@@ -412,14 +427,14 @@ public class Combat
 	/// </summary>
 	public string[] specialAnimation = new string[]{};
     public DamageForm damageForm;
-	public GestureType gestureType;
+	public UserInputType gestureType;
 	public string specialCombatFunction="";
 
     /// <summary>
     /// the gesture information that assoicated to the combat
     /// </summary>
     [HideInInspector]
-    public GestureInfomation gestureInfo;
+    public UserInputData gestureInfo;
 
     /// <summary>
     /// If FinalCombat = true, then user input should be unblocked after this combat.
