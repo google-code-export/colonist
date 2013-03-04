@@ -532,16 +532,34 @@ public class EditorCommon
 		}
 		return newArray;
 	}
-
+	
 	/// <summary>
-	/// Edit a string array.
+	/// Edits the string array. The element is input manually.
+	/// </summary>
+	public static string[] EditStringArray (string label, string[] array)
+	{
+		EditorGUILayout.LabelField (label);
+		if (GUILayout.Button ("Add new string element")) {
+			string element = "";
+			array = Util.AddToArray<string> (element, array);
+		}
+        
+		for (int i = 0; i < array.Length; i++) {
+			array [i] = EditorGUILayout.TextField(array[i]);
+			if (GUILayout.Button ("Remove")) {
+				array = Util.CloneExcept<string> (array, i);
+				break;
+			}
+			
+		}
+		return array;
+	}
+	
+	/// <summary>
+	/// Edit a string array. The element is chosen from the popup of displayOption.
 	/// array - the array to edit.
 	/// displayOption - the popup group to let user select.
 	/// </summary>
-	/// <param name="label"></param>
-	/// <param name="array"></param>
-	/// <param name="displayOption"></param>
-	/// <returns></returns>
 	public static string[] EditStringArray (string label, string[] array, string[] displayOption)
 	{
 		EditorGUILayout.LabelField (label);
@@ -575,9 +593,17 @@ public class EditorCommon
 	/// </summary>
 	public static string EditPopup (string label, string _value, string[] displayOption)
 	{
-		int index = IndexOfArray<string> (displayOption, _value);
-		index = EditorGUILayout.Popup (label, index, displayOption);
-		return displayOption [index];
+		if(displayOption.Length > 0)
+		{
+		   int index = IndexOfArray<string> (displayOption, _value);
+		   index = EditorGUILayout.Popup (label, index, displayOption);
+		   return displayOption [index];
+		}
+		else 
+		{
+			EditorGUILayout.LabelField(label);
+			return "";
+		}
 	}
 	
 	public static Object EditPopupOfTypeInChildren (string label, 
@@ -593,4 +619,7 @@ public class EditorCommon
 	}
 	
     #endregion
+	
+	
 }
+
