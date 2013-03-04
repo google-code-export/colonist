@@ -106,18 +106,12 @@ public class AIBehavior
     public int Priority = 0;
 	
     public SelectTargetRule SelectTargetRule = SelectTargetRule.Default;
+
+#region variables for Start and End Condition
 	
 	public CompositeConditionWrapper StartConditionWrapper = new CompositeConditionWrapper();
 	public CompositeConditionWrapper EndConditionWrapper = new CompositeConditionWrapper();
-#region variables for Start and End Condition
-    /// <summary>
-    /// beheavior start condition
-    /// </summary>
-    public AIBehaviorCondition StartCondition = new AIBehaviorCondition();
-    /// <summary>
-    /// beheavior end condition
-    /// </summary>
-    public AIBehaviorCondition EndCondition = new AIBehaviorCondition();
+	
 #endregion
 
 #region variables for BehaviorType = Idle
