@@ -4,22 +4,26 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class AIEditor {
+public class AIEditor
+{
 	
 	public AI AI;
 	bool EnableEditUnit = false, EnableEditIdleData = false, EnableEditAttackData = false,
          EnableEditMoveData = false, EnableEditEffectData = false, 
-	     EnableEditReceiveDamageData = false,EnableEditRotateData = false,
-         EnableEditDecalData = false, EnableEditDeathData = false, EnableEditAIBehavior = false;
-	
+	     EnableEditReceiveDamageData = false, EnableEditRotateData = false,
+         EnableEditDecalData = false, EnableEditDeathData = false, EnableEditAIBehavior = false,
+	     EnableEditStartCondition = false, EnableEditEndCondition = false;
 	IDictionary<string, bool> AIBehaviorEnableEditFlags = new Dictionary<string,bool> ();
 	
-	public AIEditor(AI AI)
+	public AIEditor (AI AI)
 	{
 		this.AI = AI;
+		if (AI.Unit == null) {
+			AI.Unit = AI.GetComponent<Unit> ();
+		}
 	}
 	
-	public void Dispose()
+	public void Dispose ()
 	{
 		//When close the window, reset all variables
 		EnableEditUnit = false;
@@ -34,7 +38,7 @@ public class AIEditor {
 		AIBehaviorEnableEditFlags.Clear ();
 	}
 	
-	public void EditUnit()
+	public void EditUnit ()
 	{
 		if (AI.Unit == null) {
 			AI.Unit = AI.GetComponent<Unit> ();
@@ -53,7 +57,7 @@ public class AIEditor {
 			EditorGUILayout.EndToggleGroup ();
 			
 			//Edit rotate data
-			if(EnableEditRotateData = EditorGUILayout.BeginToggleGroup ("---Edit Rotate Data", EnableEditRotateData)) {
+			if (EnableEditRotateData = EditorGUILayout.BeginToggleGroup ("---Edit Rotate Data", EnableEditRotateData)) {
 				AI.Unit.RotateData = EditorCommon.EditRotateDataArray (AI.Unit.gameObject,
 				                                              AI.Unit.RotateData);
 			}
@@ -104,20 +108,20 @@ public class AIEditor {
 #endregion
 	}
 	
-	public void EditAI()
+	public void EditAI ()
 	{
 #region Edit AI
 		EnableEditAIBehavior = EditorGUILayout.BeginToggleGroup ("Edit AI : " + AI.Name, EnableEditAIBehavior);
 		if (EnableEditAIBehavior) {
 			EditBaseAIProperty (AI);
-			EditorGUILayout.LabelField ("-------------------------Edit AI behavior---------------");
+			EditorGUILayout.LabelField ("-------------------------Edit AI behaviors---------------");
 			if (GUILayout.Button ("Add new AI behavior")) {
 				AIBehavior AIBehavior = new AIBehavior ();
 				IList<AIBehavior> l = AI.Behaviors.ToList<AIBehavior> ();
 				l.Add (AIBehavior);
 				AI.Behaviors = l.ToArray<AIBehavior> ();
 			}
-			AI.Behaviors = AI.Behaviors.OrderBy(x=>x.Priority).ToArray();
+			AI.Behaviors = AI.Behaviors.OrderBy (x => x.Priority).ToArray ();
 			for (int i = 0; i < AI.Behaviors.Length; i++) {
 				AIBehavior behavior = AI.Behaviors [i];
 				EditAIBehavior (behavior);
@@ -127,13 +131,13 @@ public class AIEditor {
 #endregion
 	}
 	
-	public void EditUnitAndAI()
+	public void EditUnitAndAI ()
 	{
 		if (GUILayout.Button ("Save object")) {
 			EditorUtility.SetDirty (AI);
 		}
-        EditUnit();
-		EditAI();
+		EditUnit ();
+		EditAI ();
 	}
 	
     #region Edit AI Behavior property
@@ -171,20 +175,34 @@ public class AIEditor {
 			behavior.SelectTargetRule = (SelectTargetRule)EditorGUILayout.EnumPopup (new GUIContent ("Select enemy rule:", "当这个行为生效的时候,选择敌人的规则, 默认是Closest,也就是选择最近的敌人做为当前目标."), behavior.SelectTargetRule);
 			//Edit behavior data
 			EditAIBehaviorData (behavior);
-
-			//Edit Start condition
-			EditorGUILayout.LabelField (new GUIContent (" --- Edit Start Condition of behavior - " + behavior.Name, ""));
-			EditAIBehaviorCondition (behavior, behavior.StartCondition);
+			
+			//Edit Start Condition Wrapper:
+			EditorGUILayout.LabelField ("Start condition text:");
+			EditorGUILayout.LabelField (GetCompositeConditionDescription (behavior.StartConditionWrapper.RootCompositeCondition, behavior.StartConditionWrapper));			
+			if (GUILayout.Button ("Edit start condition")) {
+				ConditionEditorWindow.DisplayConditionEditorWindow (this, behavior.StartConditionWrapper);
+			}
 			EditorGUILayout.Space ();
+			
+			
+			//Edit End Condition Wrapper:
+			EditorGUILayout.LabelField ("End condition text:");
+			EditorGUILayout.LabelField (GetCompositeConditionDescription (behavior.EndConditionWrapper.RootCompositeCondition, behavior.EndConditionWrapper));			
+			if (GUILayout.Button ("Edit end condition")) {
+				ConditionEditorWindow.DisplayConditionEditorWindow (this, behavior.EndConditionWrapper);
+			}
+			EditorGUILayout.Space ();
+			
 
-			//Edit End condition
-			EditorGUILayout.LabelField (new GUIContent (" --- Edit End Condition of behavior - " + behavior.Name, ""));
-			EditAIBehaviorCondition (behavior, behavior.EndCondition);
 			if (GUILayout.Button ("Delete " + behavior.Type.ToString () + " behavior: " + behavior.Name)) {
 				IList<AIBehavior> l = AI.Behaviors.ToList<AIBehavior> ();
 				l.Remove (behavior);
 				AI.Behaviors = l.ToArray<AIBehavior> ();
 			}
+			
+			//Start and End message:
+			behavior.MessageAtStart = EditorCommon.EditStringArray ("Message sent when behavior start", behavior.MessageAtStart);
+			behavior.MessageAtEnd = EditorCommon.EditStringArray ("Message sent when behavior end", behavior.MessageAtEnd);
 		}
 		EditorGUILayout.EndToggleGroup ();
 		EditorGUILayout.Space ();
@@ -193,9 +211,9 @@ public class AIEditor {
 
 	public virtual void EditAIBehaviorData (AIBehavior behavior)
 	{
-		string[] IdleDataName = AI.Unit.IdleData.Select (x => x.Name).ToArray<string> ();
-		string[] AttackDataName = AI.Unit.AttackData.Select (x => x.Name).ToArray<string> ();
-		string[] MoveDataName = AI.Unit.MoveData.Select (x => x.Name).ToArray<string> ();
+		string[] IdleDataName = this.AI.Unit.IdleData.Select (x => x.Name).ToArray<string> ();
+		string[] AttackDataName = this.AI.Unit.AttackData.Select (x => x.Name).ToArray<string> ();
+		string[] MoveDataName = this.AI.Unit.MoveData.Select (x => x.Name).ToArray<string> ();
 		int idx = 0;
 		switch (behavior.Type) {
 		case AIBehaviorType.Idle:
@@ -251,9 +269,13 @@ public class AIEditor {
 				return;
 			}
             //Attack Data:
-			idx = IndexOfArray<string> (AttackDataName, behavior.AttackDataName);
-			idx = EditorGUILayout.Popup ("Attack data:", idx, AttackDataName);
-			behavior.AttackDataName = AttackDataName [idx];
+			
+			behavior.UseRandomAttackData = EditorGUILayout.Toggle (new GUIContent ("Use random attack data", ""), behavior.UseRandomAttackData);
+			if (behavior.UseRandomAttackData) {
+				behavior.AttackDataNameArray = EditorCommon.EditStringArray ("Attack data:", behavior.AttackDataNameArray, AttackDataName);
+			} else {
+				behavior.AttackDataName = EditorCommon.EditPopup ("Attack data:", behavior.AttackDataName, AttackDataName);
+			}
             // Move data:
 			idx = IndexOfArray<string> (MoveDataName, behavior.MoveDataName);
 			idx = EditorGUILayout.Popup ("Move data:", idx, MoveDataName);
@@ -274,6 +296,9 @@ public class AIEditor {
 		}
 	}
 
+#endregion
+	
+	#region Edit condition functions
 	public virtual void EditAIBehaviorCondition (AIBehavior behavior, AIBehaviorCondition Condition)
 	{
 		EditorGUILayout.BeginHorizontal ();
@@ -284,17 +309,126 @@ public class AIEditor {
 		EditorGUILayout.EndHorizontal ();
       
 		EditorGUILayout.LabelField ("----ConditionData1");
-		EditAIBehaviorConditionData (Condition.ConditionData1);
+		EditAtomConditionData (Condition.ConditionData1);
 
 		if (Condition.Conjunction == LogicConjunction.And || Condition.Conjunction == LogicConjunction.Or) {
 			EditorGUILayout.LabelField ("----ConditionData2");
-			EditAIBehaviorConditionData (Condition.ConditionData2);
+			EditAtomConditionData (Condition.ConditionData2);
 		}
 	}
-
-	public virtual void EditAIBehaviorConditionData (ConditionData ConditionData)
+	/// <summary>
+	/// Composites the condition to string description.
+	/// </summary>
+	public string GetCompositeConditionDescription (CompositeCondition compositeCondition, 
+		                                           CompositeConditionWrapper compositeConditionWrapper)
 	{
+		string LeftEntityDescription = "";
+		string RightEntityDescription = "";
+	  	
+		string refId = ""; 
+		switch (compositeCondition.Entity1.EntityType) {
+		case ConditionEntityType.AtomCondition:
+			refId = compositeCondition.Entity1.EntityReferenceId;
+			IEnumerable<AtomConditionData> AllAtomConditionData = compositeConditionWrapper.atomConditionDataArray.Where (x => x.Id == refId);
+			if (AllAtomConditionData.Count () > 0) {
+				AtomConditionData atomCondition = AllAtomConditionData.First ();
+				LeftEntityDescription = atomCondition.GetDescription ();
+			}
+			break;
+		case ConditionEntityType.ReferenceToComposite:
+			refId = compositeCondition.Entity1.EntityReferenceId;
+			IEnumerable<CompositeCondition> AllCompositeConditionData = compositeConditionWrapper.CompositeConditionArray.Where (x => x.Id == refId);
+			if (AllCompositeConditionData.Count () > 0) {
+				CompositeCondition referComposite = AllCompositeConditionData.Where (x => x.Id == refId).First ();
+				if (referComposite == compositeCondition) {
+					LeftEntityDescription = "Error !!! CompositeCondition - Id:" + compositeCondition.Id + " is referring to itself!";
+				} else {
+					LeftEntityDescription = GetCompositeConditionDescription (referComposite, compositeConditionWrapper);
+				}
+			}
+			break;
+		}
+	  
+		switch (compositeCondition.Entity2.EntityType) {
+		case ConditionEntityType.AtomCondition:
+			refId = compositeCondition.Entity2.EntityReferenceId;
+			IEnumerable<AtomConditionData> AllAtomConditionData = compositeConditionWrapper.atomConditionDataArray.Where (x => x.Id == refId);
+			if (AllAtomConditionData.Count () > 0) {
+				AtomConditionData atomCondition = AllAtomConditionData.First ();
+				RightEntityDescription = atomCondition.GetDescription ();
+			}
+			break;
+		case ConditionEntityType.ReferenceToComposite:
+			refId = compositeCondition.Entity2.EntityReferenceId;
+			IEnumerable<CompositeCondition> AllCompositeConditionData = compositeConditionWrapper.CompositeConditionArray.Where (x => x.Id == refId);
+			if (AllCompositeConditionData.Count () > 0) {
+				CompositeCondition referComposite = AllCompositeConditionData.First ();
+				if (referComposite == compositeCondition) {
+					RightEntityDescription = "Error !!! CompositeCondition - Id:" + compositeCondition.Id + " is referring to itself!";
+				} else {
+					RightEntityDescription = GetCompositeConditionDescription (referComposite, compositeConditionWrapper);
+				}
+			}
+			break;
+		}
+		
+		string ret = "({0} {1} {2})";
+		switch (compositeCondition.Operator) {
+		case LogicConjunction.None:
+			ret = string.Format (ret, LeftEntityDescription, "", "");
+			break;
+		case LogicConjunction.And:
+		case LogicConjunction.Or:
+			ret = string.Format (ret, LeftEntityDescription, compositeCondition.Operator.ToString (), RightEntityDescription);
+			break;
+		}
+		return ret;
+	}
+	
+	public virtual void EditCompositeCondition (CompositeCondition compositeCondition, CompositeConditionWrapper conditionWrapper)
+	{
+		EditorGUILayout.LabelField (" -------------- Composite condition:" + compositeCondition.Id + " ------------ ");
+		compositeCondition.Id = EditorGUILayout.TextField ("Id:", compositeCondition.Id);
+		compositeCondition.Operator = (LogicConjunction)EditorGUILayout.EnumPopup (new GUIContent ("Operator ", ""), compositeCondition.Operator);
+		if (compositeCondition.Operator == LogicConjunction.None) {
+			EditCompositeConditionEntity ("Entity 1:", compositeCondition.Entity1, conditionWrapper);
+		} else {
+			EditCompositeConditionEntity ("Entity 1:", compositeCondition.Entity1, conditionWrapper);
+			EditCompositeConditionEntity ("Entity 2:", compositeCondition.Entity2, conditionWrapper);
+		}
+		EditorGUILayout.LabelField ("Condition description:");
+		EditorGUILayout.LabelField (GetCompositeConditionDescription (compositeCondition, conditionWrapper));
+	}
+	
+	public virtual void EditCompositeConditionEntity (string Label, ConditionEntity entity, 
+		                                             CompositeConditionWrapper compositionConditionWrapper)
+	{
+		EditorGUILayout.LabelField (Label);
+		entity.EntityType = (ConditionEntityType)EditorGUILayout.EnumPopup (new GUIContent ("Entity type ", ""), entity.EntityType);
+		string label = "";
+		switch (entity.EntityType) {
+		case ConditionEntityType.AtomCondition:
+			label = "Choose one of atom condition id:";
+			entity.EntityReferenceId = EditorCommon.EditPopup (label,
+			                                                  entity.EntityReferenceId,
+			                                                  compositionConditionWrapper.atomConditionDataArray.Select (x => x.Id).ToArray ());
+			break;
+		case ConditionEntityType.ReferenceToComposite:
+			label = "Choose one of composite condition id:";
+			entity.EntityReferenceId = EditorCommon.EditPopup (label,
+			                                                  entity.EntityReferenceId,
+			                                                  compositionConditionWrapper.CompositeConditionArray.Select (x => x.Id).ToArray ());
+			break;
+		}
+		
+
+	}
+
+	public virtual void EditAtomConditionData (AtomConditionData ConditionData)
+	{
+		EditorGUILayout.LabelField (" -------------- Atom condition:" + ConditionData.Id + "------------");
 		ConditionData.ConditionType = (AIBehaviorConditionType)EditorGUILayout.EnumPopup (new GUIContent ("Condition type:", ""), ConditionData.ConditionType);
+		ConditionData.Id = EditorGUILayout.TextField ("AtomCondition ID:", ConditionData.Id);
 		switch (ConditionData.ConditionType) {
 		case AIBehaviorConditionType.Boolean:
 			EditBooleanConditionData (ConditionData);
@@ -305,7 +439,7 @@ public class AIEditor {
 		}
 	}
 
-	public virtual void EditBooleanConditionData (ConditionData ConditionData)
+	public virtual void EditBooleanConditionData (AtomConditionData ConditionData)
 	{
 		EditorGUILayout.BeginHorizontal ();
 		ConditionData.BooleanCondition = (AIBooleanConditionEnum)EditorGUILayout.EnumPopup (ConditionData.BooleanCondition);
@@ -330,16 +464,16 @@ public class AIEditor {
 			break;
 		case AIBooleanConditionEnum.LastestBehaviorNameIsOneOf:
 			AllBehaviorName = AI.Behaviors.Select (x => x.Name).ToArray ();
-			EditorGUILayout.BeginVertical();
+			EditorGUILayout.BeginVertical ();
 			ConditionData.StringValueArray = EditorCommon.EditStringArray ("behavior name:", ConditionData.StringValueArray
 				, AllBehaviorName);
-			EditorGUILayout.EndVertical();
+			EditorGUILayout.EndVertical ();
 			break;
 		}
 		EditorGUILayout.EndHorizontal ();
 	}
 
-	public virtual void EditValueComparisionConditionData (ConditionData ConditionData)
+	public virtual void EditValueComparisionConditionData (AtomConditionData ConditionData)
 	{
 		EditorGUILayout.BeginHorizontal ();
 		ConditionData.ValueComparisionCondition = (AIValueComparisionCondition)EditorGUILayout.EnumPopup (ConditionData.ValueComparisionCondition);
@@ -360,13 +494,15 @@ public class AIEditor {
 			ConditionData.RightValueForComparision = EditorGUILayout.Slider (ConditionData.RightValueForComparision, 0, 1);
 			break;
 		case AIValueComparisionCondition.ExeuctionCount:
+		case AIValueComparisionCondition.AttackCount:
+		case AIValueComparisionCondition.DoDamageCount:
 			ConditionData.RightValueForComparision = EditorGUILayout.IntField ((int)ConditionData.RightValueForComparision);
 			break;
 		}
 		EditorGUILayout.EndHorizontal ();
 	}
 
-    #endregion
+	#endregion
 
     #region Helper functions
 	public static string[] GetAnimationNames (GameObject gameObject, string CurrentAnimationName, out int index)
