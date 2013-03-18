@@ -40,7 +40,13 @@ public enum AIBehaviorType
     /// Holds in a position without leaving.
     /// In holding mode, AI attack enemy in sight. But not tracking the enemy.
     /// </summary>
-    HoldPosition = 7
+    HoldPosition = 7,
+	
+	/// <summary>
+	/// Special AI behavior.
+	/// This AI will be switch off , another AI will be active.
+	/// </summary>
+	SwitchToAI = 8,
     #endregion
 }
 

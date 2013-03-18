@@ -67,7 +67,9 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour
 
     private bool isShaking = false;
     private Vector3 originPosition;
-
+	
+	private float CameraDampInterval = 0.02f;
+	private float CameraLastDampTime = 0;
     //enum CameraDampMode
     //{
     //    ByParameter = 0,
@@ -99,9 +101,10 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour
 	void LateUpdate ()
 	{
         ShouldAutoAdjustCamera = !isShaking && !IsSlowMotion;
-        if (ShouldAutoAdjustCamera)
+        if (ShouldAutoAdjustCamera && (Time.time - CameraLastDampTime >= CameraDampInterval))
         {
             SetPosition (true);
+			CameraLastDampTime = Time.time;
         }
 	}
 
@@ -115,14 +118,19 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour
 		Vector3 characterCeneter = GetCharacterCenter ();
 		//Vector3 newPosition = characterCeneter + Vector3.up * DynamicLockHeight;
 		//Vector3 NewPositionOffset = Character.transform.TransformDirection(Vector3.back) * Mathf.Abs(DynamicLockDistance);
-		Vector3 NewPositionOffset = LevelManager.Instance.ControlDirectionPivot.TransformDirection (Vector3.back) * DynamicDistance;
-		NewPositionOffset += Vector3.up * DynamicHeight;
-		Vector3 newPosition = (smoothDamp) ?
-            Vector3.SmoothDamp (transform.position, GetCharacterCenter () + NewPositionOffset, ref dampingVelocity, smoothLag) 
-            :
-            characterCeneter + NewPositionOffset;
-		newPosition = AdjustLineOfSight (newPosition, GetCharacterCenter ());
-		transform.position = newPosition;
+		if(LevelManager.Instance != null && LevelManager.Instance.ControlDirectionPivot != null)
+		{
+		   Vector3 NewPositionOffset = LevelManager.Instance.ControlDirectionPivot.TransformDirection (Vector3.back) * DynamicDistance;
+		   NewPositionOffset += Vector3.up * DynamicHeight;
+		   Vector3 newPosition = (smoothDamp) ?
+                                   Vector3.SmoothDamp (transform.position, GetCharacterCenter () + NewPositionOffset, ref dampingVelocity, smoothLag) 
+                                   : characterCeneter + NewPositionOffset;
+		    newPosition = AdjustLineOfSight (newPosition, GetCharacterCenter ());
+		    transform.position = newPosition;
+		}
+		else 
+			Debug.LogWarning("Warning! NO Level manager instance found in scene, can not set position of the camera");
+		
 		//Debug.DrawRay(Character.transform.position + Character.center, backOffset,Color.red, 5);
         //transform.LookAt(Character.center + Character.transform.position);
 	}
@@ -168,13 +176,14 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour
 
     public IEnumerator SlowMotion(Vector3 LookAtPoint)
     {
-        if (IsSlowMotion)
+        if (IsSlowMotion || (SlowMotionAnchors.Length == 0))
             yield break;
         IsSlowMotion = true;
         GameObject temp = new GameObject();
         temp.transform.position = transform.position;
         temp.transform.rotation = transform.rotation;
         //select random slow motion anchor:
+		
         Transform randomAnchor = Util.RandomFromArray<Transform>(SlowMotionAnchors);
         
         //fade out slowmotion:

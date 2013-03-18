@@ -12,18 +12,24 @@ public class LevelManager : MonoBehaviour {
 	public LayerMask GroundLayer;
     public ScenEventListener EventListener;
 	public Transform ControlDirectionPivot;
-
+	public string PlayerTag = "Player";
+	
     [HideInInspector]
-    public IList<AI> AIs = new List<AI>();
-
+    public IList<Unit> Units = new List<Unit>();
+	[HideInInspector]
+	public GameObject player = null;
+	
+	
+	
     void Awake()
     {
         Instance = this;
+		player = GameObject.FindGameObjectWithTag(PlayerTag);
     }
 
 	// Use this for initialization
 	void Start () {
-        //GameEvent(new GameEvent(GameEventType.LevelStart, this.gameObject));
+        GameEvent(new GameEvent(GameEventType.LevelStart, this.gameObject));
 	}
 	
 	// Update is called once per frame
@@ -40,35 +46,38 @@ public class LevelManager : MonoBehaviour {
     {
         if(Instance != null && Instance.EventListener != null)
         {
-           Instance.EventListener.SendMessage("ScenarioEvent", gameEvent);
+			if(Application.isPlaying ==true)
+			{
+               Instance.EventListener.SendMessage("OnEvent", gameEvent);
+			}
         }
     }
 
-    public static void RegisterAI(AI AI)
+    public static void RegisterUnit(Unit unit)
     {
-        Instance.AIs.Add(AI);
+        Instance.Units.Add(unit);
     }
 
-    public static void UnregisterAI(AI AI)
+    public static void UnregisterUnit(Unit unit)
     {
-        if (Instance.AIs.Contains(AI))
+        if (Instance.Units.Contains(unit))
         {
-            Instance.AIs.Remove(AI);
+            Instance.Units.Remove(unit);
         }
     }
 
     public static void SendAIMessage(string message, object parameter)
     {
-        for (int i=0; i<Instance.AIs.Count; i++)
+        for (int i=0; i<Instance.Units.Count; i++)
         {
-            AI ai = Instance.AIs[i];
-            if (ai == null)
+            Unit unit = Instance.Units[i];
+            if (unit == null)
             {
-                Instance.AIs.RemoveAt(i);
+                Instance.Units.RemoveAt(i);
             }
             else
             {
-                ai.SendMessage(message, parameter);
+                unit.SendMessage(message, parameter);
             }
         }
     }

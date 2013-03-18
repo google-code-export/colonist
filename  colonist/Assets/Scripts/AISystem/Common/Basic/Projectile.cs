@@ -241,13 +241,15 @@ public class Projectile : MonoBehaviour {
     /// <param name="Distance"></param>
     /// <param name="HeightDistanceRate"></param>
     /// <returns></returns>
-
     public virtual IEnumerator MoveInParabolaLine(Vector3 StartPosition, Vector3 TargetPosition, float Speed, float Radian)
     {
-        //Debug.Break();
+		//calculate the distance of start to end position
         float Distance = Vector3.Distance(TargetPosition, StartPosition);
+		//calculate the total time 
         float totalTime = Distance / Speed;
+		//calculate the total height
         float Height = Distance * Radian;
+		//calculate the rising time, which half of the total time in the air.
         float RisingTime = totalTime / 2;
         float upwardInitalSpeed, gravity = 0;//V = gravity * RisingTime
         //gravity * RisingTime * RisingTime + 0.5 * gravity * RisingTime * RisingTime = Height

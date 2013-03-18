@@ -11,8 +11,8 @@ public class Editor_Predator3rdPersonalUnit : Editor
 	bool EnableEditIdleData = false, EnableEditComboCombatData = false, EnableEditAttackData = false,
          EnableEditMoveData = false, EnableEditEffectData = false, EnableEditJumpData = false,
 	     EnableEditReceiveDamageData = false, EnableEditDecalData = false, EnableEditDeathData = false,
-	     EnableEditAttackAnimation = false;
-	bool EnableEditDefaultTapCombat = false, EnableEditDefaultSliceCombat = false;
+	     EnableEditAttackAnimation = false, EnableEditAudioData = false;
+	bool EnableEditDefaultLeftClawCombat = false, EnableEditDefaultRightClawCombat = false, EnableEditDefaultDualClawCombat;
 	static IDictionary<ComboCombat,bool> DynamicEditingComboCombatSwitch = new Dictionary<ComboCombat,bool> ();
 	
 	public Editor_Predator3rdPersonalUnit ()
@@ -62,21 +62,35 @@ public class Editor_Predator3rdPersonalUnit : Editor
 				}
 				EditorGUILayout.EndToggleGroup ();
 
-				//Edit default combat - tap
-				if(EnableEditDefaultTapCombat = EditorGUILayout.BeginToggleGroup ("  ---Edit default combat : Tap", EnableEditDefaultTapCombat)) {
-				PlayerPredatorUnit.DefaultCombat_Tap = Editor_Predator3rdPersonalUnit.EditCombat (
-					                                                                 "Edit default tap combat:",
+				//Edit default combat - left claw 
+				if (EnableEditDefaultLeftClawCombat = EditorGUILayout.BeginToggleGroup ("  ---Edit default combat : left claw", EnableEditDefaultLeftClawCombat)) {
+					PlayerPredatorUnit.DefaultCombat_LeftClaw = Editor_Predator3rdPersonalUnit.EditCombat (
+					                                                                 "Edit default left claw combat:",
 					                                                                 PlayerPredatorUnit,
-					                                                                 PlayerPredatorUnit.DefaultCombat_Tap);
+					                                                                 PlayerPredatorUnit.DefaultCombat_LeftClaw);
+					PlayerPredatorUnit.DefaultCombat_LeftClaw.gestureType = UserInputType.Button_Left_Claw_Tap;
 				}
-				EditorGUILayout.EndToggleGroup();
+				EditorGUILayout.EndToggleGroup ();
 				
-				//Edit default combat - slice
-				if(EnableEditDefaultSliceCombat = EditorGUILayout.BeginToggleGroup ("  ---Edit default combat : Slice", EnableEditDefaultSliceCombat)) {
-				PlayerPredatorUnit.DefaultCombat_Slice = Editor_Predator3rdPersonalUnit.EditCombat (
-					"Edit default slice combat:", PlayerPredatorUnit, PlayerPredatorUnit.DefaultCombat_Slice);
+				//Edit default combat - right claw 
+				if (EnableEditDefaultRightClawCombat = EditorGUILayout.BeginToggleGroup ("  ---Edit default combat : right claw", EnableEditDefaultRightClawCombat)) {
+					PlayerPredatorUnit.DefaultCombat_RightClaw = Editor_Predator3rdPersonalUnit.EditCombat (
+					                       "Edit default right claw combat:", 
+						                   PlayerPredatorUnit, 
+						                   PlayerPredatorUnit.DefaultCombat_RightClaw);
+					PlayerPredatorUnit.DefaultCombat_RightClaw.gestureType = UserInputType.Button_Right_Claw_Tap;
 				}
-				EditorGUILayout.EndToggleGroup();
+				EditorGUILayout.EndToggleGroup ();
+
+				//Edit default combat - dual claw 
+				if (EnableEditDefaultDualClawCombat = EditorGUILayout.BeginToggleGroup ("  ---Edit default combat : dual claw", EnableEditDefaultDualClawCombat)) {
+					PlayerPredatorUnit.DefaultCombat_DualClaw = Editor_Predator3rdPersonalUnit.EditCombat (
+					                       "Edit default dual claw combat:", 
+					                       PlayerPredatorUnit, 
+					                       PlayerPredatorUnit.DefaultCombat_DualClaw);
+					PlayerPredatorUnit.DefaultCombat_DualClaw.gestureType = UserInputType.Button_Dual_Claw_Tap;
+				}
+				EditorGUILayout.EndToggleGroup ();
 				
 				//Edit ComboCombat Data
 				if (EnableEditComboCombatData = EditorGUILayout.BeginToggleGroup ("    ---Edit ComboCombat Data---", EnableEditComboCombatData)) {
@@ -96,6 +110,14 @@ public class Editor_Predator3rdPersonalUnit : Editor
 
 			}
 			EditorGUILayout.EndToggleGroup ();
+			//Edit Audio Data
+			if (EnableEditAudioData = EditorGUILayout.BeginToggleGroup ("---Edit Audio Data---", EnableEditAudioData)) {
+				PlayerPredatorUnit.AudioData = EditAudioDataArray (PlayerPredatorUnit.gameObject,
+					                                                      PlayerPredatorUnit.AudioData);
+
+			}
+			EditorGUILayout.EndToggleGroup ();
+			
 		}
 		EditorGUILayout.EndToggleGroup ();
 	}
@@ -136,7 +158,7 @@ public class Editor_Predator3rdPersonalUnit : Editor
 		EditorGUILayout.LabelField (label);
 		Combat.name = EditorGUILayout.TextField ("Combat name:", Combat.name);
 		Combat.damageForm = (DamageForm)EditorGUILayout.EnumPopup ("DamageForm:", Combat.damageForm);
-		Combat.gestureType = (GestureType)EditorGUILayout.EnumPopup (new GUIContent ("Gesture:", "The matched gesture trigger this combat?"), Combat.gestureType);
+		Combat.gestureType = (UserInputType)EditorGUILayout.EnumPopup (new GUIContent ("Gesture:", "The matched gesture trigger this combat?"), Combat.gestureType);
 		
 		EditorGUILayout.BeginHorizontal ();
 		Combat.WaitUntilAnimationReturn = EditorGUILayout.Toggle ("Pend for animation", Combat.WaitUntilAnimationReturn);
@@ -230,5 +252,28 @@ public class Editor_Predator3rdPersonalUnit : Editor
 			EditorGUILayout.Space ();
 		}
 		return PlayerEffectDataArray;
+	}
+	
+	public static AudioData[] EditAudioDataArray(GameObject gameObject,
+                                                 AudioData[] AudioDataArray)
+	{
+		if (GUILayout.Button ("Add Audio Data")) {
+			AudioData audioData = new AudioData ();
+			AudioDataArray = Util.AddToArray<AudioData> (audioData, AudioDataArray);
+		}
+		for(int i=0; i<AudioDataArray.Length; i++)
+		{
+			AudioData audio = AudioDataArray [i];
+			EditorGUILayout.LabelField ("------------------------ " + audio.Name);
+			audio.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), audio.Name);
+			//audio.audioClip = (AudioClip)EditorGUILayout.ObjectField(new GUIContent ("Audio clip:", "Assign audio clip"), audio.audioClip, typeof(AudioClip));
+			audio.audioClip = EditorCommon.EditAudioClipArray("Edit audio clip", audio.audioClip);
+			//Delete this audio data
+			if (GUILayout.Button ("Delete AduioData:" + audio.Name)) {
+    			AudioDataArray = Util.CloneExcept<AudioData> (AudioDataArray, audio);
+			}
+		}
+		EditorGUILayout.Space ();
+		return AudioDataArray;
 	}
 }

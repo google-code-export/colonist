@@ -110,27 +110,32 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 	/// </summary>
 	public bool PrintDebugMessage = false;
 	
-    public virtual void Awake()
+    void Awake()
     {
-        StartCoroutine(InitAI());
+        InitAI();
     }
 
-    public virtual void Start()
+    void Start()
     {
         StartCoroutine(StartAI());
     }
 
-    public virtual void Update()
+    void Update()
     {
 
     }
 
-    public virtual void FixedUpdate()
+    void FixedUpdate()
     {
         //Refresh CurrentTarget in every Time.fixDeltaTime seconds
         FindTarget(DetectiveRange);
     }
-
+	
+	void OnDisable()
+	{
+		StopAI();
+	}
+	
 #region initialization
     /// <summary>
     /// 
@@ -139,12 +144,11 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// 
     /// Offspring should call InitAI() at Awake() 
     /// </summary>
-    public virtual IEnumerator InitAI()
+    public virtual void InitAI()
     {
         this.Unit = GetComponent<Unit>();
         controller = GetComponent<CharacterController>();
 		navigator = GetComponent<Navigator>();
-		
         //Put the behavior into a sort list first, which sort the beheavior priority from lower to higher 
         SortedList<int,AIBehavior> tempList = new SortedList<int,AIBehavior>();
         foreach (AIBehavior beheavior in Behaviors)
@@ -157,8 +161,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         for (int i = tempList.Count-1; i>=0; i--)
         {
             BehaviorList_SortedPriority.Add(tempList.Values[i]);
-        }
-        yield break;
+        }        
     }
 	
 	/// <summary>
@@ -177,10 +180,9 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// <summary>
     /// Stop AI.
     /// </summary>
-    public virtual IEnumerator StopAI()
+    public virtual void StopAI()
     {
 		StopAllCoroutines();
-        yield break;
     }
 	
     /// <summary>
@@ -429,6 +431,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         bool ShouldSendHitMessage = CheckHitCondition(target, AttackData);
         if(ShouldSendHitMessage)
 		{
+		   Debug.Log("Send hit message from unit: " + this.name + " to unit:" + target.name);
            target.SendMessage("ApplyDamage", AttackData.GetDamageParameter(gameObject));
 		   //Plus 1 to DoDamageCounter of Unit.
 		   Unit.DoDamageCounter ++;
@@ -738,8 +741,14 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 			       LeftValue = (AIBehaviorCondition.StringValue == this.CurrentBehavior.Name);
 			    break;
 		case AIBooleanConditionEnum.LastestBehaviorNameIsOneOf:
+			if(this.CurrentBehavior == null)
+			{
+				LeftValue = false;
+			}
+			else {
 			    LeftValue = Util.ArrayContains<string>(AIBehaviorCondition.StringValueArray, this.CurrentBehavior.Name);
-			    break;
+			}
+			break;
             default:
                 Debug.LogError("GameObject:" + this.gameObject.name + " - Unsupported boolean condition:" + AIBehaviorCondition.BooleanCondition.ToString());
                 break;
@@ -999,7 +1008,11 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 	
 	public virtual IEnumerator Start_MoveToCurrentTarget(AIBehavior behavior)
 	{
-        MoveData MoveData = Unit.MoveDataDict[behavior.MoveDataName];
+		if(Unit.MoveDataDict.ContainsKey(behavior.MoveDataName)==false)
+		{
+			Debug.LogError("Error key:" + behavior.MoveDataName + " at frame:" + Time.frameCount);
+		}
+		MoveData MoveData = Unit.MoveDataDict[behavior.MoveDataName];
         float refreshNavigationInterval = 0.3333f;
 		float lastNavigationTime = 0;
         while (true)
@@ -1217,6 +1230,15 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         }
 		//plus 1 to Attack counter of Unit.
 		Unit.AttackCounter++;
+	}
+	
+	public virtual void Start_SwitchToAI(AIBehavior behavior)
+	{
+		string NextAIName = Util.RandomFromArray(behavior.SwitchToAIName);
+		AI nextAI = this.Unit.AIDict[NextAIName];
+		//switch to next AI.
+		this.enabled = false;
+		nextAI.enabled = true;
 	}
 	
 #endregion

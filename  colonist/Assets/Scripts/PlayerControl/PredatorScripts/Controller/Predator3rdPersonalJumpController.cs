@@ -25,7 +25,10 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
     private LayerMask JumpOverObstacleLayer;
     private Predator3rdPersonVisualEffectController ClawEffectController;
     private Predator3rdPersonalUnit PredatorPlayerUnit = null;
-
+	
+	public float JumpForwardMaxHeight = 5;
+	
+	
     void Awake()
     {
         controller = GetComponent<CharacterController>();
@@ -69,16 +72,17 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
         //Else, jump forward
         else
         {
-            yield return StartCoroutine(JumpForward());
+            yield return StartCoroutine(JumpStraightForward());
+			
         }
         ClawEffectController.HideBothClawTrailRenderEffect();
     }
 
     /// <summary>
-    /// Jumping forward at speed = ForwardJumpSpeed, in ForwardJumpTime
+    /// Jumping straight forward at speed = ForwardJumpSpeed, in ForwardJumpTime
     /// </summary>
     /// <returns></returns>
-    IEnumerator JumpForward()
+    IEnumerator JumpStraightForward()
     {
         IsJumping = true;
         Vector3 jumpDirection = transform.forward;
@@ -86,13 +90,26 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
         animation.Play(PrejumpAnimation);
         yield return new WaitForSeconds(animation[PrejumpAnimation].length);
         float _time = Time.time;
+		
+		//rising time = 1/2 of ForwardJumpTime
+		float RisingTime = ForwardJumpTime * 0.5f;
+		float gravity = (float)(this.JumpForwardMaxHeight / (1.5f * RisingTime * RisingTime));
+		float upwardInitalSpeed = gravity * RisingTime;
+		
+		Vector3 jumpForwardVelocity = jumpDirection * ForwardJumpSpeed;
+		jumpForwardVelocity.y = 0;
+		Vector3 upwardVelocity = new Vector3(0, upwardInitalSpeed, 0);
         while ((Time.time - _time) <= ForwardJumpTime)
         {
             animation.Play(JumpingAnimation);
-            Vector3 jumpVelocity = jumpDirection * ForwardJumpSpeed * Time.deltaTime;
-            //gravity = 9.8
-            jumpVelocity.y -= 9.8f * Time.deltaTime;
-            controller.Move(jumpVelocity);
+//            Vector3 jumpVelocity = jumpDirection * ForwardJumpSpeed * Time.deltaTime;
+            upwardVelocity.y -= gravity * Time.deltaTime; 
+			Vector3 forwardVelocity = jumpForwardVelocity * Time.deltaTime + upwardVelocity;
+			
+//            controller.Move(jumpVelocity);
+			controller.Move(forwardVelocity);
+			
+//			transform.position -= new Vector3(0, gravity * Time.deltaTime, 0);
             //Util.MoveTowards(transform, transform.forward, controller, ForwardJumpSpeed);
             yield return null;
         }
@@ -105,8 +122,43 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
         //Grounding animation is optional - player may skip this part 
         animation.Play(GroundingAnimation);
         yield return new WaitForSeconds(animation[GroundingAnimation].length);
-        Debug.Log("JumpForwardEnd");
     }
+	
+	
+	/// <summary>
+	/// A more real jumps forward function. The predator jumps forward in parabola line.
+	/// </summary>
+	/// <returns>
+	/// The forward real.
+	/// </returns>
+	IEnumerator JumpForwardRealistic(Vector3 StartPosition, Vector3 TargetPosition, 
+		                             float Speed, float Overtime, float Radian)
+	{
+		//Calculate the jump forward to position.
+
+		
+		float Distance = Vector3.Distance(TargetPosition, StartPosition);
+        float totalTime = Distance / Speed;
+        float Height = Distance * Radian;
+        float RisingTime = totalTime / 2;
+        float upwardInitalSpeed, gravity = 0;//V = gravity * RisingTime
+        //gravity * RisingTime * RisingTime + 0.5 * gravity * RisingTime * RisingTime = Height
+        gravity =(float)(Height / (1.5 * RisingTime * RisingTime));
+        upwardInitalSpeed = gravity * RisingTime;
+
+        Vector3 forwardVelocity = (TargetPosition - StartPosition).normalized * Speed;
+        Vector3 velocity = forwardVelocity;
+        velocity.y = upwardInitalSpeed;
+        float StartTime = Time.time;
+        while ((Time.time - StartTime) <= totalTime)
+        {
+            transform.LookAt(transform.position + velocity);
+            transform.position += velocity * Time.deltaTime;
+			
+            velocity.y -= gravity * Time.deltaTime;
+            yield return null;
+        }
+	}
 
     /// <summary>
     /// Move over a jump over obstacle along parabola line.

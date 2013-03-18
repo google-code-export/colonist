@@ -334,7 +334,7 @@ public class EditorCommon
 	/// </summary>
 	public static EffectData[] EditEffectData (EffectData[] EffectDataArray)
 	{
-		if (GUILayout.Button ("Add Effect data")) {
+		if (GUILayout.Button ("Add new Effect data")) {
 			EffectData EffectData = new EffectData ();
 			EffectDataArray = Util.AddToArray<EffectData> (EffectData, EffectDataArray);
 		}
@@ -343,7 +343,19 @@ public class EditorCommon
 			EditorGUILayout.LabelField ("------------------------ " + EffectData.Name);
 			EffectData.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), EffectData.Name);
 				
-			EffectData.UseGlobalEffect = EditorGUILayout.Toggle (new GUIContent ("Use global effect?", "是否使用全局Effect?"), EffectData.UseGlobalEffect);
+			EffectData.UseGlobalEffect = EditorGUILayout.Toggle (new GUIContent ("Use global effect?", ""), EffectData.UseGlobalEffect);
+			
+			EditorGUILayout.BeginHorizontal();
+			EffectData.CreateDelay = EditorGUILayout.BeginToggleGroup(new GUIContent("Create in delay",""), EffectData.CreateDelay );
+			if(EffectData.CreateDelay)
+			{
+				EffectData.CreateDelayTime = EditorGUILayout.FloatField(EffectData.CreateDelayTime);
+			}
+			EditorGUILayout.EndToggleGroup();
+			EditorGUILayout.EndHorizontal();
+			
+			EffectData.Count = EditorGUILayout.IntField(new GUIContent("Number of effect object:",""), EffectData.Count);
+			
 			if (EffectData.UseGlobalEffect) {
 				EffectData.GlobalType = (GlobalEffectType)EditorGUILayout.EnumPopup (new GUIContent ("Global effect type", "是全局Effect类型"),
 						EffectData.GlobalType);
@@ -359,6 +371,7 @@ public class EditorCommon
 					EffectDataArray = Util.CloneExcept<EffectData> (EffectDataArray, EffectData);
 				}
 			}
+			
 			EditorGUILayout.Space ();
 		}
 		return EffectDataArray;

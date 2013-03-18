@@ -6,13 +6,9 @@ using System.Collections;
 /// <summary>
 /// A class used for its static member to expose current status of the predator protagonist
 /// </summary>
-[@RequireComponent(typeof(Predator3rdPersonMovementController))]
-[@RequireComponent(typeof(Predator3rdPersonalAttackController))]
-[@RequireComponent(typeof(Predator3rdPersonalFetchController))]
-[@RequireComponent(typeof(Predator3rdPersonalJumpController))]
 public class PredatorPlayerStatus : MonoBehaviour{
 
-    public MovementControlMode PlayerControlMode = MovementControlMode.CharacterRelative;
+    //public MovementControlMode PlayerControlMode = MovementControlMode.CharacterRelative;
 
     /// <summary>
     /// Assign the predator bone reference at this beheavior,
@@ -27,13 +23,6 @@ public class PredatorPlayerStatus : MonoBehaviour{
     public Transform rearRightUpperLeg = null;
     public Transform leftUpperClaw = null;
     public Transform rightUpperClaw = null;
-
-    public LayerMask GroundLayer;
-    public LayerMask WallLayer;
-    public LayerMask JumpoverObstacleLayer;
-    public LayerMask EnemyLayer;
-	
-	public AudioData[] AudioData = new AudioData[]{};
 	
     /// <summary>
     /// When DisableUserMovement = true, the movement controller will ignore the user movement command in Update()
@@ -88,22 +77,22 @@ public class PredatorPlayerStatus : MonoBehaviour{
 
     private Predator3rdPersonMovementController movementController;
     private Predator3rdPersonalAttackController attackController;
-    private Predator3rdPersonalFetchController fetchController;
+    //private Predator3rdPersonalFetchController fetchController;
     private Predator3rdPersonalJumpController JumpController;
     void Awake()
     {
         movementController = this.GetComponent<Predator3rdPersonMovementController>();
         attackController = this.GetComponent<Predator3rdPersonalAttackController>();
-        fetchController = this.GetComponent<Predator3rdPersonalFetchController>();
+        //fetchController = this.GetComponent<Predator3rdPersonalFetchController>();
         JumpController = this.GetComponent<Predator3rdPersonalJumpController>();
     }
 
     private void UpdateStatus()
     {
-        isAttacking = attackController.IsPlayingAttack() || fetchController.isPlayingFetchAnimation();
+        isAttacking = attackController.IsPlayingAttack() ;//|| fetchController.isPlayingFetchAnimation();
         isMoving = !Mathf.Approximately(movementController.MoveDirection.magnitude, 0);
                   
-        isFetching = fetchController.HasFetchSomething;
+       // isFetching = fetchController.HasFetchSomething;
         isJumping = JumpController.IsJumping;
     }
 
@@ -112,14 +101,4 @@ public class PredatorPlayerStatus : MonoBehaviour{
         UpdateStatus();
     }
 	
-	public void PlaySound(string name)
-	{
-		foreach(AudioData data in this.AudioData)
-		{
-			if(data.Name == name)
-			{
-				AudioSource.PlayClipAtPoint(data.audioClip, transform.position);
-			}
-		}
-	}
 }

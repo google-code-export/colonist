@@ -87,7 +87,7 @@ public class Ragdoll : MonoBehaviour {
     {
         foreach (EffectData effectData in EffectData)
         {
-            GlobalBloodEffectDecalSystem.CreateBloodEffect(RagdollCenter.position, effectData);
+            GlobalBloodEffectDecalSystem.CreateEffect(RagdollCenter.position, effectData);
         }
         foreach (DecalData decalData in DecalData)
         {

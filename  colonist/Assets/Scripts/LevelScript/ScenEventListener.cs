@@ -13,5 +13,5 @@ public abstract class ScenEventListener : MonoBehaviour {
 	
 	}
 	
-	public abstract void ScenarioEvent(GameEvent gameEvent);
+	public abstract void OnEvent(GameEvent gameEvent);
 }

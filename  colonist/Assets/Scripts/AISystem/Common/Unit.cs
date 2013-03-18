@@ -71,6 +71,8 @@ public class Unit : UnitBase , I_GameEventReceiver
 
     public AudioData[] AudioData = new AudioData[] { };
 	
+	public IDictionary<string,AI> AIDict = new Dictionary<string,AI>();
+	
 	/// <summary>
 	/// The attack counter indicates how many times the Unit has attacked.
 	/// Note: not necessary for every attack to do actual damage.
@@ -100,26 +102,34 @@ public class Unit : UnitBase , I_GameEventReceiver
 	/// </summary>
 	public string StartAIName = "";
 	
-	IList<AI> AIList = new List<AI>();
-	
 	/// <summary>
 	/// The current running AI.
 	/// </summary>
 	[HideInInspector]
 	public AI CurrentAI = null;
 	
-#endregion
+	/// <summary>
+	/// Indicate if the unit has been initialized.
+	/// </summary>
+	[HideInInspector]
+	public bool UnitInitDone = false;
 	
+#endregion
 
 	CharacterController controller = null;
-	
 	
     void Awake()
     {
         InitUnitData();
 		InitAnimation();
         InitUnitAI();
+		UnitInitDone = true;
     }
+	
+	public void Start()
+	{
+		
+	}
 	
 	public void Update()
 	{
@@ -269,20 +279,15 @@ public class Unit : UnitBase , I_GameEventReceiver
 		}
 		foreach(AI _AI in GetComponents<AI>())
 		{
-			AIList.Add(_AI);
+			AIDict.Add(_AI.Name, _AI);
+			if(_AI.Name == StartAIName)
+			{
+				_AI.enabled = true;
+			}
+			else {
+				_AI.enabled = false;
+			}
 		}
-		
-		//Disable the non-first AI
-//	    foreach(AI _AI in AIList)
-//		{
-//			if(_AI.Name == StartAIName)
-//			{
-//				_AI.enabled = true;
-//			}
-//			else {
-//				_AI.enabled = false;
-//			}
-//		}
 		controller = GetComponent<CharacterController>();
 		LevelManager.RegisterUnit(this);
 	}
