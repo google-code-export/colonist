@@ -4,14 +4,10 @@ using System.Collections;
 [RequireComponent(typeof (Predator3rdPersonalStealthController))]
 [ExecuteInEditMode]
 public class JoybuttonStealth : JoyButton {
-
-    public GameGUIHelper.RectPosition Location = GameGUIHelper.RectPosition.BottomLeft;
-
     private Predator3rdPersonalStealthController StealthController;
 
     void Awake()
     {
-        this.JoyButtonName = "Stealth_Predator";
         StealthController = GetComponent<Predator3rdPersonalStealthController>();
     }
 
@@ -44,8 +40,8 @@ public class JoybuttonStealth : JoyButton {
     }
     void OnGUI()
     {
-        Rect r = new Rect(JoyButtonBound.x + JoyButtonBoundOffset.x,
-            JoyButtonBound.y + JoyButtonBoundOffset.y,
+        Rect r = new Rect(JoyButtonBound.x ,//+ this.JoyButtonScreenOffset.x,
+            JoyButtonBound.y,// + JoyButtonScreenOffset.y,
             JoyButtonSize, JoyButtonSize);
         GUI.DrawTexture(r, ButtonTexture);
     }

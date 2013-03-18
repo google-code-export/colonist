@@ -87,6 +87,14 @@ public class AIBehavior
     public float HoldRadius = 3.5f;
     
 #endregion
+	
+#region variables for BehaviorType = SwitchToAI
+	/// <summary>
+	/// The name of the switch to AI.
+	/// Randomly pick one AI name, when swtiching
+	/// </summary>
+	public string[] SwitchToAIName = new string[] {};
+#endregion
 
     /// <summary>
     /// SendMessage() at behavior start/end

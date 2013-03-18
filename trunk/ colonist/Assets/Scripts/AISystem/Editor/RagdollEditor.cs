@@ -42,7 +42,8 @@ public class RagdollEditor : EditorWindow {
 		selectedRagdoll = selectedGameObject.GetComponent<Ragdoll>();
 		ScrollPosition = EditorGUILayout.BeginScrollView (ScrollPosition, false, true, null);
 		EditRagdollBase();
-		EditEffectData();
+		//EditEffectData();
+		selectedRagdoll.EffectData = EditorCommon.EditEffectData (selectedRagdoll.EffectData);
 		EditDecalData();
 		EditRagdollJointData();
 		EditorGUILayout.EndScrollView();

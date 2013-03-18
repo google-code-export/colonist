@@ -148,6 +148,10 @@ public class DeathData : UnitAnimationData
 public class EffectData
 {
     public string Name = string.Empty;
+	/// <summary>
+	/// The count of the effect
+	/// </summary>
+	public int Count = 1;
     #region use global effect object
     public bool UseGlobalEffect = true;
     public GlobalEffectType GlobalType = GlobalEffectType.HumanBlood_Splatter;
@@ -165,6 +169,13 @@ public class EffectData
     public bool DestoryInTimeOut = true;
     public float DestoryTimeOut = 1;
     #endregion
+	
+	/// <summary>
+	/// The create delay flag.
+	/// If CreateDelay is true, then the effect should be created in delay of %CreateDelayTime% seconds.
+	/// </summary>
+	public bool CreateDelay = true;
+	public float CreateDelayTime = 1;
 }
 
 

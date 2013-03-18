@@ -10,14 +10,20 @@ using System.Collections.Generic;
 /// </summary>
 [ExecuteInEditMode]
 public class CombatHint : MonoBehaviour {
-    public Texture Tap;
-	public Texture Slice;
-	public Texture Tick;
+	/// <summary>
+	/// The texture for hinting player combat action.
+	/// </summary>
+    public Texture LeftClaw_Tap;
+	public Texture LeftClaw_Hold;
+	public Texture RightClaw_Tap;
+	public Texture RightClaw_Hold;
+	public Texture DualClaw_Tap;
+	public Texture DualClaw_Hold;
 	
 	public float width = 32;
 	public float height = 32;
 	
-	private IList<GestureType> GestureList = new List<GestureType>();
+	private IList<UserInputType> PlayerCombatList = new List<UserInputType>();
     private int MaxCount = ComboCombat.ComboCombatMaxCount;
 	
 	// Use this for initialization
@@ -30,43 +36,51 @@ public class CombatHint : MonoBehaviour {
 	
 	}
 	
-    void NewHint(GestureType gestureType)
+    void NewHint(UserInputType PlayerInputType)
 	{
-		if(GestureList.Count == MaxCount)
+		if(PlayerCombatList.Count == MaxCount)
 		{
-			GestureList.Clear();
+			PlayerCombatList.Clear();
 		}
-		GestureList.Add(gestureType);
+		PlayerCombatList.Add(PlayerInputType);
 	}
 
     void ClearHint()
     {
-        GestureList.Clear();
+        PlayerCombatList.Clear();
     }
 	
     void OnGUI()
     {
 		//From left to right
-		for(int i=0; i<GestureList.Count; i++)
+		for(int i=0; i<PlayerCombatList.Count; i++)
 		{
             int GridSpaceCount = MaxCount + 1;
             Rect area1 = new Rect(Screen.width - width * (GridSpaceCount - i), 0 + height, width, height);
-            GestureType gestureType = GestureList[i];
+            UserInputType gestureType = PlayerCombatList[i];
             GUI.DrawTexture(area1, GestureToTexture(gestureType), ScaleMode.ScaleToFit, true);
 		}
 	}
 	
-	Texture GestureToTexture(GestureType gestureType)
+	Texture GestureToTexture(UserInputType gestureType)
 	{
 		switch(gestureType)
 		{
-		case GestureType.Single_Slice:
-			return Slice;
-		case GestureType.Single_Curve:
-			return Tick;
-	    case GestureType.Single_Tap:
+		case UserInputType.Button_Right_Claw_Tap:
+			return RightClaw_Tap;
+		case UserInputType.Button_Right_Claw_Hold:
+			return RightClaw_Hold;
+	    case UserInputType.Button_Left_Claw_Tap:
+			return LeftClaw_Tap;
+	    case UserInputType.Button_Left_Claw_Hold:
+			return LeftClaw_Hold;
+        case UserInputType.Button_Dual_Claw_Tap:
+			return DualClaw_Tap;
+	    case UserInputType.Button_Dual_Claw_Hold:
+			return DualClaw_Hold;			
+			
 		default:
-			return Tap;
+			return RightClaw_Tap;
 		}
 	}
 }

@@ -8,15 +8,9 @@ public interface I_AIBehaviorHandler {
     /// </summary>
     IEnumerator StartAI();
 
-    IEnumerator StopAI();
+    void StopAI();
 
-    IEnumerator InitAI();
-
-    /// <summary>
-    /// Determine if the behavior can be executed.
-    /// </summary>
-    /// <returns></returns>
-    bool IsConditionMatched(AIBehavior behavior,  AIBehaviorCondition Condition);
+    void InitAI();
 
     void StartBehavior(AIBehavior behavior);
 

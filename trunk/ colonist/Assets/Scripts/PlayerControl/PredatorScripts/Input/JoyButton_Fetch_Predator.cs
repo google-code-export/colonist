@@ -11,11 +11,8 @@ public class JoyButton_Fetch_Predator : JoyButton {
     public Vector2 Offset = new Vector2();
     public PrograssBar PowerHUD;
 
-    public GameGUIHelper.RectPosition Location = GameGUIHelper.RectPosition.BottomRight;
-
     void Awake()
     {
-        this.JoyButtonName = "Fetch";
         fetchController = this.GetComponent<Predator3rdPersonalFetchController>();
         ValueOffsetModifier = 5;
         JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate(Location, JoyButtonSize, Offset);
@@ -65,7 +62,7 @@ public class JoyButton_Fetch_Predator : JoyButton {
 
     void OnGUI()
     {
-        Rect r = new Rect(JoyButtonBound.x + JoyButtonBoundOffset.x, JoyButtonBound.y + JoyButtonBoundOffset.y,
+        Rect r = new Rect(JoyButtonBound.x + JoyButtonRuntimeOffset.x, JoyButtonBound.y + JoyButtonRuntimeOffset.y,
               JoyButtonSize, JoyButtonSize);
         GUI.color = this.baseColor;
         GUI.DrawTexture(r, ButtonTexture, ScaleMode.ScaleToFit, true);

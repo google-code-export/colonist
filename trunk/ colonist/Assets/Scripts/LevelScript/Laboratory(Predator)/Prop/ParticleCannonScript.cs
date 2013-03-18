@@ -8,7 +8,7 @@ public class ParticleCannonScript : MonoBehaviour {
     public ParticleSystem SphereSpreadBubble;
     public ParticleSystem Warmhole;
     public ParticleEmitter LightingOrb;
-    public LightningBolt_Scripted[] LightingEmitter;
+   // public LightningBolt_Scripted[] LightingEmitter;
 
 	// Use this for initialization
 	void Start () {
@@ -49,10 +49,10 @@ public class ParticleCannonScript : MonoBehaviour {
         LightingOrb.enabled = false;
         LightingOrb.emit = false;
         
-        foreach (LightningBolt_Scripted t in LightingEmitter)
-        {
-            t.enabled = false;
-        }
+        //foreach (LightningBolt_Scripted t in LightingEmitter)
+        //{
+        //    t.enabled = false;
+        //}
     }
 
     void WorkAtMiddlePower()
@@ -66,10 +66,10 @@ public class ParticleCannonScript : MonoBehaviour {
 
         Warmhole.enableEmission = false;
         LightingOrb.enabled = false;
-        foreach (LightningBolt_Scripted t in LightingEmitter)
-        {
-            t.enabled = false;
-        }
+     //   foreach (LightningBolt_Scripted t in LightingEmitter)
+      //  {
+      //      t.enabled = false;
+      //  }
     }
 
     void CutParticle()
@@ -84,10 +84,10 @@ public class ParticleCannonScript : MonoBehaviour {
         Warmhole.enableEmission = true;
         Warmhole.Play();
         LightingOrb.gameObject.active = false;
-        foreach (LightningBolt_Scripted t in LightingEmitter)
-        {
-            t.enabled = false;
-        }
+    //    foreach (LightningBolt_Scripted t in LightingEmitter)
+    ///    {
+    //        t.enabled = false;
+    //    }
     }
 
     public IEnumerator CreateWarmHole()
@@ -106,18 +106,18 @@ public class ParticleCannonScript : MonoBehaviour {
         Warmhole.Play();
         yield return new WaitForSeconds(1);
         //Lightning line since 6 sec
-        foreach (LightningBolt_Scripted t in LightingEmitter)
-        {
-            t.enabled = true;
-        }
+    //    foreach (LightningBolt_Scripted t in LightingEmitter)
+    //    {
+     //       t.enabled = true;
+     //   }
         float _t = Time.time;
         //Strengthen lightning line for 4 sec
         while ((Time.time - _t ) <= 4)
         {
-            foreach (LightningBolt_Scripted t in LightingEmitter)
-            {
-                t.particleEmitter.maxSize += 0.05f;
-            }
+   //         foreach (LightningBolt_Scripted t in LightingEmitter)
+   //         {
+   //             t.particleEmitter.maxSize += 0.05f;
+    //        }
             yield return new WaitForSeconds(0.1f);
         }
         //LightningOrb since 10 sec

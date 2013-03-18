@@ -3,11 +3,8 @@ using System.Collections;
 [ExecuteInEditMode]
 public class ButtonSkipScenario : JoyButton {
     
-    public GameGUIHelper.RectPosition Location = GameGUIHelper.RectPosition.BottomLeft;
-
     void Awake()
     {
-        this.JoyButtonName = "Skip";
         JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate(Location, JoyButtonSize);
     }
 
@@ -50,7 +47,7 @@ public class ButtonSkipScenario : JoyButton {
 
     void OnGUI()
     {
-        Rect r = new Rect(JoyButtonBound.x + JoyButtonBoundOffset.x, JoyButtonBound.y + JoyButtonBoundOffset.y,
+        Rect r = new Rect(JoyButtonBound.x + JoyButtonRuntimeOffset.x, JoyButtonBound.y + JoyButtonRuntimeOffset.y,
               JoyButtonSize, JoyButtonSize);
         GUI.DrawTexture(r, ButtonTexture, ScaleMode.ScaleToFit, true);
     }

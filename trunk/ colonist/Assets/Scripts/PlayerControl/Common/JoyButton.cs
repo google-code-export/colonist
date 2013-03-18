@@ -10,11 +10,33 @@ using System.Collections;
 /// </summary>
 public abstract class JoyButton : MonoBehaviour
 {
-    /// <summary>
+	    /// <summary>
     /// Name of the JoyButton
     /// </summary>
-    [HideInInspector]
     public string JoyButtonName;
+		
+    /// <summary>
+    /// Use this feature to control, when there're two joybuttons overlapped on screen, 
+    /// which one can get touch check first.
+    /// </summary>
+    public int Priority = 0;
+	
+	/// <summary>
+	/// The Location value defines a basic anchor of this button on screen
+	/// </summary>
+	public GameGUIHelper.RectPosition Location = GameGUIHelper.RectPosition.BottomLeft;
+
+	    /// <summary>
+    /// The button's size, it's always a rectangle.
+    /// </summary>
+    public float JoyButtonSize = 150;
+	
+	/// <summary>
+	/// The joy button screen offset.
+	/// Final position = Location + JoyButtonScreenOffset
+	/// </summary>
+    public Vector2 JoyButtonScreenOffset;
+
     /// <summary>
     /// Texture of the JoyButton
     /// </summary>
@@ -62,17 +84,10 @@ public abstract class JoyButton : MonoBehaviour
     }
 
     /// <summary>
-    /// The button's size, it's always a rectangle.
-    /// </summary>
-    public float JoyButtonSize = 150;
-
-    public Vector2 JoyButtonScreenOffset;
-
-    /// <summary>
     /// The button's bound offset , the actual display position on screen = JoyButtonBound + JoyButtonBoundOffset
     /// </summary>
     [HideInInspector]
-    public Vector2 JoyButtonBoundOffset = new Vector2();
+    public Vector2 JoyButtonRuntimeOffset = new Vector2();
     /// <summary>
     /// User Touch start position on this button
     /// </summary>
@@ -137,11 +152,7 @@ public abstract class JoyButton : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Use this feature to control, when there're two joybuttons overlapped on screen, 
-    /// which one can get touch check first.
-    /// </summary>
-    public int Priority = 0;
+
 
     /// <summary>
     /// The time when the finger touch on the Joy button

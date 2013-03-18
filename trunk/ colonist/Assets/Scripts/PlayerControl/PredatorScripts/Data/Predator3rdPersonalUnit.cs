@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
 /// Predator player jump data wrapper.
@@ -12,9 +13,21 @@ public class PredatorPlayerJumpData
 	public string JumpingAnimation = "";
 	public string GroundingAnimation = "";
 	public int AnimationLayer = 3;
+	/// <summary>
+	/// The jump forward speed.
+	/// </summary>
 	public float JumpForwardSpeed = 10;
+	/// <summary>
+	/// The jump forward time.
+	/// </summary>
 	public float JumpForwardTime = 0.2f;
+	/// <summary>
+	/// The jump over speed.
+	/// </summary>
 	public float JumpOverSpeed = 30;
+	/// <summary>
+	/// The jump over check distance.
+	/// </summary>
 	public float JumpOverCheckDistance = 4;
     /// <summary>
     /// The obstacle layer to let predator jump over.
@@ -26,6 +39,9 @@ public class PredatorPlayerJumpData
 /// Predator player unit.
 /// Don't use AttackData, use ComboCombat instead.
 /// </summary>
+[RequireComponent(typeof(JoyButtonManager))]
+[RequireComponent(typeof(Predator3rdPersonVisualEffectController))]
+[RequireComponent(typeof(Predator3rdPersonAudioController))]
 public class Predator3rdPersonalUnit : UnitBase
 {
 
@@ -53,10 +69,21 @@ public class Predator3rdPersonalUnit : UnitBase
     public float OffenseRadius = 6;
 
 	public float CombatCoolDown = 0.15f;
-
-    public Combat DefaultCombat_Tap = new Combat();
-
-    public Combat DefaultCombat_Slice = new Combat();
+	
+	/// <summary>
+	/// All unmatched left claw combat performs by DefaultCombat_LeftClaw
+	/// </summary>
+    public Combat DefaultCombat_LeftClaw = new Combat();
+	
+    /// <summary>
+	/// All unmatched right claw combat performs by DefaultCombat_RightClaw
+	/// </summary>
+    public Combat DefaultCombat_RightClaw = new Combat();
+	
+    /// <summary>
+	/// All unmatched dual claw combat performs by DeffaultCombat_DualClaw
+	/// </summary>
+	public Combat DefaultCombat_DualClaw = new Combat();
 
 	public ComboCombat[] ComboCombat = new ComboCombat[]{};
 	public string[] AttackAnimations = new string[]{};
@@ -67,6 +94,14 @@ public class Predator3rdPersonalUnit : UnitBase
 	/// Defines the effect data of the unit.
 	/// </summary>
 	public PlayerEffectData[] EffectData = new PlayerEffectData[] { };
+	public IDictionary<string,PlayerEffectData> PlayerEffectDataDict = new Dictionary<string,PlayerEffectData>();
+	
+	/// <summary>
+	/// Defines the audio data of the predator unit.
+	/// </summary>
+    public AudioData[] AudioData = new AudioData[]{};
+	public IDictionary<string,AudioData> AudioDataDict = new Dictionary<string,AudioData>();
+
 	
 	void Awake ()
 	{
@@ -88,6 +123,16 @@ public class Predator3rdPersonalUnit : UnitBase
         {
             comboCombat.Init();
         }
+		
+		foreach(PlayerEffectData effectData in EffectData)
+		{
+			PlayerEffectDataDict.Add(effectData.Name, effectData);
+		}
+		
+		foreach(AudioData audioData in AudioData)
+		{
+			AudioDataDict.Add(audioData.Name, audioData);
+		}
 	}
 	
 #region implement UnitHealth abstract

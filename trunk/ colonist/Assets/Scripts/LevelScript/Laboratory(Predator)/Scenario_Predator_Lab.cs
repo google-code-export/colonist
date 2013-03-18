@@ -95,7 +95,7 @@ public class Scenario_Predator_Lab : ScenEventListener {
         PredatorPlayer.BroadcastMessage("PlayerControlOn");
     }
 
-    public override void ScenarioEvent(GameEvent gameEvent)
+    public override void OnEvent(GameEvent gameEvent)
     {
         switch (gameEvent.type)
         {

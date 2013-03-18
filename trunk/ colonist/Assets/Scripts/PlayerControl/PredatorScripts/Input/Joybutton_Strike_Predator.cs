@@ -1,139 +1,107 @@
 using UnityEngine;
 using System.Collections;
 
-
 /// <summary>
-/// The button controls the strike action of the Predator protagonist, also by the button to speed up moving
-/// Action List:
-///  - Hold to power up
-///  - Hold and slip down to speed up
-///  - Hold and slip up to perform behead attack
-///  - Hold and slip left to perform puncture attack
-///  - Hold and slip right to perform mid attack
-///  - Hold and release to perform normal attack
+/// Stirke button - 
+/// When player tap the button, 
+/// UserInputData.Type = Tap will be send to attack controller.
 /// 
+/// When player hold the button,
+/// UserInputData.Type = Hold will be send to attack controller.
 /// </summary>
 [ExecuteInEditMode]
-[RequireComponent(typeof (Predator3rdPersonalAttackController))]
-public class Joybutton_Strike_Predator : JoyButton   {
+[RequireComponent(typeof(Predator3rdPersonalAttackController))]
+public class Joybutton_Strike_Predator : JoyButton
+{
+	
+	/// <summary>
+	/// The Input type triggered bywhenplayer tap on the button.
+	/// </summary>
+	public UserInputType Tap = UserInputType.Button_Left_Claw_Tap;
+	/// <summary>
+	/// The Input type triggered when player hold on the button.
+	/// If Hold == UserInputType.None, the hold message will not be sent.
+	/// </summary>
+	public UserInputType Hold = UserInputType.Button_Left_Claw_Hold;
+	/// <summary>
+	/// The hold detection seconds.
+	/// If player hold button longer than HoldDetectionSeconds, the 
+	/// </summary>
+	private float HoldDetectionSeconds = 0.3333f;
+	private Predator3rdPersonalAttackController attackController = null;
+	private float holdStart = -1;
+	private bool messageSent = false;
+	void Awake ()
+	{
+		attackController = this.GetComponent<Predator3rdPersonalAttackController> ();
+	}
 
-    private Predator3rdPersonalAttackController attackController = null;
-    public Color baseColor = Color.red;
+	void Start ()
+	{
+		JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate (Location, JoyButtonSize);
+	}
 
-    public PrograssBar PowerHUD;
+	void Update ()
+	{
+	}
 
-    public GameGUIHelper.RectPosition Location = GameGUIHelper.RectPosition.BottomRight;
+	/// <summary>
+	/// Call when touch.phase = Began
+	/// </summary>
+	/// <param name="touch"></param>
+	public override void onTouchBegin (Touch touch)
+	{
+		base.onTouchBegin (touch);
+		messageSent = false;
+		holdStart = -1;
+	}
+	/// <summary>
+	/// Call when touch.phase = Move
+	/// </summary>
+	/// <param name="touch"></param>
+	public override void onTouchMove (Touch touch)
+	{
 
-    void Awake()
-    {
-        this.JoyButtonName = "Strike";
-        attackController = this.GetComponent<Predator3rdPersonalAttackController>();
-        ValueOffsetModifier = 5;
-    }
+	}
+	/// <summary>
+	/// Call when touch.phase = Move
+	/// </summary>
+	/// <param name="touch"></param>
+	public override void onTouchStationary (Touch touch)
+	{
+		if (holdStart == -1) {
+			holdStart = Time.time;
+		}
+		if (messageSent==false && Hold!= UserInputType.None && ((Time.time - holdStart)>=HoldDetectionSeconds))
+		{
+			UserInputData gestInfo = new UserInputData( Hold, null, holdStart, Time.time);
+			attackController.SendMessage("NewUserGesture", gestInfo);
+			Debug.Log("Hold");
+			messageSent = true;
+		}
+	}
+	/// <summary>
+	/// Call when touch.phase = End
+	/// </summary>
+	/// <param name="touch"></param>
+	public override void onTouchEnd (Touch touch)
+	{
+		base.onTouchEnd (touch);
+        if(messageSent == false)
+		{
+			UserInputData gestInfo = new UserInputData( Tap, null, this.TouchStartTime, Time.time);
+			attackController.SendMessage("NewUserGesture", gestInfo);			
+		}
+	}
 
-    void Start()
-    {
-        JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate(Location, JoyButtonSize);
-    }
-
-    void Update()
-    {
-        //JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate(Location, JoyButtonSize);
-        //if (this.hasFingerOnJoyButton)
-        //{
-        //    PowerHUD.Value = Mathf.Clamp((PowerHUD.Value + (1f / attackController.PowerAccelerationTime) * Time.deltaTime), 0, PowerHUD.MaxValue);
-        //}
-    }
-
-    /// <summary>
-    /// Call when touch.phase = Began
-    /// </summary>
-    /// <param name="touch"></param>
-    public override void onTouchBegin(Touch touch)
-    {
-        //Debug.Log("Strike button. OntouchBegin!");
-        //Abondon the touch if the predator is now in attacking animation !!
-        if (PredatorPlayerStatus.IsAttacking==false)
-        {
-            base.onTouchBegin(touch);
-            attackController.SendMessage("StrikePowerUp");
-        }
-    }
-    /// <summary>
-    /// Call when touch.phase = Move
-    /// </summary>
-    /// <param name="touch"></param>
-    public override void onTouchMove(Touch touch)
-    {
-        onTouchStationary(touch);
-    }
-    /// <summary>
-    /// Call when touch.phase = Move
-    /// </summary>
-    /// <param name="touch"></param>
-    public override void onTouchStationary(Touch touch)
-    {
-        if (PredatorPlayerStatus.IsAttacking == false)
-        {
-            attackController.SendMessage("StrikePowerUp");
-        }
-    }
-    /// <summary>
-    /// Call when touch.phase = End
-    /// </summary>
-    /// <param name="touch"></param>
-    public override void onTouchEnd(Touch touch)
-    {
-        base.onTouchEnd(touch);
-        Vector2 direction = touch.position - this.TouchStartPosition;
-        float VerticalDistance = Mathf.Abs(direction.y);
-        float HorizontalDistance = Mathf.Abs(direction.x);
-        DamageForm attackForm = DamageForm.Predator_Strike_Single_Claw;
-        if (VerticalDistance >= HorizontalDistance)
-        {
-            //Finger Slice Up
-            if (direction.y > 0)
-            {
-                attackForm = DamageForm.Predator_Waving_Claw;
-            }
-            //Finger Slice down
-            else
-            {
-                attackForm = DamageForm.Predator_Strike_Dual_Claw;
-            }
-        }
-        else
-        {
-            //Finger Slice right
-            if (direction.x > 0)
-            {
-                attackForm = DamageForm.Predator_Clamping_Claws;
-            }
-            //Finger Slice left
-            else
-            {
-                attackForm = DamageForm.Predator_Strike_Single_Claw;
-            }
-        }
-        attackController.SendMessage("Strike", attackForm, SendMessageOptions.RequireReceiver);
-
-        PowerHUD.Value = 0;
-    }
-    /// <summary>
-    /// Call in MonoBehavior.OnGUI
-    /// </summary>
-    /// <param name="touch"></param>
-    public virtual void DrawButton()
-    {
-        GUI.color = this.baseColor;
-        Rect r = new Rect(JoyButtonBound.x + JoyButtonBoundOffset.x, JoyButtonBound.y + JoyButtonBoundOffset.y,
+	void OnGUI ()
+	{
+		JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate (Location, JoyButtonSize);
+		JoyButtonBound.x += JoyButtonScreenOffset.x;
+		JoyButtonBound.y += JoyButtonScreenOffset.y;
+		Rect r = new Rect (JoyButtonBound.x + JoyButtonRuntimeOffset.x, JoyButtonBound.y + JoyButtonRuntimeOffset.y,
             JoyButtonSize, JoyButtonSize);
-        GUI.DrawTexture(r, ButtonTexture);
-    }
-
-    void OnGUI()
-    {
-        this.DrawButton();
-    }
+		GUI.DrawTexture (r, ButtonTexture, ScaleMode.ScaleToFit,true);
+	}
  
 }

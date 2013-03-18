@@ -15,7 +15,6 @@ public class GestureHandler_Predator : JoyButton {
  	// Use this for initialization
 	void Awake () {
         JoyButtonBound = Util.GetScreenOccupancy(ScreenOccupancy);
-		this.JoyButtonName = "GestureHandler";
 		attackController = GetComponent<Predator3rdPersonalAttackController>();
  	}
 	
@@ -59,7 +58,7 @@ public class GestureHandler_Predator : JoyButton {
     /// <param name="touch"></param>
     public override void onTouchEnd(Touch touch)
     {
-        GestureInfomation gestInfo = ParseSingleTouchGesture(touch);
+        UserInputData gestInfo = ParseSingleTouchGesture(touch);
         attackController.SendMessage("NewUserGesture", gestInfo);
 		//attackController.SendMessage("ProcessUserGesture", gestInfo);
 		base.onTouchEnd(touch);
@@ -85,20 +84,20 @@ public class GestureHandler_Predator : JoyButton {
 		return ret;
 	}
 
-    private GestureInfomation ParseSingleTouchGesture(Touch endTouch)
+    private UserInputData ParseSingleTouchGesture(Touch endTouch)
     {
         float SliceDistance = Vector2.Distance(endTouch.position, this.TouchStartPosition);
-        GestureInfomation gestureInfo = null;
+        UserInputData gestureInfo = null;
         //Tap
         if (Mathf.Approximately(SliceDistance, 0))
         {
-            gestureInfo = new GestureInfomation(GestureType.Single_Tap, null, this.TouchStartTime, Time.time);
+            gestureInfo = new UserInputData(UserInputType.Single_Tap, null, this.TouchStartTime, Time.time);
         }
         //Curve
         else if(CheckTick() == true)
         {
             float _timeDis = Time.time - this.TouchStartTime;
-            gestureInfo = new GestureInfomation(GestureType.Single_Curve, null,
+            gestureInfo = new UserInputData(UserInputType.Single_Curve, null,
                                                 this.TouchStartTime, Time.time);
         }
 		//Slice
@@ -107,7 +106,7 @@ public class GestureHandler_Predator : JoyButton {
             float _timeDis = Time.time - this.TouchStartTime;
             float strength = SliceDistance / _timeDis;
             Vector2 sliceDirection = (endTouch.position - TouchStartPosition).normalized;
-            gestureInfo = new GestureInfomation(GestureType.Single_Slice, sliceDirection,
+            gestureInfo = new UserInputData(UserInputType.Single_Slice, sliceDirection,
                                                 this.TouchStartTime, Time.time);
 		}
         return gestureInfo;

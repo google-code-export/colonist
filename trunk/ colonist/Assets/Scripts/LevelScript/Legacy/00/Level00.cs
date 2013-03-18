@@ -18,7 +18,7 @@ public class Level00 : MonoBehaviour {
 	// Use this for initialization
 	IEnumerator Start () {
         playerCameraControl.enabled = false;
-        Util.AlighToward(workingCamera.transform, cameraDock1.transform, false, 0, 0);
+        //Util.AlighToward(workingCamera.transform, cameraDock1.transform, false, 0, 0);
         yield return StartCoroutine("SetCamera", 3f);
         playerCameraControl.enabled = true;
         yield return null;
@@ -43,7 +43,7 @@ public class Level00 : MonoBehaviour {
         _time = Time.time;
         while ((Time.time - _time) <= duration)
         {
-            Util.AlighToward(this.workingCamera.transform, cameraDock2, true, 0.03f, 30f);
+            //Util.AlighToward(this.workingCamera.transform, cameraDock2, true, 0.03f, 30f);
             yield return null;
         }
 

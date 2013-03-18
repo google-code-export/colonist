@@ -7,8 +7,6 @@ public class Joystick_Predator : JoyButton {
 	
 	public Texture ForeGroundTexture;
 	public float ForeGroundTextureSize = 25;
-	
-    public GameGUIHelper.RectPosition Location = GameGUIHelper.RectPosition.BottomLeft;
 
     /// <summary>
     /// If FlexibleMode = true, joy sticker is not shown by default
@@ -67,8 +65,8 @@ public class Joystick_Predator : JoyButton {
         Vector3 worldDirection = LevelManager.Instance
                                              .ControlDirectionPivot.TransformDirection(new Vector3(Joybutton_Right_Value, 0, Joybutton_Up_Value));
         PredatorMovementController.MoveDirection = worldDirection.normalized;
-        JoyButtonBoundOffset.x = direction.x * ValueOffsetModifier;
-        JoyButtonBoundOffset.y = -direction.y * ValueOffsetModifier;
+        JoyButtonRuntimeOffset.x = direction.x * ValueOffsetModifier;
+        JoyButtonRuntimeOffset.y = -direction.y * ValueOffsetModifier;
     }
 
     public override void onTouchEnd(Touch t)
@@ -76,8 +74,8 @@ public class Joystick_Predator : JoyButton {
         //Debug.Log("onTouchEnd");
         base.onTouchEnd(t);
         PredatorMovementController.MoveDirection = Vector3.zero;
-        JoyButtonBoundOffset.x = 0;
-        JoyButtonBoundOffset.y = 0;
+        JoyButtonRuntimeOffset.x = 0;
+        JoyButtonRuntimeOffset.y = 0;
     }
 
     public override void onTouchStationary(Touch t)
@@ -93,8 +91,8 @@ public class Joystick_Predator : JoyButton {
             Rect backgroundRectArea = new Rect(JoyButtonBound.x, JoyButtonBound.y, JoyButtonSize, JoyButtonSize);
             GUI.DrawTexture(backgroundRectArea, ButtonTexture);
 
-            Rect foregroundRectArea = new Rect(JoyButtonBound.center.x - ForeGroundTextureSize / 2 + JoyButtonBoundOffset.x,
-                                               JoyButtonBound.center.y - ForeGroundTextureSize / 2 + JoyButtonBoundOffset.y,
+            Rect foregroundRectArea = new Rect(JoyButtonBound.center.x - ForeGroundTextureSize / 2 + JoyButtonRuntimeOffset.x,
+                                               JoyButtonBound.center.y - ForeGroundTextureSize / 2 + JoyButtonRuntimeOffset.y,
                                                ForeGroundTextureSize, 
                                                ForeGroundTextureSize);
             GUI.DrawTexture(foregroundRectArea, ForeGroundTexture);
@@ -102,8 +100,8 @@ public class Joystick_Predator : JoyButton {
         else if(FlexibleMode && hasFingerOnJoyButton)
         {
             GUI.DrawTexture(FlexibleButtonRect, ButtonTexture);
-            Rect foregroundRectArea = new Rect(FlexibleButtonRect.center.x - ForeGroundTextureSize / 2 + JoyButtonBoundOffset.x,
-                                               FlexibleButtonRect.center.y - ForeGroundTextureSize / 2 + JoyButtonBoundOffset.y,
+            Rect foregroundRectArea = new Rect(FlexibleButtonRect.center.x - ForeGroundTextureSize / 2 + JoyButtonRuntimeOffset.x,
+                                               FlexibleButtonRect.center.y - ForeGroundTextureSize / 2 + JoyButtonRuntimeOffset.y,
                                                ForeGroundTextureSize,
                                                ForeGroundTextureSize);
             GUI.DrawTexture(foregroundRectArea, ForeGroundTexture);

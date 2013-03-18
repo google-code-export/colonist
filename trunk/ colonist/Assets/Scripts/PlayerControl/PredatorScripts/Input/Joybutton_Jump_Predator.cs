@@ -7,13 +7,11 @@ using System.Collections;
 public class Joybutton_Jump_Predator : JoyButton {
 
     private Predator3rdPersonalJumpController JumpController;
-    public GameGUIHelper.RectPosition Location = GameGUIHelper.RectPosition.BottomRight;
     public Color BaseColor;
     private float LastJumpTime = 0;
 
     void Awake()
     {
-        this.JoyButtonName = "Jump";
         JumpController = this.GetComponent<Predator3rdPersonalJumpController>();
         ValueOffsetModifier = 5;
     }
@@ -68,9 +66,11 @@ public class Joybutton_Jump_Predator : JoyButton {
     void OnGUI()
     {
         GUI.color = this.BaseColor;
-        Rect r = new Rect(JoyButtonBound.x + JoyButtonBoundOffset.x,
-            JoyButtonBound.y + JoyButtonBoundOffset.y,
+		JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate (Location, JoyButtonSize);
+		JoyButtonBound.x += JoyButtonScreenOffset.x;
+		JoyButtonBound.y += JoyButtonScreenOffset.y;
+		Rect r = new Rect (JoyButtonBound.x + JoyButtonRuntimeOffset.x, JoyButtonBound.y + JoyButtonRuntimeOffset.y,
             JoyButtonSize, JoyButtonSize);
-        GUI.DrawTexture(r, ButtonTexture);
+		GUI.DrawTexture (r, ButtonTexture);
     }
 }

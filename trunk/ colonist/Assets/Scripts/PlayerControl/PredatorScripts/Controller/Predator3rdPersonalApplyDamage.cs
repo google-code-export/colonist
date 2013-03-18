@@ -20,7 +20,7 @@ public class Predator3rdPersonalApplyDamage : UnitHealth {
 	
 	// Update is called once per frame
 	void Update () {
-        HealthPrograss.Value = HP / MaxHP;
+        //HealthPrograss.Value = HP / MaxHP;
 	}
 
     public float GetHealth()

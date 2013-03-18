@@ -49,6 +49,9 @@ public class AIEditor
 		if (EnableEditUnit) {
 			//EditBasicUnitProperty ();
 			AI.Unit = (Unit)EditorCommon.EditBasicUnitProperty (AI.Unit);
+			//Edit Start AI
+			AI[] AllAI = AI.gameObject.GetComponents<AI> ();
+			AI.Unit.StartAIName = EditorCommon.EditPopup ("Unit Start AI:", AI.Unit.StartAIName, AllAI.Select (x => x.Name).ToArray ());
 			//Edit Idle Data 
 			if (EnableEditIdleData = EditorGUILayout.BeginToggleGroup ("---Edit Idle Data", EnableEditIdleData)) {
 				AI.Unit.IdleData = EditorCommon.EditIdleDataArray (AI.Unit.gameObject,
@@ -164,7 +167,9 @@ public class AIEditor
 		if (AIBehaviorEnableEditFlags.ContainsKey (behavior.Name) == false) {
 			AIBehaviorEnableEditFlags [behavior.Name] = false;
 		}
-		AIBehaviorEnableEditFlags [behavior.Name] = EditorGUILayout.BeginToggleGroup (new GUIContent ("------------- Edit AI Behavior: " + behavior.Name + " ----------------------", ""), AIBehaviorEnableEditFlags [behavior.Name]);
+		AIBehaviorEnableEditFlags [behavior.Name] = EditorGUILayout.BeginToggleGroup (new GUIContent (
+			string.Format ("------------- Edit AI Behavior: {0} -Priority: {1} ---------------------", behavior.Name, behavior.Priority), ""),
+			AIBehaviorEnableEditFlags [behavior.Name]);
 		
 		if (AIBehaviorEnableEditFlags [behavior.Name]) {
 			behavior.Type = (AIBehaviorType)EditorGUILayout.EnumPopup (new GUIContent ("Behavior type:", ""), behavior.Type);
@@ -177,7 +182,7 @@ public class AIEditor
 			EditAIBehaviorData (behavior);
 			
 			//Edit Start Condition Wrapper:
-			EditorGUILayout.LabelField ("Start condition text:");
+			EditorGUILayout.LabelField ("Start condition:");
 			EditorGUILayout.LabelField (GetCompositeConditionDescription (behavior.StartConditionWrapper.RootCompositeCondition, behavior.StartConditionWrapper));			
 			if (GUILayout.Button ("Edit start condition")) {
 				ConditionEditorWindow.DisplayConditionEditorWindow (this, behavior.StartConditionWrapper);
@@ -185,14 +190,15 @@ public class AIEditor
 			EditorGUILayout.Space ();
 			
 			
-			//Edit End Condition Wrapper:
-			EditorGUILayout.LabelField ("End condition text:");
-			EditorGUILayout.LabelField (GetCompositeConditionDescription (behavior.EndConditionWrapper.RootCompositeCondition, behavior.EndConditionWrapper));			
-			if (GUILayout.Button ("Edit end condition")) {
-				ConditionEditorWindow.DisplayConditionEditorWindow (this, behavior.EndConditionWrapper);
+			//Edit End Condition Wrapper, for behavior type = SwitchToAI, it's not necessary to edit end condition.
+			if (behavior.Type != AIBehaviorType.SwitchToAI) {
+				EditorGUILayout.LabelField ("End condition:");
+				EditorGUILayout.LabelField (GetCompositeConditionDescription (behavior.EndConditionWrapper.RootCompositeCondition, behavior.EndConditionWrapper));			
+				if (GUILayout.Button ("Edit end condition")) {
+					ConditionEditorWindow.DisplayConditionEditorWindow (this, behavior.EndConditionWrapper);
+				}
+				EditorGUILayout.Space ();
 			}
-			EditorGUILayout.Space ();
-			
 
 			if (GUILayout.Button ("Delete " + behavior.Type.ToString () + " behavior: " + behavior.Name)) {
 				IList<AIBehavior> l = AI.Behaviors.ToList<AIBehavior> ();
@@ -292,6 +298,10 @@ public class AIEditor
 			if (behavior.Type == AIBehaviorType.HoldPosition) {
 				behavior.HoldRadius = EditorGUILayout.FloatField (new GUIContent ("Hold Position:", "The position transform."), behavior.HoldRadius);
 			}
+			break;
+		case AIBehaviorType.SwitchToAI:
+			AI[] ai = this.AI.Unit.GetComponents<AI> (); 
+			behavior.SwitchToAIName = EditorCommon.EditStringArray ("Switch to next AI:", behavior.SwitchToAIName, ai.Select (x => x.Name).ToArray ());
 			break;
 		}
 	}

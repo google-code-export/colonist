@@ -83,15 +83,15 @@ public class AISoldier :AI {
         animation[WalkBackwardAnimation].RemoveMixingTransform(Spine1);
     }
 
-    public override void Awake()
+    public void Awake()
     {
         controller = GetComponent<CharacterController>();
         InitAnimation();
-        base.InitAI();
+        InitAI();
     }
 
 	// Use this for initialization
-	public override void Start () {
+ void Start () {
 //        if (StartWaypoint != null)
 //        {
 //            yield return StartCoroutine(WayPoint.AutoRoute(this, StartWaypoint, controller, MovementSpeed, WalkAnimation ));
@@ -106,7 +106,7 @@ public class AISoldier :AI {
     }
 	
 	// Update is called once per frame
-	public override void Update () {
+	 void Update () {
         if (this.CurrentTarget != null && IsAnimatingAttack())
         {
             Util.RotateToward(transform, CurrentTarget.position, false, 0);
@@ -125,7 +125,7 @@ public class AISoldier :AI {
         }
 	}
 
-    public override void FixedUpdate()
+    void FixedUpdate()
     {
         CalculateFallbackParameter();
         if (HitWallTimeLength >= 1f)
@@ -340,7 +340,7 @@ public class AISoldier :AI {
         Debug.Log("Last hit wall time frame:" + lastHitWallTime + " " + Time.frameCount);
     }
 
-    public override IEnumerator StopAI()
+    public override void StopAI()
     {
         base.StopAI();
         StopAllCoroutines();
@@ -351,7 +351,6 @@ public class AISoldier :AI {
         controller.enabled = false;
         //Remove this monobeheavior
         //Destroy(this);
-        yield break;
     }
 
     void OnCollisionStay(Collision collisionInfo) 

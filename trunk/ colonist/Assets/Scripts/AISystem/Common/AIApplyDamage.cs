@@ -44,7 +44,7 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
     }
 
     public virtual IEnumerator DoDamage(DamageParameter damageParam)
-    {Debug.Log("DoDamage!");
+    {
         //Get the right ReceiveDamageData
         ReceiveDamageData ReceiveDamageData = null;
         if (unit.ReceiveDamageDataDict.ContainsKey(damageParam.damageForm))
@@ -71,7 +71,7 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
             foreach (string effectDataName in ReceiveDamageData.EffectDataName)
             {
                 EffectData EffectData = unit.EffectDataDict[effectDataName];
-                GlobalBloodEffectDecalSystem.CreateBloodEffect(transform.position + controller.center, EffectData);
+                GlobalBloodEffectDecalSystem.CreateEffect(transform.position + controller.center, EffectData);
             }
         }
         //Create blood decal:
@@ -125,7 +125,7 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
             foreach (string effectDataName in DeathData.EffectDataName)
             {
                 EffectData EffectData = unit.EffectDataDict[effectDataName];
-                GlobalBloodEffectDecalSystem.CreateBloodEffect(transform.position + controller.center, EffectData);
+                GlobalBloodEffectDecalSystem.CreateEffect(transform.position + controller.center, EffectData);
             }
         }
         //Create blood decal:

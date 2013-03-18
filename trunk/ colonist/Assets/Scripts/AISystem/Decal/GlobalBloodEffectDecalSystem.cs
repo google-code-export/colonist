@@ -115,8 +115,19 @@ public class GlobalBloodEffectDecalSystem : MonoBehaviour {
         }
 	}
 
-    public static void CreateBloodEffect(Vector3 center, EffectData EffectData)
+    public static void CreateEffect(Vector3 center, EffectData EffectData)
     {
+        Instance.StartCoroutine(Instance._CreateEffect(center,EffectData));
+    }
+	
+    IEnumerator _CreateEffect(Vector3 center, EffectData EffectData)
+    {
+        if(EffectData.CreateDelay)
+		{
+			yield return new WaitForSeconds(EffectData.CreateDelayTime);
+		}
+		for(int i=0; i < EffectData.Count; i++)
+		{
         if (EffectData.UseGlobalEffect)
         {
             GlobalEffectData globalEffectData = Instance.GlobalEffectDataDict[EffectData.GlobalType];
@@ -128,14 +139,23 @@ public class GlobalBloodEffectDecalSystem : MonoBehaviour {
         }
         else
         {
-            Object effectObject = Object.Instantiate(EffectData.EffectObject, EffectData.Anchor.position, EffectData.Anchor.rotation);
-            if (EffectData.DestoryInTimeOut)
-            {
+			Object effectObject = null;
+			if(EffectData.Anchor != null)
+			{
+              effectObject = Object.Instantiate(EffectData.EffectObject, EffectData.Anchor.position, EffectData.Anchor.rotation);
+			}
+			else 
+			{
+			  effectObject = Object.Instantiate(EffectData.EffectObject, center + Random.insideUnitSphere, Quaternion.identity);
+			}
+			  if (EffectData.DestoryInTimeOut)
+              {
                 Destroy(effectObject, EffectData.DestoryTimeOut);
-            }
+              }
         }
+		}
     }
-
+	
     /// <summary>
     /// CreateBloodDecal is used to create blood decal. 
     /// This method should be called by receive damage behavior when receiving damage.

@@ -31,10 +31,7 @@ public class Predator3rdPersonalStealthController : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            ToggleStealth();
-        }
+
     }
 
     public void ToggleStealth()
