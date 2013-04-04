@@ -1,17 +1,15 @@
 using UnityEngine;
 using System.Collections;
 
-public class Predator3rdPersonalApplyDamage : UnitHealth {
-    [HideInInspector]
-    public float HP;
+public class Predator3rdPersonalApplyDamage : MonoBehaviour {
     
-    public float MaxHP = 100;
+    public Predator3rdPersonalUnit predatorPlayerUnit = null;   
     public PrograssBar HealthPrograss = null;
     public ParticleSystem electricityHitEffect = null;
 
     void Awake()
     {
-        HP = MaxHP;
+       predatorPlayerUnit = GetComponent<Predator3rdPersonalUnit>();
     }
 	// Use this for initialization
 	void Start () {
@@ -23,25 +21,21 @@ public class Predator3rdPersonalApplyDamage : UnitHealth {
         //HealthPrograss.Value = HP / MaxHP;
 	}
 
-    public float GetHealth()
-    {
-        return HP;
-    }
-
     public virtual IEnumerator ApplyDamage(DamageParameter param)
     {
-        HP -= param.damagePoint;
-        //Debug.Log("Predator HP:" + HP);
+        predatorPlayerUnit.HP -= param.damagePoint;
+		
+        Debug.Log("ApplyDamage at PredatorPlayer, current HP:" + predatorPlayerUnit.HP);
         switch (param.damageForm)
         {
             case DamageForm.ElectricityBoltHit:
                 electricityHitEffect.Play();
                 break;
         }
-        if (HP <= 0)
-        {
-            StartCoroutine("Die");
-        }
+//        if (HP <= 0)
+//        {
+//            StartCoroutine("Die");
+//        }
         //if (cameraController.LookAtTarget == null)
         //{
         //    cameraController.LookAtTarget = param.src.transform;
@@ -56,22 +50,5 @@ public class Predator3rdPersonalApplyDamage : UnitHealth {
         yield return null;
     }
 
-    #region implement UnitHealth interface
-    public override void SetCurrentHP(float value)
-    {
-        HP = value;
-    }
-    public override void SetMaxHP(float value)
-    {
-        MaxHP = value;
-    }
-    public override float GetCurrentHP()
-    {
-        return HP;
-    }
-    public override float GetMaxHP()
-    {
-        return MaxHP;
-    }
-    #endregion
+
 }

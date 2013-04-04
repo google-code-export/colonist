@@ -232,3 +232,14 @@ public enum ValueComparisionOperator
     GreaterOrEqual = 4,
     NotEqual = 5,
 }
+
+/// <summary>
+/// Hit trigger type is the type to trigger hit test.
+/// ByTime - hit test occurs in specified time.
+/// ByAnimationEvent - hit test is trigger by animation event.
+/// </summary>
+public enum HitTriggerType
+{
+	ByTime = 0,
+	ByAnimationEvent = 1,
+}

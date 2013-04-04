@@ -66,6 +66,7 @@ public class AIBehavior
 #endregion
 
 #region variables for BehaviorType = Attack/AttackToPosition
+
     /// <summary>
     /// Define the attack data name of this attack behavior.
     /// </summary>

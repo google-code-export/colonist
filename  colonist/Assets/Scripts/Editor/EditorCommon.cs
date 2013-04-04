@@ -222,6 +222,45 @@ public class EditorCommon
 			AttackData.DamageForm = (DamageForm)EditorGUILayout.EnumPopup (new GUIContent ("Damage Form:", "伤害类型"), AttackData.DamageForm);
 			AttackData.AttackableRange = EditorGUILayout.FloatField (new GUIContent ("Attack range:", "攻击范围"), AttackData.AttackableRange);
 			AttackData.AttackInterval = EditorGUILayout.FloatField (new GUIContent ("Attack Interval", "攻击间隔"), AttackData.AttackInterval);
+						//Hit Test trigger type:
+			
+			EditorGUILayout.BeginHorizontal();
+			AttackData.hitTriggerType = (HitTriggerType)EditorGUILayout.EnumPopup(new GUIContent("Hit test trigger type:", "How to trigger hit test?"), 
+				AttackData.hitTriggerType);
+			if(AttackData.hitTriggerType == HitTriggerType.ByTime)
+			{
+			   AttackData.HitTime = EditorGUILayout.FloatField (new GUIContent ("Hit time:",
+                            @"The time to trigger attack functionality."),
+                            AttackData.HitTime);
+			}
+			if(AttackData.hitTriggerType == HitTriggerType.ByAnimationEvent)
+			{
+				string animationName = AttackData.AnimationName;
+				bool HasAttackEvent = false;
+				if(unit.animation[animationName] != null)
+				{
+				    AnimationEvent[] events = AnimationUtility.GetAnimationEvents(unit.animation[animationName].clip);
+					if(events != null && events.Length > 0)
+					{
+						HasAttackEvent = events.Count(x=>x.functionName == "_Attack") > 0;
+					}
+					if(HasAttackEvent == false)
+					{
+						if(GUILayout.Button("Add attack event"))
+						{
+							AnimationEvent _e = new AnimationEvent();
+							_e.functionName = "_Attack";
+							_e.stringParameter = AttackData.Name;
+							_e.time = 0;
+							unit.animation[animationName].clip.AddEvent(_e);
+//							AnimationUtility.SetAnimationEvents(unit.animation[animationName].clip , new AnimationEvent[] { _e } );
+						}
+					}
+				}
+			}
+			
+			EditorGUILayout.EndHorizontal();
+			
 			AttackData.DamagePointBase = EditorGUILayout.FloatField (new GUIContent ("Base Damage Point:", "基础伤害点数"), AttackData.DamagePointBase);
 			EditorGUILayout.BeginHorizontal ();
 			AttackData.MinDamageBonus = EditorGUILayout.FloatField (new GUIContent ("Min Damage Point Bonus:", ""), AttackData.MinDamageBonus);
@@ -235,10 +274,6 @@ public class EditorCommon
 			AttackData.Type = (AIAttackType)EditorGUILayout.EnumPopup (new GUIContent ("AI Attack Type:", "攻击类型 - 立刻的/投射/区域"), AttackData.Type);
 			switch (AttackData.Type) {
 			case AIAttackType.Instant:
-				AttackData.HitTime = EditorGUILayout.FloatField (new GUIContent ("Hit time:",
-                            @"如果AttackType = Instant,HitTime表示发送Apply Damage的时间;
-如果AttackType = Projectile, 表示创建Projectile的时间."),
-                            AttackData.HitTime);
 				AttackData.HitTestType = (HitTestType)EditorGUILayout.EnumPopup (new GUIContent ("*Hit Test Type:", "命中检测方式 - 一定命中/百分率/碰撞器校验/距离校验"), AttackData.HitTestType);
 				switch (AttackData.HitTestType) {
 				case HitTestType.AlwaysTrue:
@@ -316,7 +351,7 @@ public class EditorCommon
 				string[] decalDataNameArray = unit.DecalData.Select (x => x.Name).ToArray<string> ();
 				ReceiveDamageData.DecalDataName = EditStringArray ("--------- Edit receive damage decal data-----", ReceiveDamageData.DecalDataName, decalDataNameArray);
 			}
-                
+
                 
 			ReceiveDamageDataArray [i] = ReceiveDamageData;
 			//Delete ReceiveDamageData

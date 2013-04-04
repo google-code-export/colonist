@@ -16,7 +16,7 @@ public class AIEditorWindow : EditorWindow
 	Vector2 ScrollPosition = Vector2.zero;
 	
 	IList<AIEditor> AIEditor_List = null;
-	[MenuItem("Component/AI/Edit AI")]	
+	[MenuItem("Component/AI/Edit Unit and AI")]	
 	public static void init ()
 	{
 		AIEditorWindow window = (AIEditorWindow)EditorWindow.GetWindow (typeof(AIEditorWindow));

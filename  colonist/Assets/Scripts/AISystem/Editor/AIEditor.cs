@@ -274,8 +274,8 @@ public class AIEditor
 				EditorGUILayout.LabelField ("!!!There is no Move Data defined in this Unit!!!");
 				return;
 			}
-            //Attack Data:
 			
+            //Attack Data:
 			behavior.UseRandomAttackData = EditorGUILayout.Toggle (new GUIContent ("Use random attack data", ""), behavior.UseRandomAttackData);
 			if (behavior.UseRandomAttackData) {
 				behavior.AttackDataNameArray = EditorCommon.EditStringArray ("Attack data:", behavior.AttackDataNameArray, AttackDataName);
