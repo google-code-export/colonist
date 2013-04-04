@@ -44,7 +44,7 @@ public enum AIBehaviorType
 	
 	/// <summary>
 	/// Special AI behavior.
-	/// This AI will be switch off , another AI will be active.
+	/// This AI will be set off , another AI will be set active.
 	/// </summary>
 	SwitchToAI = 8,
     #endregion

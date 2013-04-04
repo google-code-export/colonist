@@ -224,6 +224,8 @@ public class AttackData : UnitAnimationData
     /// </summary>
     public AIAttackType Type = AIAttackType.Instant;
 	
+    public HitTriggerType hitTriggerType = HitTriggerType.ByTime;
+	
     /// <summary>
     /// DamageForm - the damage form in sending "ApplyDamage" interface
     /// </summary>
@@ -318,4 +320,3 @@ public class AudioData
     public string Name = "";
     public AudioClip[] audioClip = new AudioClip[]{};
 }
-

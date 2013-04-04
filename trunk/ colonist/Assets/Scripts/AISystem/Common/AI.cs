@@ -122,14 +122,19 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 
     void Update()
     {
-
     }
 
     void FixedUpdate()
     {
         //Refresh CurrentTarget in every Time.fixDeltaTime seconds
         FindTarget(DetectiveRange);
+		this.Unit.CurrentTarget = this.CurrentTarget;
     }
+	
+	void OnEnable()
+	{
+		Unit.CurrentAI = this;
+	}
 	
 	void OnDisable()
 	{
@@ -217,7 +222,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 return true;
             }
         }
-        //if no enemy's around, and the current target is dead, reset the current target vaiables
+        //if no enemy's around, or the current target is dead, reset the current target vaiables
         else if (CurrentTarget == null || CurrentTarget.GetComponent<UnitHealth>().GetCurrentHP() <= 0)
         {
             CurrentTarget = null;
@@ -381,64 +386,6 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     }
 	
 	/// <summary>
-	/// Given an AttackData, check by its HitTestType, return true/false to indicate if AI has hit the target.
-	/// </summary>
-	public virtual bool CheckHitCondition(GameObject target, AttackData AttackData)
-	{
-		bool ShouldSendHitMessage =false;
-        switch (AttackData.HitTestType)
-        {
-            case HitTestType.AlwaysTrue:
-                ShouldSendHitMessage = true;
-                break;
-            case HitTestType.HitRate:
-                float randomNumber = Random.Range(0f, 1f);
-                ShouldSendHitMessage = (randomNumber <= AttackData.HitRate);
-                break;
-            case HitTestType.CollisionTest:
-                ShouldSendHitMessage = AttackData.HitTestCollider.bounds.Intersects(target.collider.bounds);
-                break;
-            case HitTestType.DistanceTest:
-                float TargetDistance = Util.DistanceOfCharacters(gameObject, CurrentTarget.gameObject); 
-                ShouldSendHitMessage = TargetDistance <= AttackData.HitTestDistance;
-			    break;
-		    case HitTestType.AngleTest:
-			    float TargetAngularDiscrepancy = Vector3.Distance(transform.forward, (CurrentTarget.position - transform.position).normalized);
-			    ShouldSendHitMessage = TargetAngularDiscrepancy<= AttackData.HitTestAngularDiscrepancy;
-                break;
-		    case HitTestType.DistanceAndAngleTest:
-                TargetDistance = Util.DistanceOfCharacters(gameObject, CurrentTarget.gameObject); 
-			    TargetAngularDiscrepancy = Vector3.Distance(transform.forward, (CurrentTarget.position - transform.position).normalized);
-                ShouldSendHitMessage = TargetAngularDiscrepancy <= AttackData.HitTestDistance && TargetAngularDiscrepancy<= AttackData.HitTestAngularDiscrepancy;
-			    break;
-        }
-		return ShouldSendHitMessage;
-	}
-	
-    /// <summary>
-    /// Send ApplyDamage message, in %delay time% = AttackData.HitTime seconds
-    /// </summary>
-    /// <param name="target"></param>
-    /// <param name="DamageParameter"></param>
-    /// <param name="delay"></param>
-    /// <returns></returns>
-    public virtual IEnumerator SendHitmessage(GameObject target, AttackData AttackData)
-    {
-        if (AttackData.HitTime != 0)
-        {
-			yield return new WaitForSeconds(AttackData.HitTime);
-        }
-        bool ShouldSendHitMessage = CheckHitCondition(target, AttackData);
-        if(ShouldSendHitMessage)
-		{
-		   Debug.Log("Send hit message from unit: " + this.name + " to unit:" + target.name);
-           target.SendMessage("ApplyDamage", AttackData.GetDamageParameter(gameObject));
-		   //Plus 1 to DoDamageCounter of Unit.
-		   Unit.DoDamageCounter ++;
-		}
-    }
-	
-	/// <summary>
 	/// Helper functions - navigating AI to transform.
 	/// The function returns when distance to target transform lesser than BreakDistance
 	/// </summary>
@@ -553,7 +500,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
             //Choose next behavior whose StartCondition = True
             foreach (AIBehavior behavior in BehaviorList_SortedPriority)
             {
-                if(behavior.Name=="WaitForAWhile") 
+                if(behavior.Name=="SwitchToAttack") 
 					Debug.DebugBreak();
 				if(CheckConditionWrapper(behavior.StartConditionWrapper, behavior))
                 {
@@ -1077,7 +1024,6 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 continue;
             }
             //Get attack data
-
 			if(behavior.UseRandomAttackData == false)
 			{
 			   attackData = Unit.AttackDataDict[behavior.AttackDataName];
@@ -1096,6 +1042,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 					attackData = Unit.AttackDataDict[attackDataName];
 				}
 			}
+			//Animating attack
             string AttackAnimationName = attackData.AnimationName;
             //If can see target, and target distance <= AttackableRange, do this:
             //1. Face to target
@@ -1103,15 +1050,19 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
             //3. if #2 pass, animating, send hit message
             if (this.CanSeeCurrentTarget && CurrentTargetDistance <= attackData.AttackableRange)
             {
+				
                 transform.LookAt(new Vector3(CurrentTarget.position.x, transform.position.y, CurrentTarget.position.z));
-                yield return StartCoroutine("DoAttack_Block",attackData);
-				//yield return new WaitForSeconds(animation[attackData.AnimationName].length);
+				//If hitTriggerType is HitTriggerType.ByAnimationEvent, the function will be invoked by animation event
+				if(attackData.hitTriggerType == HitTriggerType.ByTime)
+				{
+				   SendMessage("_Attack",attackData.Name);
+				}
+				animation.CrossFade(attackData.AnimationName);
+				yield return new WaitForSeconds(animation[attackData.AnimationName].length);
+				//After attack animation complete, set this flag AlternateBehaviorFlag to true, to enable altering to higher priority behavior.
+				AlternateBehaviorFlag = true;
+				yield return null;
 				continue;
-            }
-            else if (animation.IsPlaying(attackData.AnimationName))
-            {
-                yield return null;
-                continue;
             }
             //else if can't see target, navigating until CanSeeCurrentTarget = true & within AttackableRange
             else
@@ -1165,72 +1116,6 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         StopCoroutine("Start_HoldPosition");
         yield return null;
     }
-
-    /// <summary>
-    /// Try to perform Attack action. If the timing is not available to perform attack, the method do nothing and return.
-    /// It's safe to call this method per frame.
-    /// </summary>
-    public virtual void DoAttack(AttackData attackData)
-    {
-        //Don't attack if it's too early.
-        if (Halt || Time.time - LastAttackTime <= attackData.AttackInterval)
-        {
-            return;
-        }
-        else
-        {
-            this.LastAttackTime = Time.time;
-			animation.CrossFade(attackData.AnimationName);
-            Attack(attackData);
-        }
-    }
-	
-	/// <summary>
-	/// Different to DoAttack(AttackData), this method blocks until attack finish.
-	/// </summary>
-	public virtual IEnumerator DoAttack_Block(AttackData attackData)
-	{
-		float _time = Time.time;
-		Attack(attackData);
-		animation.CrossFade(attackData.AnimationName);
-		while((Time.time - _time) <= attackData.AttackInterval)
-		{
-			yield return null;
-		}
-	}
-	
-	/// <summary>
-	/// The actual routine to perform attack.
-    /// </summary>
-    /// <param name="attackData"></param>
-	public virtual void Attack(AttackData attackData)
-	{
-        DamageParameter dp = attackData.GetDamageParameter(this.gameObject);
-        switch (attackData.Type)
-        {
-                case AIAttackType.Instant:
-                    StartCoroutine(SendHitmessage(CurrentTarget.gameObject, attackData));
-                    break;
-                case AIAttackType.Projectile:
-                    StartCoroutine(CreateProjectile(attackData, attackData.HitTime));
-                    break;
-                //Regional attack is bit special, because Regional attack could hurts
-                //more than one enemy(not just the CurrentTarget) as long as enemy intersect
-                //with the HitTestCollider!
-                case AIAttackType.Regional:
-                    //scan enemy inside the HitTestDistance range:
-                    foreach (Collider c in Physics.OverlapSphere(transform.position, attackData.HitTestDistance, Unit.EnemyLayer))
-                    {
-                        StartCoroutine(SendHitmessage(c.gameObject, attackData));
-                    }
-                    break;
-                default:
-                    Debug.Log("Unsupported attack type:" + attackData.Type.ToString() + " at object:" + gameObject.name);
-                    break;
-        }
-		//plus 1 to Attack counter of Unit.
-		Unit.AttackCounter++;
-	}
 	
 	public virtual void Start_SwitchToAI(AIBehavior behavior)
 	{

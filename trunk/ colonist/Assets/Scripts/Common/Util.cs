@@ -697,7 +697,13 @@ public class Util : MonoBehaviour {
         Debug.Log("PosCompare:" + comparePos + " compareRot:" + compareRot);
         return comparePos && compareRot;
     }
-
+	
+	public static float Angle_XZ(Vector3 a , Vector3 b)
+	{
+        b.y = a.y;
+        return Vector3.Angle(a, b);
+	}
+	
     /// <summary>
     /// Return XZ distance of two vector, Y-axis value is ignored
     /// </summary>

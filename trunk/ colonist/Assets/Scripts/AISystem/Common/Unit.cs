@@ -86,6 +86,12 @@ public class Unit : UnitBase , I_GameEventReceiver
 	public int DoDamageCounter = 0;
 	
 	/// <summary>
+	/// The receive damage counter.
+	/// </summary>
+	[HideInInspector]
+	public int ReceiveDamageCounter = 0;
+	
+	/// <summary>
 	/// The halt flat.
 	/// If halt = true, the AI component should Halt its behavior according to this flag.
 	/// </summary>
@@ -114,6 +120,12 @@ public class Unit : UnitBase , I_GameEventReceiver
 	[HideInInspector]
 	public bool UnitInitDone = false;
 	
+	/// <summary>
+	/// The current target variable, which will be updated by the current running AI component.
+	/// </summary>
+	[HideInInspector]
+	public Transform CurrentTarget = null;
+	
 #endregion
 
 	CharacterController controller = null;
@@ -133,7 +145,8 @@ public class Unit : UnitBase , I_GameEventReceiver
 	
 	public void Update()
 	{
-        if (Time.time >= ResetHaltTime && Halt == true)
+		//reset Halt flag
+        if (Halt == true && Time.time >= ResetHaltTime)
         {
             Halt = false;
         }
@@ -290,6 +303,17 @@ public class Unit : UnitBase , I_GameEventReceiver
 		}
 		controller = GetComponent<CharacterController>();
 		LevelManager.RegisterUnit(this);
+	}
+	
+	public void SwitchAI(string SwitchToAIName)
+	{
+	    if(CurrentAI != null)
+		{
+		   CurrentAI.StopAI();
+		}
+		AI newAI = AIDict[SwitchToAIName];
+	    newAI.StartAI();
+	    this.CurrentAI = newAI;
 	}
 	
 #region implement UnitHealth interface

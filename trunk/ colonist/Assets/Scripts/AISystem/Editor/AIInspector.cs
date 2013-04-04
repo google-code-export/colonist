@@ -20,6 +20,7 @@ public class AIInspector : Editor
 		{
 			aiEditor = new AIEditor(target as AI);
 		}
+		EditorGUILayout.LabelField("Editing AI: " + (target as AI).Name);
 		EnableBaseInspector = EditorGUILayout.Toggle(new GUIContent("Base Inspector", ""), EnableBaseInspector);
 		if(EnableBaseInspector)
 		{

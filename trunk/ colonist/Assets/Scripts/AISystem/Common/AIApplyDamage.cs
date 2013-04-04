@@ -6,6 +6,20 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
 
 	Unit unit;
 	CharacterController controller;
+	
+	/// <summary>
+	/// if SwitchToAI flag is turned on, the current AI will be set off, another AI will be set on.
+	/// </summary>
+	public bool SwitchToAI = false;
+	public string SwitchToAIName = string.Empty;
+	float SwitchToAITime = float.MaxValue;
+	
+	/// <summary>
+	/// When receive damager counter GE random of min and max, switch to AI.
+	/// </summary>
+	public int SwitchConditionCounter_Min = 1;
+	public int SwitchConditionCounter_Max = 2;
+	
 	void Awake()
 	{
 		unit = GetComponent<Unit>();
@@ -14,10 +28,19 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
 	
 	void Update()
 	{
-		if(Input.GetKeyDown("t"))
+//		if(Input.GetKeyDown("t"))
+//		{
+//			DamageParameter dp = new DamageParameter(this.gameObject, DamageForm.Predator_Strike_Single_Claw, 3);
+//			SendMessage("ApplyDamage",dp);
+//		}
+		
+		//Switch to another AI, if the applied receive damage data contains switch to AI definition
+		if(SwitchToAIName != string.Empty && Time.time>=SwitchToAITime)
 		{
-			DamageParameter dp = new DamageParameter(this.gameObject, DamageForm.Predator_Strike_Single_Claw, 3);
-			SendMessage("ApplyDamage",dp);
+			this.unit.SwitchAI(SwitchToAIName);
+			//reset switch AI variables.
+			SwitchToAITime = int.MaxValue;
+			SwitchToAIName = string.Empty;
 		}
 	}
 	
@@ -38,6 +61,7 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
         else
         {
             StartCoroutine("DoDamage", damageParam);
+			this.unit.ReceiveDamageCounter++;
             yield break;
         }
         
@@ -45,52 +69,60 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
 
     public virtual IEnumerator DoDamage(DamageParameter damageParam)
     {
-        //Get the right ReceiveDamageData
-        ReceiveDamageData ReceiveDamageData = null;
+        //Get ReceiveDamageData
+        ReceiveDamageData receiveDamageData = null;
         if (unit.ReceiveDamageDataDict.ContainsKey(damageParam.damageForm))
         {
             if (unit.ReceiveDamageDataDict[damageParam.damageForm].Count == 1)
             {
-                ReceiveDamageData = unit.ReceiveDamageDataDict[damageParam.damageForm][0];
+                receiveDamageData = unit.ReceiveDamageDataDict[damageParam.damageForm][0];
             }
-            else
+            else //if more than one matched receive damage data is found, randomly choose one.
             {
                 int RandomIndex = Random.Range(0, unit.ReceiveDamageDataDict[damageParam.damageForm].Count);
-                ReceiveDamageData = unit.ReceiveDamageDataDict[damageParam.damageForm][RandomIndex];
+                receiveDamageData = unit.ReceiveDamageDataDict[damageParam.damageForm][RandomIndex];
             }
         }
         //If ReceiveDamageDataDict[DamageForm.Common] = null or Count ==0, will have error!
         //So make sure you have assign a Common receive damage data!
         else
         {
-            ReceiveDamageData = unit.ReceiveDamageDataDict[DamageForm.Common][0];
+            receiveDamageData = unit.ReceiveDamageDataDict[DamageForm.Common][0];
         }
         //Create effect data
-        if (ReceiveDamageData.EffectDataName != null && ReceiveDamageData.EffectDataName.Length > 0)
+        if (receiveDamageData.EffectDataName != null && receiveDamageData.EffectDataName.Length > 0)
         {
-            foreach (string effectDataName in ReceiveDamageData.EffectDataName)
+            foreach (string effectDataName in receiveDamageData.EffectDataName)
             {
                 EffectData EffectData = unit.EffectDataDict[effectDataName];
                 GlobalBloodEffectDecalSystem.CreateEffect(transform.position + controller.center, EffectData);
             }
         }
         //Create blood decal:
-        if (ReceiveDamageData.DecalDataName != null && ReceiveDamageData.DecalDataName.Length > 0)
+        if (receiveDamageData.DecalDataName != null && receiveDamageData.DecalDataName.Length > 0)
         {
-            foreach (string decalName in ReceiveDamageData.DecalDataName)
+            foreach (string decalName in receiveDamageData.DecalDataName)
             {
                 DecalData DecalData = unit.DecalDataDict[decalName];
                 GlobalBloodEffectDecalSystem.CreateBloodDecal(transform.position + controller.center, DecalData);
             }
         }
-
-        //Halt AI if set true
-        if (ReceiveDamageData.HaltAI)
+		
+		if(this.SwitchToAI)
+		{
+			int counter = Random.Range(SwitchConditionCounter_Min, SwitchConditionCounter_Max);
+			this.SwitchToAITime = animation[receiveDamageData.AnimationName].length + Time.time;
+			this.SwitchToAIName = this.SwitchToAIName;
+		}
+		
+        //Halt AI if set true, stop all animation, and play the receive damage animation
+        if (receiveDamageData.HaltAI)
         {
-            animation.Rewind(ReceiveDamageData.AnimationName);
-            animation.Play(ReceiveDamageData.AnimationName);
-			SendMessage("HaltUnit", animation[ReceiveDamageData.AnimationName].length);
-            yield return new WaitForSeconds(animation[ReceiveDamageData.AnimationName].length);
+			animation.Stop();
+            animation.Rewind();
+            animation.CrossFade(receiveDamageData.AnimationName);
+			SendMessage("HaltUnit", animation[receiveDamageData.AnimationName].length);
+            yield return new WaitForSeconds(animation[receiveDamageData.AnimationName].length);
         }
     }
 

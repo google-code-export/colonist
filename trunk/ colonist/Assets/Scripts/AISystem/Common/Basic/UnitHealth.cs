@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public abstract class UnitHealth :MonoBehaviour {
+public abstract class UnitHealth : MonoBehaviour {
     public abstract void SetCurrentHP(float value);
     public abstract void SetMaxHP(float value);
     public abstract float GetCurrentHP();
