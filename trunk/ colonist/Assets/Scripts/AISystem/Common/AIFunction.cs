@@ -14,6 +14,8 @@ public class AIFunction : MonoBehaviour
 	float stopBackward = 0;
 	Unit unit;
 	
+	public float MoveOffset = -1;
+	
 	Transform CurrentTarget 
 	{
 		get
@@ -164,9 +166,9 @@ public class AIFunction : MonoBehaviour
 	IEnumerator _MoveToCurrentTarget(float _duration)
 	{
 		CharacterController controller = this.GetComponent<CharacterController>();
-		float distnace = Util.DistanceOfCharactersXZ(controller, this.unit.CurrentTarget.GetComponent<CharacterController>());
+		float distance = Util.DistanceOfCharactersXZ(controller, this.unit.CurrentTarget.GetComponent<CharacterController>()) + MoveOffset;
 		Vector3 direction = (this.unit.CurrentTarget.position - transform.position).normalized;
-		Vector3 velocity = direction * distnace / _duration;
+		Vector3 velocity = direction * distance / _duration;
 		float _start = Time.time;
 		while((Time.time - _start) < _duration)
 		{
@@ -180,4 +182,26 @@ public class AIFunction : MonoBehaviour
 		Vector3 targetPos_XZ = new Vector3(this.unit.CurrentTarget.position.x, transform.position.y, this.unit.CurrentTarget.position.z);
 		transform.LookAt(targetPos_XZ);
 	}
+	
+    /// <summary>
+    /// Create a effect object.
+    /// Note: the %name% MUST BE an effective name in the key set of Unit.EffectDataDict
+    /// </summary>
+    /// <param name="name"></param>
+    public void _CreateEffect(string name)
+    {
+        if (this.unit.EffectDataDict.Keys.Contains(name) == false)
+        {
+            Debug.LogError("There is no such effect:" + name + " gameobject-" + gameObject.name);
+        }
+        else
+        {
+            EffectData data = this.unit.EffectDataDict[name];
+            Object effectObject = Object.Instantiate(data.EffectObject, data.Anchor.position, data.Anchor.rotation);
+            if (data.DestoryInTimeOut)
+            {
+                Destroy(effectObject, data.DestoryTimeOut);
+            }
+        }
+    }	
 }

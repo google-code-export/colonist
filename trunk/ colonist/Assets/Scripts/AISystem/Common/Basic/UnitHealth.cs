@@ -10,6 +10,9 @@ public abstract class UnitHealth : MonoBehaviour {
 
 public abstract class UnitBase : UnitHealth
 {
+	/// <summary>
+	/// The name of this unit.
+	/// </summary>
 	public string Name = "Default Name";
 	public ArmorType Armor = ArmorType.NoArmor_Human;
 	    /// <summary>
@@ -34,4 +37,15 @@ public abstract class UnitBase : UnitHealth
 	/// </summary>
 	[HideInInspector]
 	public float SpeedModifier = 1;
+	
+	public void CloneTo(UnitBase unitbase)
+	{
+		unitbase.Name = this.Name;
+		unitbase.Armor = this.Armor;
+		unitbase.EnemyLayer = this.EnemyLayer;
+		unitbase.GroundLayer = this.GroundLayer;
+		unitbase.WallLayer = this.WallLayer;
+		unitbase.MaxHP = this.MaxHP;
+		unitbase.HP = this.HP;
+	}
 }

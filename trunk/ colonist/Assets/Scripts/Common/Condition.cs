@@ -25,6 +25,22 @@ public class CompositeConditionWrapper
 		}
 	}
 	
+	public CompositeConditionWrapper GetClone()
+	{
+		CompositeConditionWrapper clone = new CompositeConditionWrapper();
+		clone.RootCompositeCondition = this.RootCompositeCondition.GetClone();
+		foreach(CompositeCondition compositeCondition in this.CompositeConditionArray)
+		{
+			CompositeCondition cloneCompositiobCondition = compositeCondition.GetClone();
+			clone.CompositeConditionArray = Util.AddToArray<CompositeCondition>(cloneCompositiobCondition, clone.CompositeConditionArray);
+		}
+		foreach(AtomConditionData atomCondition in this.atomConditionDataArray)
+		{
+			AtomConditionData cloneAtomCondition = atomCondition.GetClone();
+			clone.atomConditionDataArray = Util.AddToArray<AtomConditionData>(cloneAtomCondition, clone.atomConditionDataArray);
+		}
+		return clone;
+	}
 }
 
 public enum ConditionEntityType
@@ -77,7 +93,16 @@ public class CompositeCondition
 	
 	public ConditionEntity Entity2 = new ConditionEntity();
 	
-	
+	public CompositeCondition GetClone()
+	{
+		CompositeCondition clone = new CompositeCondition();
+		clone.Id = this.Id;
+		clone.Operator = this.Operator;
+		clone.Entity1 = new ConditionEntity();
+		clone.Entity1.EntityReferenceId = this.Entity1.EntityReferenceId;
+		clone.Entity1.EntityType = this.Entity1.EntityType;
+		return clone;
+	}
 	
 }
 
@@ -151,5 +176,21 @@ public class AtomConditionData
 		return ret;
 	}
 	
+	public AtomConditionData GetClone()
+	{
+		AtomConditionData clone = new AtomConditionData();
+		clone.Id = this.Id;
+		clone.ConditionType = this.ConditionType;
+		clone.BooleanOperator = this.BooleanOperator;
+		clone.BooleanCondition = this.BooleanCondition;
+		clone.CheckAreaes = this.CheckAreaes;
+		clone.ValueComparisionCondition = this.ValueComparisionCondition;
+		clone.ValueOperator = this.ValueOperator;
+		clone.RightValueForComparision = this.RightValueForComparision;
+		clone.LayerMaskForComparision = this.LayerMaskForComparision;
+		clone.StringValue = this.StringValue;
+		clone.StringValueArray = this.StringValueArray;		
+		return clone;
+	}
 
 }

@@ -367,5 +367,65 @@ public class Unit : UnitBase , I_GameEventReceiver
 	}
 #endregion
 	
+	public void CloneTo(Unit unit)
+	{
+		base.CloneTo(unit as UnitBase);
+		//copy character controller
+		CharacterController cc = unit.gameObject.AddComponent<CharacterController>();
+		cc.center = this.GetComponent<CharacterController>().center;
+		cc.radius = this.GetComponent<CharacterController>().radius;
+		cc.height = this.GetComponent<CharacterController>().height;
+		
+		//copy animation
+		foreach(AnimationState ani in this.animation)
+		{
+			AnimationClip clip = ani.clip;
+			unit.animation.AddClip(clip,ani.name);
+			
+		}
+		//copy idledata
+		foreach(IdleData idleData in this.IdleData)
+		{
+			IdleData clone = idleData.GetClone();
+			unit.IdleData = Util.AddToArray<IdleData>(clone, unit.IdleData);
+		}
+		//copy movedata
+		foreach(MoveData moveData in this.MoveData)
+		{
+			MoveData clone = moveData.GetClone();
+			unit.MoveData = Util.AddToArray<MoveData>(clone, unit.MoveData);
+		}
+		//copy attackdata
+		foreach(AttackData attackData in this.AttackData)
+		{
+			AttackData clone = attackData.GetClone();
+			unit.AttackData = Util.AddToArray<AttackData>(clone, unit.AttackData);
+		}
+		//copy ReceiveDamageData
+		foreach(ReceiveDamageData receiveDamageData in this.ReceiveDamageData)
+		{
+			ReceiveDamageData clone = receiveDamageData.GetClone();
+			unit.ReceiveDamageData = Util.AddToArray<ReceiveDamageData>(clone, unit.ReceiveDamageData);
+		}
+		//copy DeathData
+		foreach(DeathData deathData in this.DeathData)
+		{
+			DeathData clone = deathData.GetClone();
+			unit.DeathData = Util.AddToArray<DeathData>(clone, unit.DeathData);
+		}
+		//copy AudioData
+		foreach(AudioData audioData in this.AudioData)
+		{
+			AudioData clone = audioData.GetClone();
+			unit.AudioData = Util.AddToArray<AudioData>(clone, unit.AudioData);
+		}
+		//copy DecalData
+		foreach(DecalData decalData in this.DecalData)
+		{
+			DecalData clone = decalData.GetClone();
+			unit.DecalData = Util.AddToArray<DecalData>(clone, unit.DecalData);
+		}
+
+	}
 
 }

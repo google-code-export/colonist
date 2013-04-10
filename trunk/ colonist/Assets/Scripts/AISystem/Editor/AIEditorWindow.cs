@@ -16,6 +16,9 @@ public class AIEditorWindow : EditorWindow
 	Vector2 ScrollPosition = Vector2.zero;
 	
 	IList<AIEditor> AIEditor_List = null;
+	
+	Unit UnitToEdited = null;
+	
 	[MenuItem("Component/AI/Edit Unit and AI")]	
 	public static void init ()
 	{
@@ -26,11 +29,19 @@ public class AIEditorWindow : EditorWindow
 	{
 		MainWindowWidth = position.width;
 		MainWindowHeight = position.height;
-		GameObject selectedGameObject = Selection.activeGameObject;
-		if (selectedGameObject == null) {
-			Debug.LogWarning ("No gameObject is selected.");
+		if(Selection.activeObject != null &&
+			Selection.activeGameObject.GetComponent<Unit>() != null && GUILayout.Button("Use selected gameobject"))
+		{
+			UnitToEdited = Selection.activeGameObject.GetComponent<Unit>();
+		}
+		UnitToEdited = (Unit)EditorGUILayout.ObjectField(UnitToEdited, typeof (Unit));
+		if (UnitToEdited == null) {
+			EditorGUILayout.LabelField ("Select a unit to edit.");
 			return;
 		}
+		
+		GameObject selectedGameObject = UnitToEdited.gameObject;
+		
 		//Attach AI script button
 		if (selectedGameObject.GetComponent<AI> () == null) {
 			Rect newAIScriptButton = new Rect (0, 0, MainWindowWidth - 10, 30);

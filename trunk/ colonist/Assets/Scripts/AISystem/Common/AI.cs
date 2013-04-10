@@ -593,39 +593,6 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 		}
 		return ret;
 	}
-	
-    /// <summary>
-    /// Determine if the behavior matches start condition.
-    /// Return true/false.
-    /// Offspring can override this method.
-    /// </summary>
-    /// <returns></returns>
-    public virtual bool IsConditionMatched(AIBehavior Behavior, AIBehaviorCondition AICondition)
-    {
-        bool ret = false;
-        //switch (Behavior.ConditionConjunction)
-        switch (AICondition.Conjunction)
-        {
-            case LogicConjunction.None:
-                ret = CheckAtomCondition(AICondition.ConditionData1, Behavior);
-                break;
-            case LogicConjunction.And:
-                ret = CheckAtomCondition(AICondition.ConditionData1, Behavior);
-                if (ret == true)
-                {
-                    ret = ret && CheckAtomCondition(AICondition.ConditionData2, Behavior);
-                }
-                break;
-            case LogicConjunction.Or:
-                ret = CheckAtomCondition(AICondition.ConditionData1, Behavior);
-                if (ret == false)
-                {
-                    ret = ret || CheckAtomCondition(AICondition.ConditionData2, Behavior);
-                }
-                break;
-        }
-        return ret;
-    }
 
     /// <summary>
     /// Check if the AIBehavior condition is true
@@ -1030,17 +997,8 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 			}
 			else 
 			{
-				if(attackData != null)
-				{
-				  //Exclude the previous attack data - to make attack animation different each time.
-			      string attackDataName = Util.RandomFromArray<string>( behavior.AttackDataNameArray, attackData.Name);
-			      attackData = Unit.AttackDataDict[attackDataName];
-				}
-				else
-				{
-					string attackDataName = Util.RandomFromArray<string>(behavior.AttackDataNameArray);
-					attackData = Unit.AttackDataDict[attackDataName];
-				}
+		       string attackDataName = Util.RandomFromArray<string>(behavior.AttackDataNameArray);
+			   attackData = Unit.AttackDataDict[attackDataName];
 			}
 			//Animating attack
             string AttackAnimationName = attackData.AnimationName;
@@ -1062,6 +1020,17 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 				//After attack animation complete, set this flag AlternateBehaviorFlag to true, to enable altering to higher priority behavior.
 				AlternateBehaviorFlag = true;
 				yield return null;
+				if(behavior.AttackInterrupt)
+				{
+					IdleData idleData = this.Unit.IdleDataDict[behavior.IdleDataName];
+					float interval = Random.Range(behavior.AttackIntervalMin, behavior.AttackIntervalMax);
+					animation.CrossFade(idleData.AnimationName,0.5f);
+					yield return new WaitForSeconds(interval);
+				}
+				else 
+				{
+				    yield return null;
+				}
 				continue;
             }
             //else if can't see target, navigating until CanSeeCurrentTarget = true & within AttackableRange
@@ -1128,44 +1097,20 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 	
 #endregion
 
-#region Visual Effect
-
-    /// <summary>
-    /// Create a effect object.
-    /// Note: the %name% MUST BE an effective name in the key set of Unit.EffectDataDict
-    /// </summary>
-    /// <param name="name"></param>
-    public virtual void CreateEffect(string name)
-    {
-        if (Unit.EffectDataDict.Keys.Contains(name) == false)
-        {
-            Debug.LogError("There is no such effect:" + name + " gameobject-" + gameObject.name);
-        }
-        else
-        {
-            EffectData data = Unit.EffectDataDict[name];
-            Object effectObject = Object.Instantiate(data.EffectObject, data.Anchor.position, data.Anchor.rotation);
-            if (data.DestoryInTimeOut)
-            {
-                Destroy(effectObject, data.DestoryTimeOut);
-            }
-        }
-    }
-
-    
-
-#endregion
-
-#region Audio playing
-    
-#endregion
-
-#region Internal AI event listener
-//	void OnAttackComplete()
-//	{
-//         this.AlternateBehaviorFlag = true;
-//	}
-#endregion
+    public void CloneTo(AI _ai)
+	{
+		_ai.Name = this.Name;
+		_ai.AlterBehaviorInterval = this.AlterBehaviorInterval;
+		_ai.AttackObstacle = this.AttackObstacle;
+		_ai.OffensiveRange = this.OffensiveRange;
+		_ai.DetectiveRange = this.DetectiveRange;
+		foreach(AIBehavior behavior in this.Behaviors)
+		{
+ 			AIBehavior clone = behavior.GetClone(); 
+			_ai.Behaviors = Util.AddToArray<AIBehavior>(clone, _ai.Behaviors);
+		}
+	}
+	
 	
     void OnDrawGizmosSelected()
     {

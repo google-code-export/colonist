@@ -221,7 +221,7 @@ public class EditorCommon
 				                        AttackData as UnitAnimationData);
 			AttackData.DamageForm = (DamageForm)EditorGUILayout.EnumPopup (new GUIContent ("Damage Form:", "伤害类型"), AttackData.DamageForm);
 			AttackData.AttackableRange = EditorGUILayout.FloatField (new GUIContent ("Attack range:", "攻击范围"), AttackData.AttackableRange);
-			AttackData.AttackInterval = EditorGUILayout.FloatField (new GUIContent ("Attack Interval", "攻击间隔"), AttackData.AttackInterval);
+//			AttackData.AttackInterval = EditorGUILayout.FloatField (new GUIContent ("Attack Interval", "攻击间隔"), AttackData.AttackInterval);
 						//Hit Test trigger type:
 			
 			EditorGUILayout.BeginHorizontal();
@@ -664,6 +664,22 @@ public class EditorCommon
 		int index = (_value == null) ? 0 : IndexOfArray<string> (names, _value.name);
 		index = EditorGUILayout.Popup (index, names);
 		return co.Where (x => x.name == names [index]).First ();
+	}
+	
+	/// <summary>
+	/// Copies the unit and AI component from Unit A to Unit B.
+	/// </summary>
+	public static void CopyUnitAndAIComponent(Unit A, GameObject B)
+	{
+        Unit unit = B.AddComponent<Unit>();
+		A.CloneTo(unit);
+		EditorUtility.SetDirty (B);
+	}
+	
+	public static void CopyAnimationEvents(AnimationClip A, AnimationClip B)
+	{
+		AnimationEvent[] events = AnimationUtility.GetAnimationEvents(A);
+		AnimationUtility.SetAnimationEvents(B, events);
 	}
 	
     #endregion
