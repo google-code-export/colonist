@@ -1,16 +1,6 @@
 using UnityEngine;
 using System.Collections;
 
-
-
-[System.Serializable]
-public class AIBehaviorCondition
-{
-    public AtomConditionData ConditionData1 = new AtomConditionData();
-    public LogicConjunction Conjunction = LogicConjunction.None;
-    public AtomConditionData ConditionData2 = new AtomConditionData();
-}
-
 /// <summary>
 /// Base class of AI Beheavior.
 /// A AIBehavior defines a set of data to guide how AI behaves.
@@ -81,7 +71,13 @@ public class AIBehavior
 	/// The attack data name array, which is used when UseRandomAttackData is true.
 	/// </summary>
 	public string[] AttackDataNameArray = new string[]{};
-	
+	/// <summary>
+	/// The attack interval minimum and maximum is used when behavior type = Attack and AttackInterrupt = true
+	/// During interval, IdleData will be performed.
+	/// </summary>
+	public bool AttackInterrupt = true;
+	public float AttackIntervalMin = 0.5f;
+	public float AttackIntervalMax = 1.5f;
 #endregion
 
 #region variables for BehaviorType = HoldPosition
@@ -116,33 +112,28 @@ public class AIBehavior
 	
 	[HideInInspector]
 	public float StartTime = 0;
-}
-
-
-/// <summary>
-/// Condition data_of AI switching.
-/// Note: this class defines how should different AI switch between each other, which is different to ConditionData_AIBehaviorSwitching.
-/// </summary>
-[System.Serializable]
-public class ConditionData_AISwitching
-{
 	
+	public AIBehavior GetClone()
+	{
+		AIBehavior clone = new AIBehavior();
+		clone.StartConditionWrapper = this.StartConditionWrapper.GetClone();
+		clone.EndConditionWrapper = this.EndConditionWrapper.GetClone();
+		clone.Name = this.Name;
+		clone.Type = this.Type;
+		clone.Priority = this.Priority;
+		clone.SelectTargetRule = this.SelectTargetRule;
+		clone.IdleDataName = this.IdleDataName;
+		clone.MoveDataName = this.MoveDataName;
+		clone.MoveToTarget = this.MoveToTarget;
+		clone.IsWorldDirection = this.IsWorldDirection;
+		clone.MoveDirection = this.MoveDirection;
+		clone.AttackDataName = this.AttackDataName;
+		clone.UseRandomAttackData = this.UseRandomAttackData;
+		clone.AttackDataNameArray = Util.CloneArray<string>(this.AttackDataNameArray);
+		clone.HoldRadius = HoldRadius;
+		clone.SwitchToAIName = Util.CloneArray<string>(this.SwitchToAIName);
+		clone.MessageAtStart = Util.CloneArray<string>(this.MessageAtStart);
+		clone.MessageAtEnd = Util.CloneArray<string>(this.MessageAtEnd);
+		return clone;
+	}
 }
-
-/// <summary>
-/// Switch AI data.
-/// The class wrap the switch AI data:
-/// 1. Switch from AI to AI.
-/// 2. Condition of switching.
-/// 3. 
-/// </summary>
-//[System.Serializable]
-//public class SwitchAIData
-//{
-//	/// <summary>
-//	/// The name of this switch AI data.
-//	/// </summary>
-//	public string Name = "";
-//	
-//	public ConditionData_AIBehaviorSwitching StartConditionData = new ConditionData_AIBehaviorSwitching();
-//}

@@ -60,7 +60,7 @@ public class Util : MonoBehaviour {
 		}
 		else {
 		   newArray = new T[OrigArray.Length + slotCount];
-		   Util.CloneArray<T>(OrigArray, newArray); 
+		   newArray = Util.CloneArray<T>(OrigArray); 
 		}
 		return newArray;
 	}
@@ -113,10 +113,18 @@ public class Util : MonoBehaviour {
         return false;
     }
 
-	public static void CloneArray<T>(T[] src, T[] dst)
+	public static T[] CloneArray<T>(T[] src)
 	{
+		if(src == null || src.Length == 0)
+		{
+			return null;
+		}
+		T[] dst = new T[src.Length];
 		for(int i=0;i<src.Length;i++)
+		{
 			dst[i] = src[i];
+		}
+		return dst;
 	}
 	
 	public static IList<T> CloneList<T>(IList<T> list)

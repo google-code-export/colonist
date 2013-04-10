@@ -217,60 +217,60 @@ public class AIEditor
 
 	public virtual void EditAIBehaviorData (AIBehavior behavior)
 	{
-		string[] IdleDataName = this.AI.Unit.IdleData.Select (x => x.Name).ToArray<string> ();
-		string[] AttackDataName = this.AI.Unit.AttackData.Select (x => x.Name).ToArray<string> ();
-		string[] MoveDataName = this.AI.Unit.MoveData.Select (x => x.Name).ToArray<string> ();
+		string[] IdleDataNameArray = this.AI.Unit.IdleData.Select (x => x.Name).ToArray<string> ();
+		string[] AttackDataNameArray = this.AI.Unit.AttackData.Select (x => x.Name).ToArray<string> ();
+		string[] MoveDataNameArray = this.AI.Unit.MoveData.Select (x => x.Name).ToArray<string> ();
 		int idx = 0;
 		switch (behavior.Type) {
 		case AIBehaviorType.Idle:
-			if (IdleDataName == null || IdleDataName.Length == 0) {
+			if (IdleDataNameArray == null || IdleDataNameArray.Length == 0) {
 				EditorGUILayout.LabelField ("!!!There is no Idle Data defined in this Unit!!!");
 			} else {
-				idx = IndexOfArray<string> (IdleDataName, behavior.IdleDataName);
-				idx = EditorGUILayout.Popup ("Use Idle data:", idx, IdleDataName);
-				behavior.IdleDataName = IdleDataName [idx];
+				idx = IndexOfArray<string> (IdleDataNameArray, behavior.IdleDataName);
+				idx = EditorGUILayout.Popup ("Use Idle data:", idx, IdleDataNameArray);
+				behavior.IdleDataName = IdleDataNameArray [idx];
 			}
 			break;
 		case AIBehaviorType.MoveToTransform:
-			if (MoveDataName == null || MoveDataName.Length == 0) {
+			if (MoveDataNameArray == null || MoveDataNameArray.Length == 0) {
 				EditorGUILayout.LabelField ("!!!There is no Move Data defined in this Unit!!!");
 			} else {
-				idx = IndexOfArray<string> (MoveDataName, behavior.MoveDataName);
-				idx = EditorGUILayout.Popup ("Use Move data:", idx, MoveDataName);
-				behavior.MoveDataName = MoveDataName [idx];
+				idx = IndexOfArray<string> (MoveDataNameArray, behavior.MoveDataName);
+				idx = EditorGUILayout.Popup ("Use Move data:", idx, MoveDataNameArray);
+				behavior.MoveDataName = MoveDataNameArray [idx];
 				behavior.MoveToTarget = (Transform)EditorGUILayout.ObjectField (new GUIContent ("Move to target", ""),
                         behavior.MoveToTarget, typeof(Transform));
 			}
 			break;
 		case AIBehaviorType.MoveAtDirection:
-			if (MoveDataName == null || MoveDataName.Length == 0) {
+			if (MoveDataNameArray == null || MoveDataNameArray.Length == 0) {
 				EditorGUILayout.LabelField ("!!!There is no Move Data defined in this Unit!!!");
 			} else {
-				idx = IndexOfArray<string> (MoveDataName, behavior.MoveDataName);
-				idx = EditorGUILayout.Popup ("Use Move data:", idx, MoveDataName);
-				behavior.MoveDataName = MoveDataName [idx];
+				idx = IndexOfArray<string> (MoveDataNameArray, behavior.MoveDataName);
+				idx = EditorGUILayout.Popup ("Use Move data:", idx, MoveDataNameArray);
+				behavior.MoveDataName = MoveDataNameArray [idx];
 				behavior.MoveDirection = EditorGUILayout.Vector3Field ("Move at direction", behavior.MoveDirection);
 				behavior.IsWorldDirection = EditorGUILayout.Toggle (new GUIContent ("Is world direction?", "Move at Direction 指定的方向,是世界方向还是局部方向?"), behavior.IsWorldDirection);
 			}
 			break;
 		case AIBehaviorType.MoveToCurrentTarget:
-			if (MoveDataName == null || MoveDataName.Length == 0) {
+			if (MoveDataNameArray == null || MoveDataNameArray.Length == 0) {
 				EditorGUILayout.LabelField ("!!!There is no Move Data defined in this Unit!!!");
 			} else {
-				idx = IndexOfArray<string> (MoveDataName, behavior.MoveDataName);
-				idx = EditorGUILayout.Popup ("Use Move data:", idx, MoveDataName);
-				behavior.MoveDataName = MoveDataName [idx];
+				idx = IndexOfArray<string> (MoveDataNameArray, behavior.MoveDataName);
+				idx = EditorGUILayout.Popup ("Use Move data:", idx, MoveDataNameArray);
+				behavior.MoveDataName = MoveDataNameArray [idx];
 			}
 			break;
 		case AIBehaviorType.Attack:
 		case AIBehaviorType.AttackToPosition:
 		case AIBehaviorType.AttackToDirection:
 		case AIBehaviorType.HoldPosition:
-			if (AttackDataName == null || AttackDataName.Length == 0) {
+			if (AttackDataNameArray == null || AttackDataNameArray.Length == 0) {
 				EditorGUILayout.LabelField ("!!!There is no Attack Data defined in this Unit!!!");
 				return;
 			}
-			if (MoveDataName == null || MoveDataName.Length == 0) {
+			if (MoveDataNameArray == null || MoveDataNameArray.Length == 0) {
 				EditorGUILayout.LabelField ("!!!There is no Move Data defined in this Unit!!!");
 				return;
 			}
@@ -278,14 +278,14 @@ public class AIEditor
             //Attack Data:
 			behavior.UseRandomAttackData = EditorGUILayout.Toggle (new GUIContent ("Use random attack data", ""), behavior.UseRandomAttackData);
 			if (behavior.UseRandomAttackData) {
-				behavior.AttackDataNameArray = EditorCommon.EditStringArray ("Attack data:", behavior.AttackDataNameArray, AttackDataName);
+				behavior.AttackDataNameArray = EditorCommon.EditStringArray ("Attack data:", behavior.AttackDataNameArray, AttackDataNameArray);
 			} else {
-				behavior.AttackDataName = EditorCommon.EditPopup ("Attack data:", behavior.AttackDataName, AttackDataName);
+				behavior.AttackDataName = EditorCommon.EditPopup ("Attack data:", behavior.AttackDataName, AttackDataNameArray);
 			}
             // Move data:
-			idx = IndexOfArray<string> (MoveDataName, behavior.MoveDataName);
-			idx = EditorGUILayout.Popup ("Move data:", idx, MoveDataName);
-			behavior.MoveDataName = MoveDataName [idx];
+			idx = IndexOfArray<string> (MoveDataNameArray, behavior.MoveDataName);
+			idx = EditorGUILayout.Popup ("Move data:", idx, MoveDataNameArray);
+			behavior.MoveDataName = MoveDataNameArray [idx];
 
 			if (behavior.Type == AIBehaviorType.AttackToPosition) {
 				behavior.MoveToTarget = (Transform)EditorGUILayout.ObjectField (new GUIContent ("Move to target", ""),
@@ -298,6 +298,15 @@ public class AIEditor
 			if (behavior.Type == AIBehaviorType.HoldPosition) {
 				behavior.HoldRadius = EditorGUILayout.FloatField (new GUIContent ("Hold Position:", "The position transform."), behavior.HoldRadius);
 			}
+			
+			//Idle data:
+			behavior.AttackInterrupt = EditorGUILayout.Toggle("Attack interrupt:", behavior.AttackInterrupt);
+			if(behavior.AttackInterrupt)
+			{
+				behavior.IdleDataName = EditorCommon.EditPopup ("Interval Idle data:", behavior.IdleDataName, IdleDataNameArray);
+				behavior.AttackIntervalMin = EditorGUILayout.FloatField("Min attack interval:" , behavior.AttackIntervalMin );
+				behavior.AttackIntervalMax = EditorGUILayout.FloatField("Max attack interval:" , behavior.AttackIntervalMax );
+			}
 			break;
 		case AIBehaviorType.SwitchToAI:
 			AI[] ai = this.AI.Unit.GetComponents<AI> (); 
@@ -309,23 +318,7 @@ public class AIEditor
 #endregion
 	
 	#region Edit condition functions
-	public virtual void EditAIBehaviorCondition (AIBehavior behavior, AIBehaviorCondition Condition)
-	{
-		EditorGUILayout.BeginHorizontal ();
-		Condition.Conjunction = (LogicConjunction)EditorGUILayout.EnumPopup (new GUIContent ("ConditionData1 ", ""), Condition.Conjunction);
-		if (Condition.Conjunction == LogicConjunction.Or || Condition.Conjunction == LogicConjunction.And) {
-			EditorGUILayout.LabelField ("ConditionData2");
-		}
-		EditorGUILayout.EndHorizontal ();
-      
-		EditorGUILayout.LabelField ("----ConditionData1");
-		EditAtomConditionData (Condition.ConditionData1);
 
-		if (Condition.Conjunction == LogicConjunction.And || Condition.Conjunction == LogicConjunction.Or) {
-			EditorGUILayout.LabelField ("----ConditionData2");
-			EditAtomConditionData (Condition.ConditionData2);
-		}
-	}
 	/// <summary>
 	/// Composites the condition to string description.
 	/// </summary>
@@ -614,4 +607,5 @@ public class AIEditor
 	}
 
     #endregion
+
 }

@@ -11,6 +11,14 @@ public class UnitAnimationData
     public string AnimationName = string.Empty;
     public WrapMode AnimationWrapMode = WrapMode.Default;
     public float AnimationSpeed = 1;
+	public void CloneBasic(UnitAnimationData _unitAnimationData)
+	{
+		_unitAnimationData.Name = this.Name;
+		_unitAnimationData.AnimationLayer = this.AnimationLayer;
+		_unitAnimationData.AnimationName = this.AnimationName;
+		_unitAnimationData.AnimationWrapMode = this.AnimationWrapMode;
+		_unitAnimationData.AnimationSpeed = this.AnimationSpeed;
+	}
 }
 
 /// <summary>
@@ -35,6 +43,17 @@ public class MoveData : UnitAnimationData
 	/// This variable is only used in Attack behavior.
 	/// </summary>
 	public float RedirectTargetInterval = 0.15f;
+	
+	public MoveData GetClone()
+	{
+		MoveData clone = new MoveData();
+		base.CloneBasic(clone as UnitAnimationData);
+		clone.MoveSpeed = this.MoveSpeed;
+		clone.CanRotate = this.CanRotate;
+		clone.SmoothRotate = this.SmoothRotate;
+		clone.RotateAngularSpeed = this.RotateAngularSpeed;
+		return clone;
+	}
 }
 
 /// <summary>
@@ -79,6 +98,15 @@ public class IdleData : UnitAnimationData
 	/// </summary>
 	public bool SmoothRotate = false;
 	public string RotateDataName = "";
+	public IdleData GetClone()
+	{
+		IdleData clone = new IdleData();
+		base.CloneBasic(clone);
+		clone.KeepFacingTarget = this.KeepFacingTarget;
+		clone.SmoothRotate = this.SmoothRotate;
+		clone.RotateDataName = this.RotateDataName;
+		return clone;
+	}
 }
 
 /// <summary>
@@ -103,6 +131,17 @@ public class ReceiveDamageData : UnitAnimationData
     /// DecalDataName - the decal object will be created when receiving damage
     /// </summary>
     public string[] DecalDataName = new string[] { };
+	
+    public ReceiveDamageData GetClone()
+	{
+		ReceiveDamageData clone = new ReceiveDamageData();
+		base.CloneBasic(clone);
+		clone.DamageForm = this.DamageForm;
+		clone.HaltAI = this.HaltAI;
+	    clone.EffectDataName = Util.CloneArray<string>(this.EffectDataName);
+		clone.DecalDataName = Util.CloneArray<string>(this.DecalDataName);
+		return clone;
+	}
 }
 /// <summary>
 /// The class wrap receive unit die data
@@ -139,6 +178,20 @@ public class DeathData : UnitAnimationData
     /// the DieReplacement's children transform will be aligned to gameObject.
     /// </summary>
     public bool CopyChildrenTransformToDieReplacement = false;
+	
+    public DeathData GetClone()
+	{
+		DeathData clone = new DeathData();
+		base.CloneBasic(clone);
+		clone.DamageForm = this.DamageForm;
+		clone.UseDieReplacement = this.UseDieReplacement;
+		clone.ReplaceAfterAnimationFinish = this.ReplaceAfterAnimationFinish;
+		clone.DieReplacement = this.DieReplacement;
+		clone.CopyChildrenTransformToDieReplacement = this.CopyChildrenTransformToDieReplacement;
+	    clone.EffectDataName = Util.CloneArray<string>(this.EffectDataName);
+		clone.DecalDataName = Util.CloneArray<string>(this.DecalDataName);
+		return clone;
+	}
 }
 
 /// <summary>
@@ -176,6 +229,21 @@ public class EffectData
 	/// </summary>
 	public bool CreateDelay = true;
 	public float CreateDelayTime = 1;
+	
+	public EffectData GetClone()
+	{
+		EffectData clone = new EffectData();
+		clone.Name = this.Name;
+		clone.Count = this.Count;
+		clone.UseGlobalEffect = this.UseGlobalEffect;
+		clone.GlobalType = this.GlobalType;
+		clone.EffectObject = this.EffectObject;
+		clone.DestoryTimeOut = this.DestoryTimeOut;
+		clone.DestoryInTimeOut = this.DestoryInTimeOut;
+		clone.CreateDelay = this.CreateDelay;
+		clone.CreateDelayTime = this.CreateDelayTime;
+		return clone;
+	}
 }
 
 
@@ -211,6 +279,21 @@ public class DecalData
     public float ScaleRate = 1;
     public LayerMask ApplicableLayer;
 #endregion
+	
+	public DecalData GetClone()
+	{
+		DecalData clone = new DecalData();
+		clone.Name = this.Name;
+		clone.UseGlobalDecal = this.UseGlobalDecal;
+		clone.GlobalType = this.GlobalType;
+	    clone.DecalObjects = Util.CloneArray<Object>(this.DecalObjects);
+		clone.ProjectDirection = this.ProjectDirection;
+		clone.DestoryInTimeOut = this.DestoryInTimeOut;	
+		clone.DestoryTimeOut = this.DestoryTimeOut;	
+		clone.ScaleRate = this.ScaleRate;	
+		clone.ApplicableLayer = this.ApplicableLayer;	
+		return clone;
+	}
 }
 
 /// <summary>
@@ -276,7 +359,7 @@ public class AttackData : UnitAnimationData
     /// <summary>
     /// After last attacking, how long will the next attack take place.
     /// </summary>
-    public float AttackInterval = 0.5f;
+//    public float AttackInterval = 0.5f;
 
     /// <summary>
     /// Only used if attackType = Projectile.
@@ -309,6 +392,30 @@ public class AttackData : UnitAnimationData
     {
         return new DamageParameter(DamageSource, this.DamageForm, DamagePointBase + Random.Range(MinDamageBonus, MaxDamageBonus));
     }
+	
+    public AttackData GetClone()
+	{
+		AttackData clone = new AttackData();
+		base.CloneBasic(clone as UnitAnimationData);
+		clone.Type = this.Type;
+		clone.hitTriggerType = this.hitTriggerType;
+		clone.DamageForm = this.DamageForm;
+		clone.WeaponType = this.WeaponType;
+		clone.HitTestType = this.HitTestType;
+		clone.HitRate = this.HitRate;
+		clone.HitTestCollider = this.HitTestCollider;
+		clone.HitTestDistance = this.HitTestDistance;
+		clone.HitTestAngularDiscrepancy = this.HitTestAngularDiscrepancy;
+		clone.AttackableRange = this.AttackableRange;
+		clone.HitTime = this.HitTime;
+		clone.Projectile = this.Projectile;
+		clone.ProjectileInstantiateAnchor = this.ProjectileInstantiateAnchor;
+		clone.DamagePointBase = this.DamagePointBase;
+		clone.MinDamageBonus = this.MinDamageBonus;
+		clone.MaxDamageBonus = this.MaxDamageBonus;
+		clone.ScriptObjectAttachToTarget = this.ScriptObjectAttachToTarget;
+		return clone;
+	}
 }
 
 /// <summary>
@@ -319,4 +426,11 @@ public class AudioData
 {
     public string Name = "";
     public AudioClip[] audioClip = new AudioClip[]{};
+	public AudioData GetClone()
+	{
+		AudioData clone = new AudioData();
+		clone.Name = this.Name;
+		clone.audioClip = Util.CloneArray<AudioClip>(audioClip);
+		return clone;
+	}
 }

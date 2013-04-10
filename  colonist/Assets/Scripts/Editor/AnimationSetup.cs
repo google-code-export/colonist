@@ -13,7 +13,10 @@ public class AnimationSetup  {
 		IList<AnimationClip> animationList = new List<AnimationClip>();
 		foreach(AnimationState animationState in selectedObject.animation)
 		{
-			animationList.Add(animationState.clip);
+			if(animationState != null && animationState.clip != null)
+			{
+			   animationList.Add(animationState.clip);
+			}
 		}
 		foreach(AnimationClip animationClip in animationList)
 		{
