@@ -17,6 +17,8 @@ public class RagdollEditor : EditorWindow {
 	Ragdoll selectedRagdoll;
 	bool EnableEditDecalData = false, EnableEditEffectData = false, EnableEditRagdollData = false;
 	
+	Ragdoll ragdollToEdited = null;
+	
 	void OnGUI ()
 	{
 		MainWindowWidth = position.width;
@@ -26,24 +28,30 @@ public class RagdollEditor : EditorWindow {
 			Debug.LogWarning ("No gameObject is selected.");
 			return;
 		}
-		//Attach Ragdoll script button
-		if (selectedGameObject.GetComponent<Ragdoll> () == null) {
-			Rect newRagdollScriptButton = new Rect (0, 0, MainWindowWidth - 10, 30);
-			if (GUI.Button (newRagdollScriptButton, "Attach Ragdoll script")) {
-				selectedGameObject.AddComponent<Ragdoll> ();
-			}
-			return;
+		
+		if(Selection.activeObject != null &&
+			Selection.activeGameObject.GetComponent<Ragdoll>() != null && GUILayout.Button("Use selected gameobject"))
+		{
+			ragdollToEdited = Selection.activeGameObject.GetComponent<Ragdoll>();
 		}
+		ragdollToEdited = (Ragdoll)EditorGUILayout.ObjectField(ragdollToEdited, typeof (Ragdoll));
+		
+		if(ragdollToEdited == null)
+			return;
 		
 		if (GUILayout.Button ("Save object")) {
-			EditorUtility.SetDirty (selectedGameObject);
+			EditorUtility.SetDirty (ragdollToEdited);
+			EditorUtility.SetDirty (ragdollToEdited.gameObject);
 		}
 		
-		selectedRagdoll = selectedGameObject.GetComponent<Ragdoll>();
+		selectedRagdoll = ragdollToEdited;
 		ScrollPosition = EditorGUILayout.BeginScrollView (ScrollPosition, false, true, null);
 		EditRagdollBase();
 		//EditEffectData();
-		selectedRagdoll.EffectData = EditorCommon.EditEffectData (selectedRagdoll.EffectData);
+		if (EnableEditEffectData = EditorGUILayout.BeginToggleGroup ("---Edit Effect Data---", EnableEditEffectData)) {
+		    selectedRagdoll.EffectData = EditorCommon.EditEffectData(selectedRagdoll.EffectData);
+		}
+		EditorGUILayout.EndToggleGroup();
 		EditDecalData();
 		EditRagdollJointData();
 		EditorGUILayout.EndScrollView();
@@ -102,45 +110,45 @@ public class RagdollEditor : EditorWindow {
 		EditorGUILayout.EndToggleGroup ();
 	}
 	
-	public virtual void EditEffectData ()
-	{
-		EnableEditEffectData = EditorGUILayout.BeginToggleGroup ("---Edit Effect Data", EnableEditEffectData);
-		if (EnableEditEffectData) {
-			if (GUILayout.Button ("Add Effect data")) {
-				EffectData EffectData = new EffectData ();
-				IList<EffectData> l = selectedRagdoll.EffectData.ToList<EffectData> ();
-				l.Add (EffectData);
-				selectedRagdoll.EffectData = l.ToArray<EffectData> ();
-			}
-			for (int i = 0; i < selectedRagdoll.EffectData.Length; i++) {
-				EffectData EffectData = selectedRagdoll.EffectData [i];
-				EditorGUILayout.LabelField ("------------------------ " + EffectData.Name);
-				EffectData.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), EffectData.Name);
-				
-				EffectData.UseGlobalEffect = EditorGUILayout.Toggle (new GUIContent ("Use global effect?", "是否使用全局Effect?"), EffectData.UseGlobalEffect);
-				if(EffectData.UseGlobalEffect)
-				{
-					EffectData.GlobalType = (GlobalEffectType)EditorGUILayout.EnumPopup(new GUIContent ("Global effect type", "是全局Effect类型"),
-						EffectData.GlobalType);
-				}
-				else {
-				  EffectData.EffectObject = (GameObject)EditorGUILayout.ObjectField (new GUIContent ("Effect object", ""), EffectData.EffectObject, typeof(GameObject));
-				  EffectData.Anchor = (Transform)EditorGUILayout.ObjectField (new GUIContent ("Effect creation anchor", ""), EffectData.Anchor, typeof(Transform));
-				  EffectData.DestoryInTimeOut = EditorGUILayout.Toggle (new GUIContent ("Destory this effect in timeout?", "是否在N秒内删除这个效果?"), EffectData.DestoryInTimeOut);
-				  if (EffectData.DestoryInTimeOut) {
-				    	EffectData.DestoryTimeOut = EditorGUILayout.FloatField (new GUIContent ("Destory Timeout:", ""), EffectData.DestoryTimeOut);
-				  }
-				  if (GUILayout.Button ("Delete EffectData:" + EffectData.Name)) {
-  					  IList<EffectData> l = selectedRagdoll.EffectData.ToList<EffectData> ();  
-					  l.Remove (EffectData);
-				  	  selectedRagdoll.EffectData = l.ToArray<EffectData> ();
-				  }
-				}
-				EditorGUILayout.Space ();
-			}
-		}
-		EditorGUILayout.EndToggleGroup ();
-	}
+//	public virtual void EditEffectData ()
+//	{
+//		EnableEditEffectData = EditorGUILayout.BeginToggleGroup ("---Edit Effect Data", EnableEditEffectData);
+//		if (EnableEditEffectData) {
+//			if (GUILayout.Button ("Add Effect data")) {
+//				EffectData EffectData = new EffectData ();
+//				IList<EffectData> l = selectedRagdoll.EffectData.ToList<EffectData> ();
+//				l.Add (EffectData);
+//				selectedRagdoll.EffectData = l.ToArray<EffectData> ();
+//			}
+//			for (int i = 0; i < selectedRagdoll.EffectData.Length; i++) {
+//				EffectData EffectData = selectedRagdoll.EffectData [i];
+//				EditorGUILayout.LabelField ("------------------------ " + EffectData.Name);
+//				EffectData.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), EffectData.Name);
+//				
+//				EffectData.UseGlobalEffect = EditorGUILayout.Toggle (new GUIContent ("Use global effect?", "是否使用全局Effect?"), EffectData.UseGlobalEffect);
+//				if(EffectData.UseGlobalEffect)
+//				{
+//					EffectData.GlobalType = (GlobalEffectType)EditorGUILayout.EnumPopup(new GUIContent ("Global effect type", "是全局Effect类型"),
+//						EffectData.GlobalType);
+//				}
+//				else {
+//				  EffectData.EffectObject = (GameObject)EditorGUILayout.ObjectField (new GUIContent ("Effect object", ""), EffectData.EffectObject, typeof(GameObject));
+//				  EffectData.Anchor = (Transform)EditorGUILayout.ObjectField (new GUIContent ("Effect creation anchor", ""), EffectData.Anchor, typeof(Transform));
+//				  EffectData.DestoryInTimeOut = EditorGUILayout.Toggle (new GUIContent ("Destory this effect in timeout?", "是否在N秒内删除这个效果?"), EffectData.DestoryInTimeOut);
+//				  if (EffectData.DestoryInTimeOut) {
+//				    	EffectData.DestoryTimeOut = EditorGUILayout.FloatField (new GUIContent ("Destory Timeout:", ""), EffectData.DestoryTimeOut);
+//				  }
+//				  if (GUILayout.Button ("Delete EffectData:" + EffectData.Name)) {
+//  					  IList<EffectData> l = selectedRagdoll.EffectData.ToList<EffectData> ();  
+//					  l.Remove (EffectData);
+//				  	  selectedRagdoll.EffectData = l.ToArray<EffectData> ();
+//				  }
+//				}
+//				EditorGUILayout.Space ();
+//			}
+//		}
+//		EditorGUILayout.EndToggleGroup ();
+//	}
 	
 	
 	public virtual void EditRagdollJointData()

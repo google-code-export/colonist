@@ -9,6 +9,6 @@ public class RobotWarrior_Unit : Unit {
         InitUnitData();
 		InitAnimation();
         InitUnitAI();
-		Debug.Log("Init Unit at frame:" + Time.frameCount);
+//		Debug.Log("Init Unit at frame:" + Time.frameCount);
 	}
 }
