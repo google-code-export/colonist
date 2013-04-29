@@ -9,7 +9,7 @@ using System.Collections.Generic;
 /// dot, slice, tick
 /// </summary>
 [ExecuteInEditMode]
-public class CombatHint : MonoBehaviour {
+public class CombatHint : HUD {
 	/// <summary>
 	/// The texture for hinting player combat action.
 	/// </summary>
