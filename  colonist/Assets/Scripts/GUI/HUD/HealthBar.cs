@@ -2,19 +2,36 @@ using UnityEngine;
 using System.Collections;
 
 [ExecuteInEditMode]
-public class HealthBar : MonoBehaviour {
+public class HealthBar : HUD {
 	
 	public Texture foregoundTexture;
+	public Texture backgoundTexture;
 	public Rect LocationRect;
 	public Rect TextCoord;
 	public ScaleMode scaleMode;
 	public bool AplhaBlend;
-	public float imageAspect = 0;
+
 	public UnitBase unit;
 	
-	protected float thevalue;
-	protected float theMaxValue;
+	public Color startColor = Color.green;
 	
+	public Color endColor = Color.red;
+	
+	/// <summary>
+	/// The wink value.
+	/// When health below 30%, the health bar will wink.
+	/// </summary>
+	public float winkValue = 0.3f;
+	
+	bool wink = false;
+	public bool show = true;
+	float lastChangeShowHideTime = 0;
+	
+	float thevalue;
+	float theMaxValue;
+	Color theColor = Color.gray;
+	Rect theRect;
+	Rect theTextCoord;
 	void Awake()
 	{
 		theMaxValue = unit.GetMaxHP();
@@ -28,21 +45,42 @@ public class HealthBar : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 	    thevalue = unit.GetCurrentHP();
+		float percentage = Mathf.Clamp01(thevalue / theMaxValue);
+		theRect = new Rect(LocationRect);
+		theRect.width *= percentage;
+		theTextCoord = new Rect(TextCoord);
+		theTextCoord.width *= percentage;	
+		theColor = Color.Lerp(endColor ,startColor, percentage);
+		if(wink == false && percentage <= winkValue)
+		{
+			wink = true;
+		}
+		if(wink == true && percentage > winkValue)
+		{
+			wink = false;
+			show = true;
+		}
+		if(wink)
+		{
+			if((Time.time - lastChangeShowHideTime)>=0.1f)
+			{
+//				Debug.Log("winking:"+Time.frameCount);
+				show = !show;
+				lastChangeShowHideTime = Time.time;
+			}
+		}
 	}
 	
+	float lastHideTime = 0;
 	void OnGUI()
 	{
-		float percentage = Mathf.Clamp01(thevalue / theMaxValue);
-		
-		Rect positionRect = new Rect(LocationRect);
-		positionRect.width *= percentage;
-		
-		Rect textCoordRect = new Rect(TextCoord);
-		textCoordRect.width *= percentage;		
-		
-		GUI.DrawTextureWithTexCoords(  positionRect, foregoundTexture, textCoordRect, AplhaBlend);
+		GUI.DrawTexture( LocationRect, backgoundTexture,scaleMode, AplhaBlend);
+		if(show)
+		{
+		  GUI.color = theColor;
+		  GUI.DrawTextureWithTexCoords(  theRect, foregoundTexture, theTextCoord, AplhaBlend);
 //			GUI.DrawTexture (LocationRect, foregoundTexture, scaleMode, AplhaBlend, imageAspect);
-			
+		}	
 		
 	}
 }
