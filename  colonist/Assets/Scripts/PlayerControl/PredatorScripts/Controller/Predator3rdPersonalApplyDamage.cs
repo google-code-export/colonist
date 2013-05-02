@@ -3,8 +3,7 @@ using System.Collections;
 
 public class Predator3rdPersonalApplyDamage : MonoBehaviour {
     
-    public Predator3rdPersonalUnit predatorPlayerUnit = null;   
-    public PrograssBar HealthPrograss = null;
+    Predator3rdPersonalUnit predatorPlayerUnit = null;   
     public ParticleSystem electricityHitEffect = null;
 
     void Awake()
@@ -24,8 +23,8 @@ public class Predator3rdPersonalApplyDamage : MonoBehaviour {
     public virtual IEnumerator ApplyDamage(DamageParameter param)
     {
         predatorPlayerUnit.HP -= param.damagePoint;
-		
-        Debug.Log("ApplyDamage at PredatorPlayer, current HP:" + predatorPlayerUnit.HP);
+		predatorPlayerUnit.HUDObject.SendMessage("ApplyDamage", param);
+//        Debug.Log("ApplyDamage at PredatorPlayer, current HP:" + predatorPlayerUnit.HP);
         switch (param.damageForm)
         {
             case DamageForm.ElectricityBoltHit:

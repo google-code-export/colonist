@@ -204,5 +204,4 @@ public class ThirdPersonFollowCamera_Predator : MonoBehaviour
         IsSlowMotion = false;
         Destroy(temp);
     }
-
 }

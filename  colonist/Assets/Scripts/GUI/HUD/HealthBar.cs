@@ -11,7 +11,7 @@ public class HealthBar : HUD {
 	public ScaleMode scaleMode;
 	public bool AplhaBlend;
 
-	public UnitBase unit;
+    UnitBase unit;
 	
 	public Color startColor = Color.green;
 	
@@ -34,6 +34,7 @@ public class HealthBar : HUD {
 	Rect theTextCoord;
 	void Awake()
 	{
+		unit = transform.root.GetComponentInChildren<UnitBase>();
 		theMaxValue = unit.GetMaxHP();
 	}
 	
@@ -69,6 +70,16 @@ public class HealthBar : HUD {
 				lastChangeShowHideTime = Time.time;
 			}
 		}
+	}
+	
+    IEnumerator ApplyDamage(DamageParameter param)
+	{
+		yield return new WaitForEndOfFrame();
+		GameEvent _e = new GameEvent(GameEventType.DisplayDamageParameterOnPlayer);
+		_e.ObjectParameter = param;
+		_e.Vector2Parameter = new Vector2(theRect.x + theRect.width, theRect.y + theRect.height);
+		//send gameEvent to display player damage number
+ 		SendMessage("OnGameEvent", _e);
 	}
 	
 	float lastHideTime = 0;

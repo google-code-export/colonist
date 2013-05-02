@@ -7,13 +7,6 @@ using System;
 [@RequireComponent(typeof(Predator3rdPersonalUnit))]
 public class Predator3rdPersonalAttackController : MonoBehaviour
 {
-
-	/// <summary>
-	/// CombatHintHUD - the hint to be displayed on right-top screen. Offer a visual tips to player
-	/// the combat they have performed.
-	/// </summary>
-	public GameObject CombatHintHUD;
-
 	/// <summary>
 	/// The default combat - left claw
 	/// </summary>
@@ -95,7 +88,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 		//If player do not append combat in 1 second, reset the playerComboToken and clear HUD hint
 		if (((Time.time - LastProcessPlayerGestureInputTime) > 1f) && playerComboToken != string.Empty) {
 			playerComboToken = "";
-			CombatHintHUD.SendMessage ("ClearHint");
+			PredatorPlayerUnit.HUDObject.SendMessage ("ClearHint");
 		}
 		
 		//Test for puncture :
@@ -123,11 +116,11 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	/// Push a new user gesture into queue - UnprocessGestureList
 	/// </summary>
 	/// <param name="gestureInfo"></param>
-	void NewUserGesture (UserInputData gestureInfo)
+	public void NewUserGesture (UserInputData gestureInfo)
 	{
 		if (!BlockUserGestureInput) {
 			//New Hint in GUI (HUD)
-			CombatHintHUD.SendMessage ("NewHint", gestureInfo.Type);
+			PredatorPlayerUnit.HUDObject.SendMessage ("NewHint", gestureInfo.Type);
 			//Accumulate player combo token string
 			playerComboToken += ((int)gestureInfo.Type).ToString ();
 			//Check if player combo token has a matched prefab
@@ -173,7 +166,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 				}
 				if (combat.FinalCombat) {
 					BlockUserGestureInput = false;
-					CombatHintHUD.SendMessage ("ClearHint");
+					PredatorPlayerUnit.HUDObject.SendMessage ("ClearHint");
 				}
 			}
 			yield return new WaitForSeconds(CombatCooldown);
@@ -181,7 +174,14 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
         
 	}
 
-    
+    void OnEnable() {
+		StartCoroutine("RepeatCheckCombatList");
+	}
+	
+	void OnDisable()
+	{
+		StopCoroutine("RepeatCheckCombatList");
+	}
 
 
 	/// <summary>
@@ -370,6 +370,10 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 			}
 			DamageParameter damageParam = new DamageParameter (this.gameObject, DamageForm, HitPoint);
 			enemy.SendMessage ("ApplyDamage", damageParam);
+			GameEvent _e = new GameEvent(GameEventType.DisplayDamageParameterOnNPC);
+			_e.receiver = enemy;
+			_e.ObjectParameter = damageParam;
+			PredatorPlayerUnit.HUDObject.SendMessage("OnGameEvent", _e);
 			health = enemy.GetComponent<UnitHealth> ().GetCurrentHP ();
 			if ((health - HitPoint) <= 0) {
 				Transform topestParent = Util.GetTopestParent (transform);

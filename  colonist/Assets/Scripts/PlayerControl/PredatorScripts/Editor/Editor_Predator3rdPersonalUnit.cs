@@ -243,7 +243,7 @@ public class Editor_Predator3rdPersonalUnit : Editor
 					EffectData.DestoryTimeOut = EditorGUILayout.FloatField (new GUIContent ("LifeTime:", ""), EffectData.DestoryTimeOut);
 				}
 				EffectData.EffectObject = (GameObject)EditorGUILayout.ObjectField (new GUIContent ("Effect object", ""), EffectData.EffectObject, typeof(GameObject));
-				EffectData.Anchor = (Transform)EditorGUILayout.ObjectField (new GUIContent ("Effect creation anchor", ""), EffectData.Anchor, typeof(Transform));
+				EffectData.instantiationData = EditorCommon.EditInstantiationData(" -----------  Edit instantiation data ----------- ", EffectData.instantiationData);
 				//Delete this effect data
 				if (GUILayout.Button ("Delete EffectData:" + EffectData.Name)) {
 					PlayerEffectDataArray = Util.CloneExcept<PlayerEffectData> (PlayerEffectDataArray, EffectData);

@@ -23,7 +23,7 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
     private CharacterController controller;
     private LayerMask GroundLayer;
     private LayerMask JumpOverObstacleLayer;
-    private Predator3rdPersonVisualEffectController ClawEffectController;
+//    private Predator3rdPersonVisualEffectController ClawEffectController;
     private Predator3rdPersonalUnit PredatorPlayerUnit = null;
 	
 	public float JumpForwardMaxHeight = 5;
@@ -32,7 +32,7 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
     void Awake()
     {
         controller = GetComponent<CharacterController>();
-        ClawEffectController = GetComponent<Predator3rdPersonVisualEffectController>();
+//        ClawEffectController = GetComponent<Predator3rdPersonVisualEffectController>();
         PredatorPlayerUnit = this.GetComponent<Predator3rdPersonalUnit>();
 
         GroundLayer = PredatorPlayerUnit.GroundLayer;
@@ -60,7 +60,7 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
         JumpOverObstacle obstacle = null;
         bool HasObstacle = CheckJumpOverObstacle(out obstacle);
 
-        ClawEffectController.ShowBothClawVisualEffects();
+//        ClawEffectController.ShowBothClawVisualEffects();
 
         //If there is obstacle, jump over it
         if (HasObstacle)
@@ -75,7 +75,7 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
             yield return StartCoroutine(JumpStraightForward());
 			
         }
-        ClawEffectController.HideBothClawTrailRenderEffect();
+//        ClawEffectController.HideBothClawTrailRenderEffect();
     }
 
     /// <summary>

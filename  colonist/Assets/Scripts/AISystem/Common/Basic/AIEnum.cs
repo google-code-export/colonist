@@ -1,3 +1,9 @@
+public enum EffectObjectInstantiation
+{
+	creat = 0,
+    play = 1,
+}
+
 public enum AIBehaviorType
 {
     #region base 0~999

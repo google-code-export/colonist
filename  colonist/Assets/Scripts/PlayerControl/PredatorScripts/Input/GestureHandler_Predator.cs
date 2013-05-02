@@ -59,8 +59,7 @@ public class GestureHandler_Predator : JoyButton {
     public override void onTouchEnd(Touch touch)
     {
         UserInputData gestInfo = ParseSingleTouchGesture(touch);
-        attackController.SendMessage("NewUserGesture", gestInfo);
-		//attackController.SendMessage("ProcessUserGesture", gestInfo);
+        attackController.NewUserGesture(gestInfo);
 		base.onTouchEnd(touch);
 		OneOffTouchHistory.Clear();
     }

@@ -42,7 +42,7 @@ public class PredatorPlayerJumpData
 [RequireComponent(typeof(JoyButtonManager))]
 [RequireComponent(typeof(Predator3rdPersonVisualEffectController))]
 [RequireComponent(typeof(Predator3rdPersonAudioController))]
-public class Predator3rdPersonalUnit : UnitBase
+public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
 {
 
 	#region variables for Idle
@@ -101,6 +101,12 @@ public class Predator3rdPersonalUnit : UnitBase
 	/// </summary>
     public AudioData[] AudioData = new AudioData[]{};
 	public IDictionary<string,AudioData> AudioDataDict = new Dictionary<string,AudioData>();
+	
+	/// <summary>
+	/// CombatHintHUD - the hint to be displayed on right-top screen. Offer a visual tips to player
+	/// the combat they have performed.
+	/// </summary>
+	public GameObject HUDObject;
 
 	
 	void Awake ()
@@ -164,4 +170,35 @@ public class Predator3rdPersonalUnit : UnitBase
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, OffenseRadius);
     }
+	
+	public void OnGameEvent(GameEvent gameEvent)
+	{
+		switch(gameEvent.type)
+		{
+		case GameEventType.PlayerControlOff:
+			SetPlayerControlOnOff(false);
+			break;
+		case GameEventType.PlayerControlOn:
+			SetPlayerControlOnOff(true);
+			break;
+		}
+	}
+	
+	/// <summary>
+	/// Set players the control on or off.
+	/// </summary>
+	void SetPlayerControlOnOff(bool isOn)
+	{
+		//Turn on-off JoyButton & JoyButtonManager
+		foreach(JoyButton button in this.transform.root.GetComponentsInChildren<JoyButton>())
+		{
+			button.enabled = isOn;
+		}
+		this.transform.root.GetComponentInChildren<JoyButtonManager>().enabled = isOn;
+		//Turn on-off HUD
+		foreach(HUD _HUD in this.transform.root.GetComponentsInChildren<HUD>())
+		{
+			_HUD.enabled = isOn;
+		}
+	}
 }

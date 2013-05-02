@@ -43,6 +43,8 @@ public class LocalizedDialogueItem
 	/// if pendAfterFinished = null, use default setting in GameDialogue.
 	/// </summary>
 	public float? pendAfterFinished = null;
+	
+	public float? ShowTime = null;
 }
 
 /// <summary>
@@ -85,7 +87,7 @@ public class Localization {
 	   CharacterDict.Clear();
 	   DialogueDict.Clear();
 		
-	   CharacterDict = ParseCharacterLocalizationXMLFile (ParseTextAssetToXMLDocument(characterXMLFile));
+	   CharacterDict = ParseCharacterLocalizationXMLFile (ParseTextAssetToXMLDocument(characterXMLFile),TargetLanguage);
 	   DialogueDict = ParseDialogLocalizationXMLFile(ParseTextAssetToXMLDocument(dialogFile));
 	}
 	
@@ -123,7 +125,7 @@ public class Localization {
 	/// <summary>
 	/// Parses the character localization XML file.
 	/// </summary>
-	static IDictionary<string, LocalizeCharacter> ParseCharacterLocalizationXMLFile(XmlDocument xmlDoc)
+	static IDictionary<string, LocalizeCharacter> ParseCharacterLocalizationXMLFile(XmlDocument xmlDoc, SystemLanguage language)
 	{
 		IDictionary<string, LocalizeCharacter> ret = new Dictionary<string, LocalizeCharacter>();
 	    XmlElement root = xmlDoc.DocumentElement;
@@ -133,7 +135,7 @@ public class Localization {
 			XmlElement characterElement = (XmlElement)node;
 			LocalizeCharacter localization_Character = new LocalizeCharacter();
 			localization_Character.CharacterID = characterElement.GetAttribute("id");;
-			localization_Character.CharacterName = characterElement.GetAttribute("Chinese");
+			localization_Character.CharacterName = characterElement.GetAttribute(language.ToString());
 			localization_Character.CharacterIconPath = characterElement.GetAttribute("imagepath");
 			localization_Character.IconTexture = (Texture2D)Resources.Load(localization_Character.CharacterIconPath, typeof(Texture2D));
 			ret.Add(localization_Character.CharacterID, localization_Character);
@@ -168,6 +170,10 @@ public class Localization {
 				if(dialogItemElement.HasAttribute("pend"))
 				{
 					localizedDialogueItem.pendAfterFinished = float.Parse(dialogItemElement.GetAttribute("pend"));
+				}
+				if(dialogItemElement.HasAttribute("showtime"))
+				{
+					localizedDialogueItem.ShowTime = float.Parse(dialogItemElement.GetAttribute("showtime"));
 				}
 				
 				localizedDialogue.dialogueItem.Add(localizedDialogueItem);

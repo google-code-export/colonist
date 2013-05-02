@@ -16,7 +16,7 @@ public class AIEditorWindow : EditorWindow
 	Vector2 ScrollPosition = Vector2.zero;
 	
 	IList<AIEditor> AIEditor_List = null;
-	
+	IDictionary<string, bool> EnableEditAIFlag = new Dictionary<string,bool>();
 	Unit UnitToEdited = null;
 	
 	[MenuItem("Component/AI/Edit Unit and AI")]	
@@ -65,7 +65,7 @@ public class AIEditorWindow : EditorWindow
 		if (GUILayout.Button ("Save object")) {
 			foreach(AIEditor aiEditor in AIEditor_List){
 				EditorUtility.SetDirty (aiEditor.AI.Unit);
-			   EditorUtility.SetDirty (aiEditor.AI);
+			    EditorUtility.SetDirty (aiEditor.AI);
 			}
 		}
 		
@@ -73,7 +73,15 @@ public class AIEditorWindow : EditorWindow
 		AIEditor_List[0].EditUnit();
 		foreach(AIEditor aiEditor in AIEditor_List)
 		{
-		   aiEditor.EditAI();
+		   if(EnableEditAIFlag.Keys.Contains(aiEditor.AI.Name) == false)
+		   {
+			  EnableEditAIFlag[aiEditor.AI.Name] = false;
+		   }
+			
+		   EnableEditAIFlag[aiEditor.AI.Name] = EditorGUILayout.BeginToggleGroup ("Edit AI : " + aiEditor.AI.Name, EnableEditAIFlag[aiEditor.AI.Name]);
+           if (EnableEditAIFlag[aiEditor.AI.Name] ) {
+		      aiEditor.EditAI();
+		   }
 		}
 		EditorGUILayout.EndScrollView ();
 	}

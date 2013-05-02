@@ -5,6 +5,8 @@ public class WeaponControl : MonoBehaviour {
 	
 	public GameObject ControllableWeapon = null;
 	
+	public TrailRenderEffectData trailRenderEffectData = null;
+	
 	public bool InitOn = false;
 	
 	void Awake()
@@ -12,7 +14,16 @@ public class WeaponControl : MonoBehaviour {
 		ControllableWeapon.active = InitOn;
 	}
 	
-	void Weapon(float delay)
+	void Update()
+	{
+		if(trailRenderEffectData.enabled && trailRenderEffectData.IsActive == true && (Time.time - trailRenderEffectData.LastDisplayTime)>=trailRenderEffectData.DisplayLength)
+		{
+			trailRenderEffectData.trailRenderObject.enabled = false;
+			trailRenderEffectData.IsActive = false;
+		}
+	}
+	
+	void _WeaponOn(float delay)
 	{
 		Invoke("WeaponOn", delay);
 	}
@@ -25,5 +36,16 @@ public class WeaponControl : MonoBehaviour {
 	void WeaponOff()
 	{
 		ControllableWeapon.active = false;
+	}
+	
+	void _TrailRenderOn(float length)
+	{   
+		if(trailRenderEffectData.enabled)
+		{
+		  trailRenderEffectData.trailRenderObject.enabled = true;
+		  trailRenderEffectData.IsActive = true;
+	  	  trailRenderEffectData.LastDisplayTime = Time.time;
+		  trailRenderEffectData.DisplayLength = length;
+		}
 	}
 }

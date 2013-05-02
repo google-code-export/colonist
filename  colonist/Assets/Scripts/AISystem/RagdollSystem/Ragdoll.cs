@@ -63,7 +63,7 @@ public class Ragdoll : MonoBehaviour {
     /// </summary>
     public string DelgateDestoryFunction = string.Empty;
     /// <summary>
-    /// Assign the center for  this ragdoll (because ragdoll has NO character controller.)
+    /// Assign the center for this ragdoll (because ragdoll has NO character controller.)
     /// </summary>
     public Transform RagdollCenter = null;
     public EffectData[] EffectData = new EffectData[] { };
@@ -140,6 +140,11 @@ public class Ragdoll : MonoBehaviour {
         else
         {
             Destroy(gameObject);
+			for(int i=0; i<RagdollJointData.Length; i++)
+			{
+				GameObject jointObject = RagdollJointData[i].Joint.gameObject;
+				Destroy(jointObject);
+			}
         }
     }
 }
