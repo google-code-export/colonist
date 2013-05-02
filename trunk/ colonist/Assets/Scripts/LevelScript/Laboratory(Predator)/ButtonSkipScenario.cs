@@ -15,11 +15,11 @@ public class ButtonSkipScenario : JoyButton {
 	
 	// Update is called once per frame
 	void Update () {
-        if (Input.GetKey(KeyCode.Escape))
-        {
-            LevelManager.GameEvent(new GameEvent(GameEventType.SkipScenario, null));
-
-        }
+//        if (Input.GetKey(KeyCode.Escape))
+//        {
+//            LevelManager.GameEvent(new GameEvent(GameEventType.SkipScenario, null));
+//
+//        }
 	}
 
     /// <summary>
@@ -42,7 +42,7 @@ public class ButtonSkipScenario : JoyButton {
     public override void onTouchEnd(Touch touch)
     {
         base.onTouchEnd(touch);
-        LevelManager.GameEvent(new GameEvent(GameEventType.SkipScenario, null));
+//        LevelManager.GameEvent(new GameEvent(GameEventType.SkipScenario, null));
     }
 
     void OnGUI()

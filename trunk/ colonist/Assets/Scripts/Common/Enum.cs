@@ -166,33 +166,61 @@ public enum GameEventType
     LevelStart = 0,
     LevelPause = 1,
     LevelEnd = 2,
-    StartScenario = 3,
-    SkipScenario = 4,
-    EndScenario = 5,
+    StartScenario = 3,//start a scenario , the scenario name is given in GameEvent.stringParameter
+	/// <summary>
+	/// LevelArea start spawning, the LevelArea Name is given in stringParameter
+	/// </summary>
+	LevelAreaStartSpawn = 4,
+	
     //Player Character Event
     PlayerBirth = 100,
     PlayerDie = 101,
     PlayerEnterArea = 102,
     PlayerLeaveArea = 103,
-    PlayerReceiveDamage = 104,
+    DisplayDamageParameterOnPlayer = 104,
     PlayerKill = 105,//Event when player kill NPC
     PlayerAttack = 106,//Event when player perform an attack
     PlayerReloading = 107,
-    PlayerControlOn = 108,//When player gained control
-    PlayerControlOff = 109,//When player lost control
-
+    PlayerControlOn = 108,//player gained control
+    PlayerControlOff = 109,//player lost control
+	PlayerSetToInactive = 110, //Disable the player object
+	PlayerSetToActive = 111, //Enable the player object
+	PlayerCameraWhiteIn = 112,//White In player camera
+	PlayerCameraWhiteOut = 113,//White out player camera
+	PlayerCameraOff = 114,//set off the player camera
+	PlayerCameraOn = 115,//set on the player camera
+	PlayerCameraAudioListenerOn = 116,//set on the player camera's audio listener
+	PlayerCameraAudioListenerOff = 117,//set on the player camera's audio listener
+	
     //NPC Event
     NPCBirth = 200,
     NPCDie = 201,
     NPCEnterArea = 202,
     NPCLeaveArea = 203,
-    NPCReceiveDamage = 204,
-    NPCKill = 205,
-    NPCAttack = 206,//Event when player perform an attack
-    NPCReloading = 207,
+	/// <summary>
+	/// Notify that the game object is appling damage
+	/// </summary>
+    DisplayDamageParameterOnNPC = 204,
+	/// <summary>
+	/// Manipulate NPC to play animation, animation name is specified in GameEvent.StringParameter
+	/// </summary>
+	NPCPlayAnimation = 208, 
+	/// <summary>
+	/// Manipulate NPC to start AI, the AI name is given in GameEvent.StringParameter
+	/// </summary>
+	NPCStartAI = 209,
 	
-	//Object communication event
-	ApplyDamage = 300,
+	//Scenario event:
+	ShowGameDialogue = 400,//display a Dialogue, MUST pass Dialogue ID in GameEvent.StringParameter
+	WhiteInScenarioCamera = 401,//White in scenario camera
+	WhiteOutScenarioCamera = 402,//white out scenario camera
+	ScenarioCameraDockComplete = 403, //Send when a camera dock is completed
+	ScenarioComplete = 405,//indicate the scenario stop playing
+	ScenarioCameraOff = 406,//Set off the scenario camera
+	ScenarioCameraOn = 407,//Set on the scenario camera
+	ScenarioCameraAudioListenerOn = 408,//set on the Scenario camera's audio listener
+	ScenarioCameraAudioListenerOff = 409,//set on the Scenario camera's audio listener
+	
 }
 
 /// <summary>

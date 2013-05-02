@@ -156,7 +156,13 @@ public class Util : MonoBehaviour {
         ret.CopyTo(newArray, 0);
 		return newArray;
     }
-
+	
+	public static Quaternion NewQuaternion(Quaternion basic, Vector3 EulerAngleDiff)
+	{
+		Vector3 NewEuler = basic.eulerAngles + EulerAngleDiff;
+		return Quaternion.Euler(NewEuler);
+	}
+	
     /// <summary>
     /// Clone an array, exclude the element at index
     /// </summary>
@@ -326,6 +332,21 @@ public class Util : MonoBehaviour {
         }
         return farest;
     }
+	
+	/// <summary>
+	/// Formats the IntegerNumber to individual number array.
+	/// 10178 format to int{1,0,1,7,8}
+	/// </summary>
+	public static int[] FormatNumberToNumberArray (int IntegerNumber)
+	{
+		string NumberString = IntegerNumber.ToString ();
+		int[] intArray = new int[NumberString.Length];
+		for (int i=0; i<intArray.Length; i++) {
+			int j = NumberString [i] - 48;
+			intArray [i] = j;
+		}
+		return intArray;
+	}
 
     public enum GamePlatform
     {
@@ -610,11 +631,6 @@ public class Util : MonoBehaviour {
     /// <summary>
     /// rotationSpeed is ignored if smoothRotate = false
     /// </summary>
-    /// <param name="transform"></param>
-    /// <param name="pos"></param>
-    /// <param name="smoothRotate"></param>
-    /// <param name="rotationSpeed"></param>
-    /// <param name="upwardAxis"></param>
     public static void RotateToward(Transform transform, Vector3 pos, bool smoothRotate, float rotationSpeed, Vector3 upwardAxis)
     {
         Vector3 direction = pos - transform.position;

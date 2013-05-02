@@ -2,6 +2,13 @@ using UnityEngine;
 using System.Collections;
 using UnityEditor;
 
+public enum AnimationParameterType
+{
+	IntParam = 0,
+	StringParam = 1,
+	FloatParam = 2,
+}
+
 public class EditorUtilityWindow : EditorWindow
 {
 	[MenuItem("Window/Utility")]	
@@ -20,6 +27,11 @@ public class EditorUtilityWindow : EditorWindow
 	AnimationClip CopyFromClipA = null;
 	AnimationClip CopyFromClipB = null;
 	
+	bool AddAnimationEvent = false;
+	string AnimationNameToEdit = "";
+	string AnimationFunctionName = "";
+	string AnimationParam = "";
+	AnimationParameterType animationParameterType = AnimationParameterType.FloatParam;
 	
 	void OnGUI ()
 	{
@@ -60,6 +72,35 @@ public class EditorUtilityWindow : EditorWindow
 			}
 		}
 		EditorGUILayout.EndToggleGroup ();
+#endregion
+		
+#region add animation event
+		AddAnimationEvent = EditorGUILayout.BeginToggleGroup ("Add animation event", AddAnimationEvent);
+		if(AddAnimationEvent)
+		{
+			if(Selection.activeGameObject != null)
+			{
+               int index = 0;
+               string[] array = EditorCommon.GetAnimationNames (Selection.activeGameObject, AnimationNameToEdit, out index);
+			   if(index == -1)
+			   {
+				  index = 0;
+			   }
+               index = EditorGUILayout.Popup ("Animation:", index, array);
+			   
+               AnimationNameToEdit = array [index];
+			   AnimationFunctionName = EditorGUILayout.TextField ("Function name:", AnimationFunctionName);
+			   EditorGUILayout.BeginHorizontal();
+			   animationParameterType = (AnimationParameterType)EditorGUILayout.EnumPopup("Evnet param:",animationParameterType);
+			   AnimationParam =	EditorGUILayout.TextField("Animation param:" , AnimationParam);
+			   EditorGUILayout.EndHorizontal();
+			   if(GUILayout.Button("Add animation"))
+			   {
+				  AnimationClip clip = Selection.activeGameObject.animation.GetClip(AnimationNameToEdit);
+				  EditorCommon.AddAnimationEvent(clip,AnimationFunctionName,AnimationParam,animationParameterType);
+			   }
+			}
+		}
 #endregion
 	}
 }

@@ -30,7 +30,10 @@ public class AIInspector : Editor
 		EnableAIInspector = EditorGUILayout.Toggle(new GUIContent("Advanced AI Inspector", ""), EnableAIInspector);
 		if(EnableAIInspector)
 		{
-			aiEditor.EditUnitAndAI();
+		   if (GUILayout.Button ("Save object")) {
+				EditorUtility.SetDirty (target as AI);
+		   }
+           aiEditor.EditAI();
 		}
 	}
 }

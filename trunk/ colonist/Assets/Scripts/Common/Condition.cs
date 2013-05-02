@@ -13,6 +13,9 @@ public class CompositeConditionWrapper
 	/// </summary>
 	public CompositeCondition RootCompositeCondition = new CompositeCondition();
 	
+	/// <summary>
+	/// initialize the dictionary - put the atomCondition and compositeCondition into corresponding dictionary.
+	/// </summary>
 	public void InitDictionary()
 	{
 		foreach(CompositeCondition compositeCondition in CompositeConditionArray)
@@ -136,7 +139,7 @@ public class AtomConditionData
     /// <summary>
     /// Used only when ConditionType = InArea
     /// </summary>
-    public Collider[] CheckAreaes;
+    public Collider CheckArea;
 
     /// <summary>
     /// Used when ConditionType = ValueComparision
@@ -183,7 +186,7 @@ public class AtomConditionData
 		clone.ConditionType = this.ConditionType;
 		clone.BooleanOperator = this.BooleanOperator;
 		clone.BooleanCondition = this.BooleanCondition;
-		clone.CheckAreaes = this.CheckAreaes;
+		clone.CheckArea = this.CheckArea;
 		clone.ValueComparisionCondition = this.ValueComparisionCondition;
 		clone.ValueOperator = this.ValueOperator;
 		clone.RightValueForComparision = this.RightValueForComparision;

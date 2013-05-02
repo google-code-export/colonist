@@ -19,10 +19,9 @@ public class LocaleFont
 [ExecuteInEditMode]
 public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 {
+	public string LevelName = "Level Name";
 	public SystemLanguage targetLanguage;
-
 	public float ShowDialogueTime = 5;
-	
 	public Texture DialogueBackgroundTexture;
 	
 	/// <summary>
@@ -59,8 +58,7 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 	/// The width of the text, in letter count.
 	/// </summary>
 	public int textWidth = 60;
-	
-    public LocaleFont[] LocaleFontArray = new LocaleFont[] { };
+	public LocaleFont[] LocaleFontArray = new LocaleFont[] { };
 	
 	/// <summary>
 	/// After display a dialogue, delay N seconds.
@@ -79,11 +77,11 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 	/// </summary>
 	public int DefaultTypeLetterSpeed = 48;
 	
-	
 	public bool Completed { get { return finished; } }
 
 	public bool Active { get { return animating; } }
 	
+	bool HasDialog = false;
 	List<string> lines;
 	bool animating = false;
 	bool finished = false;
@@ -96,7 +94,7 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 	/// The portrait image on the current dialog.
 	/// </summary>
 	public Texture2D Portrait = null;
-	
+	public string SpearkerName = "Speaker";
 	/// <summary>
 	/// if breakOnWholeWords = true, when line space not enough,
 	/// word will be displayed integrallty at next line, 
@@ -106,22 +104,21 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 	
 	void Awake ()
 	{
-		Localization.InitializeLevelDialogue (LevelManager.Instance.LevelName, targetLanguage);
+		Localization.InitializeLevelDialogue (this.LevelName, targetLanguage);
 		displayedText = "";
 		Portrait = null;
 		//Pick custom font for the target language, if exists.
-		foreach(LocaleFont lf in LocaleFontArray)
-		{
-			if(lf.language == targetLanguage)
-			{
-			   this.customFont = lf.font;
-			   break;
+		foreach (LocaleFont lf in LocaleFontArray) {
+			if (lf.language == targetLanguage) {
+				this.customFont = lf.font;
+				break;
 			}
 		}
-		SetupDisplayedRect();
+
+		SetupDisplayedRect ();
 	}
 	
-	void SetupDisplayedRect()
+	void SetupDisplayedRect ()
 	{
 		DialogueArea.x = Screen.width * DialogueAreaAspect.x;
 		DialogueArea.y = Screen.height * DialogueAreaAspect.y;
@@ -153,10 +150,18 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 	
 	public void OnGameEvent (GameEvent _event)
 	{
-		if (_event.type == GameEventType.DisplayGUIText) {
+		switch (_event.type) {
+		case GameEventType.ShowGameDialogue:
 			string DialogueID = _event.StringParameter;
-			StartCoroutine("DisplayDialogue",DialogueID);
+			StartCoroutine ("DisplayDialogue", DialogueID);
+			break;
 		}
+	}
+	
+	IEnumerator DisplayDialogueWithDelay (string DialogueID, float delay)
+	{
+		yield return new WaitForSeconds(delay);
+		StartCoroutine ("DisplayDialogue", DialogueID);
 	}
 
 	public void Stop ()
@@ -165,31 +170,39 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 		animating = false;
 	}
 	
+	/// <summary>
+	/// Displaies the dialogue.
+	/// if AnimatedTypingLetter = true, the letters will be typed to screen one by one
+	/// if AnimatedTypingLetter = false. the dialog text will be flashed out to screen in one time.
+	/// </summary>
 	IEnumerator DisplayDialogue (string DialogueID)
 	{
 		LocalizedDialogue dialog = Localization.GetDialogue (DialogueID);
-		
+		HasDialog = true;	
 		foreach (LocalizedDialogueItem dialogItem in dialog.dialogueItem) {
-			LocalizeCharacter speaker = Localization.GetCharacter(dialogItem.DialogCharacterID);
+			LocalizeCharacter speaker = Localization.GetCharacter (dialogItem.DialogCharacterID);
 			this.Portrait = speaker.IconTexture;
-			
+			this.SpearkerName = speaker.CharacterName;
 			string formattedText = FormatText (dialogItem.DialogText);
 			int typeSpeed = dialogItem.typeSpeed.HasValue ? dialogItem.typeSpeed.Value : DefaultTypeLetterSpeed;
 			float delay = dialogItem.pendAfterFinished.HasValue ? dialogItem.pendAfterFinished.Value : DefaultDelayPerDialog;
+			float showtime = dialogItem.ShowTime.Value;
 			
 			if (AnimatedTypingLetter) {
 				animating = true;
-				int currentLength = 1;
+				int currentIndex = 0;
+				float displayProgress = 0; // Progress in percentage, 0 = just start, 1 = finish last letter
+				float StartTime = Time.time;
 				
-				while (animating && currentLength <= formattedText.Length) {
-				
-					displayedText = formattedText.Substring (0, currentLength);
-					// This has to be calculated each time because the rate can change
-					// during playback, such as with a "hold button to accelerate text"
-					// type script.
-					yield return new WaitForSeconds(1/(float)typeSpeed);
-					++currentLength;
+				while(displayProgress <= 1)
+				{
+					displayProgress = (Time.time - StartTime) / showtime;
+					currentIndex = Mathf.RoundToInt(formattedText.Length * displayProgress);
+					currentIndex = currentIndex >= formattedText.Length - 1 ? formattedText.Length - 1 : currentIndex;
+					displayedText = formattedText.Substring(0,currentIndex);
+					yield return null;
 				}
+				
 			} else {
 				displayedText = formattedText;
 			}
@@ -197,6 +210,7 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 			yield return new WaitForSeconds(delay);
 		}
 		finished = true;
+		HasDialog = false;
 	}
 	
 	string FormatText (string text)
@@ -218,13 +232,12 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 				}
 				
 				adjustedWidth = width;
-				try{
-				while (!endOfText && (offset+adjustedWidth-1 >= 0) && text[offset+adjustedWidth-1] != ' ' && adjustedWidth > 0) {
-					--adjustedWidth;
-				}
-				}catch(System.Exception  exc)
-				{
-					Debug.LogError(offset+adjustedWidth-1);
+				try {
+					while (!endOfText && (offset+adjustedWidth-1 >= 0) && text[offset+adjustedWidth-1] != ' ' && adjustedWidth > 0) {
+						--adjustedWidth;
+					}
+				} catch (System.Exception  exc) {
+					Debug.LogError (offset + adjustedWidth - 1);
 					throw exc;
 				}
 				
@@ -256,19 +269,25 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 	
 	void OnGUI ()
 	{
-		if(DialogueBackgroundTexture)
-		{
-			GUI.DrawTexture(BackgroundArea, DialogueBackgroundTexture,ScaleMode.ScaleAndCrop, true);
-		}
-		if (Portrait != null) {
-			GUI.DrawTexture (this.PortraitArea, Portrait,ScaleMode.ScaleToFit, true);
-		}
-		if (displayedText != "") {
-			if(this.customFont != null)
-			{
+		if (HasDialog) {
+			if (this.customFont != null) {
 				GUI.skin.font = this.customFont;
 			}
-			GUI.Label (this.DialogueArea, displayedText);
+			if (DialogueBackgroundTexture) {
+				GUI.DrawTexture (BackgroundArea, DialogueBackgroundTexture, ScaleMode.ScaleAndCrop, true);
+			}
+			if (Portrait != null) {
+				GUI.DrawTexture (this.PortraitArea, Portrait, ScaleMode.ScaleToFit, true);
+				if (SpearkerName != null) {
+					Rect speakerNameArea = new Rect(PortraitArea);
+					speakerNameArea.x += speakerNameArea.width + 20;
+				    GUI.Label (speakerNameArea, SpearkerName);
+				}
+			}
+			if (displayedText != "") {
+				GUI.Label (this.DialogueArea, displayedText);
+			}
+			GUI.skin.font = null;
 		}
 	}
 }

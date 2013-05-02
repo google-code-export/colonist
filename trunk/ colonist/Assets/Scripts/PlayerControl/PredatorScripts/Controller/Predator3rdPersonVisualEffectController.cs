@@ -1,6 +1,14 @@
 using UnityEngine;
 using System.Collections;
 
+public class RenderControlData
+{
+	public string Name = "";
+	public Renderer[] LeftClawTailRender;
+	public bool display = false;
+	public float StopTime = 0;
+}
+
 public class Predator3rdPersonVisualEffectController : MonoBehaviour
 {
 	public Renderer[] LeftClawTailRender;
@@ -12,7 +20,10 @@ public class Predator3rdPersonVisualEffectController : MonoBehaviour
     private float leftclaw_visual_time;
     private float lastShowRightClawEffectTime;
     private float lastShowLeftClawEffectTime;
-
+	
+	private float rightClaw_Effect_StopTime = 0;
+	private float leftClaw_Effect_StopTime = 0;
+	
     void Awake()
     {
         HideLeftClawTrailRenderEffect();
@@ -28,11 +39,11 @@ public class Predator3rdPersonVisualEffectController : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
 	{
-        if (leftClawEffectDisplay && (Time.time - lastShowLeftClawEffectTime) > leftclaw_visual_time)
+        if (leftClawEffectDisplay && Time.time  > leftClaw_Effect_StopTime)
         {
             HideLeftClawTrailRenderEffect();
         }
-        if (rightClawEffectDisplay && (Time.time - lastShowRightClawEffectTime) > rightclaw_visual_time)
+        if (rightClawEffectDisplay && Time.time  > rightClaw_Effect_StopTime)
         {
             HideRightClawTrailRenderEffect();
         }
@@ -47,23 +58,10 @@ public class Predator3rdPersonVisualEffectController : MonoBehaviour
 		foreach (Renderer render in LeftClawTailRender) {
 			render.enabled = true;
 		}
-        lastShowLeftClawEffectTime = Time.time;
+        leftClaw_Effect_StopTime = Time.time + _time;
         leftClawEffectDisplay = true;
-        leftclaw_visual_time = _time;
-		//Invoke ("HideLeftClawTrailRenderEffect", _time);
 	}
 
-    /// <summary>
-    /// Show left claw trail render
-    /// </summary>
-    /// <param name="_time"></param>
-    public void ShowLeftClawTrailRenderEffect()
-    {
-        foreach (Renderer render in LeftClawTailRender)
-        {
-            render.enabled = true;
-        }
-    }
 
     /// <summary>
     /// Show right claw trail render effect in _time seconds.
@@ -74,34 +72,14 @@ public class Predator3rdPersonVisualEffectController : MonoBehaviour
 		foreach (Renderer render in RightClawTailRender) {
 			render.enabled = true;
 		}
-        lastShowRightClawEffectTime = Time.time;
-        rightClawEffectDisplay = true;
-        rightclaw_visual_time = _time;
-        //Invoke ("HideRightClawTrailRenderEffect", _time);
+        rightClaw_Effect_StopTime = Time.time + _time;
+        rightClawEffectDisplay = true; 
 	}
-
-    /// <summary>
-    /// Show right claw trail render.
-    /// </summary>
-    /// <param name="_time"></param>
-    public void ShowRightClawTrailRenderEffect()
-    {
-        foreach (Renderer render in RightClawTailRender)
-        {
-            render.enabled = true;
-        }
-    }
 
     public void ShowBothClawVisualEffects(float _time)
     {
         ShowRightClawTrailRenderEffect(_time);
         ShowLeftClawTrailRenderEffect(_time);
-    }
-
-    public void ShowBothClawVisualEffects()
-    {
-        ShowRightClawTrailRenderEffect();
-        ShowLeftClawTrailRenderEffect();
     }
 
 	public void HideRightClawTrailRenderEffect ()

@@ -221,6 +221,7 @@ public class EditorCommon
 				                        AttackData as UnitAnimationData);
 			AttackData.DamageForm = (DamageForm)EditorGUILayout.EnumPopup (new GUIContent ("Damage Form:", "伤害类型"), AttackData.DamageForm);
 			AttackData.AttackableRange = EditorGUILayout.FloatField (new GUIContent ("Attack range:", "攻击范围"), AttackData.AttackableRange);
+			AttackData.LookAtTarget = EditorGUILayout.Toggle (new GUIContent ("Look at target:", "Should the unit look at target before attacking ?"), AttackData.LookAtTarget);
 //			AttackData.AttackInterval = EditorGUILayout.FloatField (new GUIContent ("Attack Interval", "攻击间隔"), AttackData.AttackInterval);
 						//Hit Test trigger type:
 			
@@ -342,8 +343,11 @@ public class EditorCommon
 				GUILayout.Label (string.Format (" ---------------------- {0}", ReceiveDamageData.Name));
 				ReceiveDamageData.Name = EditorGUILayout.TextField (new GUIContent ("Name:", ""), ReceiveDamageData.Name);
 			}
-			ReceiveDamageData.HaltAI = EditorGUILayout.Toggle (new GUIContent ("HaltAI", "受到伤害时,是否停止AI,播放受伤动画?"), ReceiveDamageData.HaltAI);
-			ReceiveDamageData.DamageForm = (DamageForm)EditorGUILayout.EnumPopup (new GUIContent ("Damage Form", "触发这个ReceiveDamage的DamageForm, Common类型是默认数据."), ReceiveDamageData.DamageForm);
+			ReceiveDamageData.HaltAI = EditorGUILayout.Toggle (new GUIContent ("HaltAI", "Stop AI and animation and play receive damage animation?"), ReceiveDamageData.HaltAI);
+			ReceiveDamageData.ApplicableDamageForm = EditDamageFormArray("Edit applicable damageform:", ReceiveDamageData.ApplicableDamageForm);
+			
+			
+			
 			string[] effectDataNameArray = unit.EffectData.Select (x => x.Name).ToArray<string> ();
 			ReceiveDamageData.EffectDataName = EditStringArray ("--------- Edit receive damage effect data-----", ReceiveDamageData.EffectDataName, effectDataNameArray);
 
@@ -374,42 +378,67 @@ public class EditorCommon
 			EffectDataArray = Util.AddToArray<EffectData> (EffectData, EffectDataArray);
 		}
 		for (int i = 0; i < EffectDataArray.Length; i++) {
-			EffectData EffectData = EffectDataArray [i];
-			EditorGUILayout.LabelField ("------------------------ " + EffectData.Name);
-			EffectData.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), EffectData.Name);
+			EffectData _EffectData = EffectDataArray [i];
+			EditorGUILayout.LabelField ("------------------------ " + _EffectData.Name);
+			_EffectData.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), _EffectData.Name);
+			
+			_EffectData.InstantionType = (EffectObjectInstantiation)EditorGUILayout.EnumPopup(
+				                                                  new GUIContent("Instantion type","Create a new gameobject, or play a children object's particleSystem?"),
+				                                                  _EffectData.InstantionType);
 				
-			EffectData.UseGlobalEffect = EditorGUILayout.Toggle (new GUIContent ("Use global effect?", ""), EffectData.UseGlobalEffect);
+			_EffectData.UseGlobalEffect = EditorGUILayout.Toggle (new GUIContent ("Use global effect?", ""), _EffectData.UseGlobalEffect);
 			
 			EditorGUILayout.BeginHorizontal();
-			EffectData.CreateDelay = EditorGUILayout.BeginToggleGroup(new GUIContent("Create in delay",""), EffectData.CreateDelay );
-			if(EffectData.CreateDelay)
+			_EffectData.CreateDelay = EditorGUILayout.BeginToggleGroup(new GUIContent("Create in delay",""), _EffectData.CreateDelay );
+			if(_EffectData.CreateDelay)
 			{
-				EffectData.CreateDelayTime = EditorGUILayout.FloatField(EffectData.CreateDelayTime);
+				_EffectData.CreateDelayTime = EditorGUILayout.FloatField(_EffectData.CreateDelayTime);
 			}
 			EditorGUILayout.EndToggleGroup();
 			EditorGUILayout.EndHorizontal();
 			
-			EffectData.Count = EditorGUILayout.IntField(new GUIContent("Number of effect object:",""), EffectData.Count);
+			_EffectData.Count = EditorGUILayout.IntField(new GUIContent("Number count:",""), _EffectData.Count);
 			
-			if (EffectData.UseGlobalEffect) {
-				EffectData.GlobalType = (GlobalEffectType)EditorGUILayout.EnumPopup (new GUIContent ("Global effect type", "是全局Effect类型"),
-						EffectData.GlobalType);
+			if (_EffectData.UseGlobalEffect) {
+				_EffectData.GlobalType = (GlobalEffectType)EditorGUILayout.EnumPopup (new GUIContent ("Global effect type", "Use global effect instead of custom effect."),
+						_EffectData.GlobalType);
 			} else {
-				EffectData.DestoryInTimeOut = EditorGUILayout.Toggle (new GUIContent ("Auto Destory?", ""), EffectData.DestoryInTimeOut);
-				if (EffectData.DestoryInTimeOut) {
-					EffectData.DestoryTimeOut = EditorGUILayout.FloatField (new GUIContent ("LifeTime:", ""), EffectData.DestoryTimeOut);
+				_EffectData.DestoryInTimeOut = EditorGUILayout.Toggle (new GUIContent ("Auto Destory?", ""), _EffectData.DestoryInTimeOut);
+				if (_EffectData.DestoryInTimeOut) {
+					_EffectData.DestoryTimeOut = EditorGUILayout.FloatField (new GUIContent ("LifeTime:", ""), _EffectData.DestoryTimeOut);
 				}
-				EffectData.EffectObject = (GameObject)EditorGUILayout.ObjectField (new GUIContent ("Effect object", ""), EffectData.EffectObject, typeof(GameObject));
-				EffectData.Anchor = (Transform)EditorGUILayout.ObjectField (new GUIContent ("Effect creation anchor", ""), EffectData.Anchor, typeof(Transform));
+				_EffectData.EffectObject = (GameObject)EditorGUILayout.ObjectField (new GUIContent ("Effect object", ""), _EffectData.EffectObject, typeof(GameObject));
+				_EffectData.instantiationData = EditorCommon.EditInstantiationData(" -----------  Edit instantiation data ----------- ", _EffectData.instantiationData);
 				//Delete this effect data
-				if (GUILayout.Button ("Delete EffectData:" + EffectData.Name)) {
-					EffectDataArray = Util.CloneExcept<EffectData> (EffectDataArray, EffectData);
+				if (GUILayout.Button ("Delete EffectData:" + _EffectData.Name)) {
+					EffectDataArray = Util.CloneExcept<EffectData> (EffectDataArray, _EffectData);
 				}
 			}
-			
 			EditorGUILayout.Space ();
+			if(GUILayout.Button("Remove EffectData:" + _EffectData.Name))
+			{
+				EffectDataArray = Util.CloneExcept<EffectData>(EffectDataArray, _EffectData);
+			}
 		}
 		return EffectDataArray;
+	}
+	
+	public static InstantiationData EditInstantiationData(string label, InstantiationData instantiationData)
+	{
+		EditorGUILayout.LabelField(label);
+		instantiationData.BasicAnchor = (Transform)EditorGUILayout.ObjectField(new GUIContent("Base creation anchor:","The basic anchor to create instance."),
+			                                                                   instantiationData.BasicAnchor, 
+			                                                                   typeof(Transform));
+		EditorGUILayout.BeginHorizontal();
+        instantiationData.RandomQuaternion = EditorGUILayout.Toggle("Randomly assign quaternion?",instantiationData.RandomQuaternion);
+		instantiationData.RandomPositionInsideSphere = EditorGUILayout.Toggle("Randomly create inside sphere?",instantiationData.RandomPositionInsideSphere);
+		if(instantiationData.RandomPositionInsideSphere)
+		{
+		   instantiationData.RandomSphereUnit = EditorGUILayout.FloatField("Random sphere radius:", instantiationData.RandomSphereUnit);
+		}
+		EditorGUILayout.EndHorizontal();
+		instantiationData.WorldOffset = EditorGUILayout.Vector3Field("World position offset:", instantiationData.WorldOffset);
+		return instantiationData;
 	}
 	
 	/// <summary>
@@ -463,16 +492,26 @@ public class EditorCommon
 				EditBasicAnimationData (unit.gameObject,
 					                        string.Format (" ---------------------- {0}", DeathData.Name), 
 					                        DeathData as UnitAnimationData);
-			} else {
+			} 
+			else {
 				GUILayout.Label (string.Format (" ---------------------- {0}", DeathData.Name));
 				DeathData.Name = EditorGUILayout.TextField (new GUIContent ("Name:", ""), DeathData.Name);
 			}
-			DeathData.DamageForm = (DamageForm)EditorGUILayout.EnumPopup (new GUIContent ("Damage Form", "触发这个DeathData的DamageForm, Common类型是默认数据."), DeathData.DamageForm);
+			DeathData.ApplicableDamageForm =  EditDamageFormArray("Applicable Damage Form",DeathData.ApplicableDamageForm);
 			DeathData.UseDieReplacement = EditorGUILayout.Toggle (new GUIContent ("Use Die replacement:", "死亡时,是否创建替代布娃娃?"), DeathData.UseDieReplacement);
 			if (DeathData.UseDieReplacement) {
 				DeathData.ReplaceAfterAnimationFinish = EditorGUILayout.Toggle (new GUIContent ("Create replacement following animation", "等待动画播放完毕后再创建替代物?"), DeathData.ReplaceAfterAnimationFinish);
 				DeathData.DieReplacement = (GameObject)EditorGUILayout.ObjectField (new GUIContent ("Die replacement:", ""), DeathData.DieReplacement, typeof(GameObject));
 				DeathData.CopyChildrenTransformToDieReplacement = EditorGUILayout.Toggle (new GUIContent ("Copy transform?", "是否把替代物的关节位置调整到和死亡单位一致?"), DeathData.CopyChildrenTransformToDieReplacement);
+			}
+			else {
+				EditorGUILayout.BeginHorizontal();
+				DeathData.DestoryGameObject = EditorGUILayout.Toggle (new GUIContent ("Destory GameObject:", ""), DeathData.DestoryGameObject);
+				if(DeathData.DestoryGameObject)
+				{
+					DeathData.DestoryLagTime = EditorGUILayout.FloatField("Destory lag time:", DeathData.DestoryLagTime);
+				}
+				EditorGUILayout.EndHorizontal();
 			}
 			string[] effectDataNameArray = unit.EffectData.Select (x => x.Name).ToArray<string> ();
 			DeathData.EffectDataName = EditStringArray ("--------- Edit death effect data-----", DeathData.EffectDataName, effectDataNameArray);
@@ -581,6 +620,27 @@ public class EditorCommon
 		return newArray;
 	}
 	
+	public static DamageForm[] EditDamageFormArray(string label, DamageForm[] damageFormArray)
+	{
+		EditorGUILayout.LabelField (label);
+		if (GUILayout.Button ("Add new DamageForm element")) {
+			DamageForm element = DamageForm.Common;
+			damageFormArray = Util.AddToArray<DamageForm> (element, damageFormArray);
+		}
+        
+		for (int i = 0; i < damageFormArray.Length; i++) {
+			EditorGUILayout.BeginHorizontal();
+			damageFormArray [i] = (DamageForm) EditorGUILayout.EnumPopup(damageFormArray [i]);
+			if (GUILayout.Button ("Remove")) {
+				damageFormArray = Util.CloneExcept<DamageForm> (damageFormArray, i);
+				EditorGUILayout.EndHorizontal();
+				break;
+			}
+			EditorGUILayout.EndHorizontal();
+		}
+		return damageFormArray;
+	}
+	
 	/// <summary>
 	/// Edits the string array. The element is input manually.
 	/// </summary>
@@ -637,6 +697,24 @@ public class EditorCommon
 	}
 	
 	/// <summary>
+	/// Edits the given name's property field of the object.
+	/// </summary>
+	/// <param name='fieldname'>
+	/// Fieldname.
+	/// </param>
+	/// <param name='gameObject'>
+	/// Game object.
+	/// </param>
+	public static void EditPropertyField (string label, string description, 
+		                                  string fieldname, Object theObject)
+	{
+		SerializedObject serObj = new SerializedObject(theObject);
+		SerializedProperty  p = serObj.FindProperty(fieldname);
+		EditorGUILayout.PropertyField (p, new GUIContent(label, description));
+		serObj.Update();
+	}
+	
+	/// <summary>
 	/// Given a value, and a string array, let the value selected from the drop down list composed of displayOption.
 	/// </summary>
 	public static string EditPopup (string label, string _value, string[] displayOption)
@@ -682,8 +760,73 @@ public class EditorCommon
 		AnimationUtility.SetAnimationEvents(B, events);
 	}
 	
+	public static void AddAnimationEvent(AnimationClip clip, string function, 
+		                                 string param, AnimationParameterType parameterType)
+	{
+		AnimationEvent _event = new AnimationEvent();
+		_event.time = 0;
+		_event.functionName = function;
+		switch(parameterType)
+		{
+		    case AnimationParameterType.StringParam:
+			   _event.stringParameter = param;
+			   break;
+			case AnimationParameterType.IntParam:
+			   _event.intParameter = int.Parse(param);
+			   break;
+			case AnimationParameterType.FloatParam:
+			   _event.floatParameter = float.Parse(param);
+			   break;
+		}
+	    clip.AddEvent(_event);
+	}
+	
     #endregion
 	
+#region ScenarioData edit
+	public static void EditScenarioData(ScenarioData scenarioData)
+	{
+		scenarioData.Name = EditorGUILayout.TextField("Scenario Name:" , scenarioData.Name);
+		scenarioData.cameraDock = (CameraDock)EditorGUILayout.ObjectField("Camera Docks:", scenarioData.cameraDock, typeof(CameraDock));
+		scenarioData.gameEventAtScenarioStart =  EditGameEventArray("---------- Edit GameEvents at scenario start -------", scenarioData.gameEventAtScenarioStart);
+		scenarioData.gameEventAtScenarioCameraDockingCompleted =  EditGameEventArray("---------- Edit GameEvents at scenario camera on dock -------", scenarioData.gameEventAtScenarioCameraDockingCompleted);
+	}
 	
+	public static GameEvent[] EditGameEventArray(string label, GameEvent[] array)
+	{
+		GUILayout.Label(label);
+		if(GUILayout.Button("Add GameEvent:"))
+		{
+			GameEvent e = new GameEvent();
+			array = Util.AddToArray<GameEvent>(e, array);
+		}
+		foreach(GameEvent _e in array)
+		{
+			EditGameEvent(_e);
+			if(GUILayout.Button("Delete GameEvent:" + _e.Name))
+			{
+			   array = Util.CloneExcept<GameEvent>(array,_e);
+			}
+			EditorGUILayout.Separator();
+		}
+		return array;
+	}
+	
+	public static void EditGameEvent(GameEvent _event)
+	{
+		EditorGUILayout.BeginHorizontal();
+		_event.Name = EditorGUILayout.TextField("Event name:",_event.Name);
+		_event.type = (GameEventType) EditorGUILayout.EnumPopup("Event type:",_event.type);
+		_event.delaySend = EditorGUILayout.FloatField("Delay:",_event.delaySend);
+		EditorGUILayout.EndHorizontal();
+		_event.receiver = (GameObject)EditorGUILayout.ObjectField("Receiver gameobject:", _event.receiver, typeof(GameObject));
+		EditorGUILayout.BeginHorizontal();
+		_event.IntParameter = EditorGUILayout.IntField("Int param:",_event.IntParameter);
+		_event.FloatParameter = EditorGUILayout.FloatField("Float param:",_event.FloatParameter);
+		_event.StringParameter = EditorGUILayout.TextField("String param:",_event.StringParameter);
+		_event.BoolParameter = EditorGUILayout.Toggle("Bool param:",_event.BoolParameter);
+		EditorGUILayout.EndHorizontal();
+	}
+#endregion
 }
 

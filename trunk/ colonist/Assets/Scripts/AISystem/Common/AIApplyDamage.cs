@@ -51,6 +51,12 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
         {
             yield break;
         }
+		//Dispatch ReceiveDamage GameEvent
+		GameEvent e = new GameEvent(GameEventType.DisplayDamageParameterOnNPC);
+		e.sender = this.gameObject;
+		e.ObjectParameter = damageParam;
+		LevelManager.GameEvent(e);
+		
         //Minus HP:
         unit.HP -= damageParam.damagePoint;
         if (unit.HP <= 0)
@@ -128,7 +134,13 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
 
     public virtual IEnumerator Die(DamageParameter DamageParameter)
     {
-		LevelManager.UnregisterUnit(unit);
+//		LevelManager.UnregisterUnit(unit);
+		
+		if(this.unit.spawnIdentity != null)
+		{
+			LevelArea.GetArea(unit.spawnIdentity.LevelAreaName).OnSpawneeDie (this.gameObject, this.unit.spawnIdentity);
+//			Debug.Log("Area:" + unit.spawnIdentity.LevelAreaName + " spawnee die:" + this.gameObject.name + "spawn wave:" + this.unit.spawnIdentity.SpawnWaveName);
+		}
 		
         //Basic death processing.
         controller.enabled = false;
@@ -187,7 +199,12 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
         }
         else 
         {
-            animation.CrossFade(DeathData.AnimationName);
+            animation.Play(DeathData.AnimationName);
+			if(DeathData.DestoryGameObject)
+			{
+				yield return new WaitForSeconds(animation[DeathData.AnimationName].length + DeathData.DestoryLagTime);
+				Destroy(gameObject);
+			}
         }
         
     }

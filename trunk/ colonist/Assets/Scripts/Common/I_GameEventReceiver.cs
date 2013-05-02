@@ -6,6 +6,6 @@ using System.Collections;
 /// </summary>
 public interface I_GameEventReceiver  {
 
-	IEnumerator OnGameEvent(GameEvent _event);
+	void OnGameEvent(GameEvent _event);
 	
 }

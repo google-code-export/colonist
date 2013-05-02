@@ -72,11 +72,10 @@ public class Joybutton_Strike_Predator : JoyButton
 		if (holdStart == -1) {
 			holdStart = Time.time;
 		}
-		if (messageSent==false && Hold!= UserInputType.None && ((Time.time - holdStart)>=HoldDetectionSeconds))
+		if (messageSent==false && Hold != UserInputType.None && ((Time.time - holdStart) >= HoldDetectionSeconds))
 		{
 			UserInputData gestInfo = new UserInputData( Hold, null, holdStart, Time.time);
-			attackController.SendMessage("NewUserGesture", gestInfo);
-			Debug.Log("Hold");
+			attackController.NewUserGesture(gestInfo);
 			messageSent = true;
 		}
 	}
@@ -90,7 +89,7 @@ public class Joybutton_Strike_Predator : JoyButton
         if(messageSent == false)
 		{
 			UserInputData gestInfo = new UserInputData( Tap, null, this.TouchStartTime, Time.time);
-			attackController.SendMessage("NewUserGesture", gestInfo);			
+			attackController.NewUserGesture(gestInfo);		
 		}
 	}
 

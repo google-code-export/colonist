@@ -4,6 +4,7 @@ using System.Collections;
 /// <summary>
 /// Wrap the base data for a unitdata
 /// </summary>
+[System.Serializable]
 public class UnitAnimationData
 {
     public string Name = string.Empty;
@@ -118,7 +119,7 @@ public class ReceiveDamageData : UnitAnimationData
     /// <summary>
     /// DamageForm of this ReceiveDamageData.
     /// </summary>
-    public DamageForm DamageForm = DamageForm.Common;
+    public DamageForm[] ApplicableDamageForm = new DamageForm[] { DamageForm.Common };
     /// <summary>
     /// If HaltAI = true, AI will play receive damage animation, and Halt all behavior.
     /// </summary>
@@ -136,7 +137,7 @@ public class ReceiveDamageData : UnitAnimationData
 	{
 		ReceiveDamageData clone = new ReceiveDamageData();
 		base.CloneBasic(clone);
-		clone.DamageForm = this.DamageForm;
+		clone.ApplicableDamageForm = Util.CloneArray<DamageForm>( this.ApplicableDamageForm );
 		clone.HaltAI = this.HaltAI;
 	    clone.EffectDataName = Util.CloneArray<string>(this.EffectDataName);
 		clone.DecalDataName = Util.CloneArray<string>(this.DecalDataName);
@@ -152,7 +153,7 @@ public class DeathData : UnitAnimationData
     /// <summary>
     /// DamageForm of this ReceiveDamageData.
     /// </summary>
-    public DamageForm DamageForm = DamageForm.Common;
+    public DamageForm[] ApplicableDamageForm = new DamageForm[] { DamageForm.Common };
     /// <summary>
     /// EffectDataName - the effectdata will be created immediately when playing the animation.
     /// </summary>
@@ -161,7 +162,17 @@ public class DeathData : UnitAnimationData
     /// DecalDataName - the decal object will be created when die
     /// </summary>
     public string[] DecalDataName = new string[] { };
-
+	
+	/// <summary>
+	/// If this flag is marked true, the gameObject will be destoryed if UseDieReplacement = false.
+	/// </summary>
+	public bool DestoryGameObject = false;
+	/// <summary>
+	/// DestoryLagTime is used when UseDieReplacement = false and DestoryGameObject = true
+	/// The gameObject will be destoryed after N seconds later of Die animation.
+	/// </summary>
+	public float DestoryLagTime = 0;
+	
     public bool UseDieReplacement = false;
     /// <summary>
     /// If UseDieReplacement = true, will create the DieReplacement GameObject after animation finished.
@@ -183,7 +194,7 @@ public class DeathData : UnitAnimationData
 	{
 		DeathData clone = new DeathData();
 		base.CloneBasic(clone);
-		clone.DamageForm = this.DamageForm;
+		clone.ApplicableDamageForm = Util.CloneArray<DamageForm>(this.ApplicableDamageForm);
 		clone.UseDieReplacement = this.UseDieReplacement;
 		clone.ReplaceAfterAnimationFinish = this.ReplaceAfterAnimationFinish;
 		clone.DieReplacement = this.DieReplacement;
@@ -192,6 +203,55 @@ public class DeathData : UnitAnimationData
 		clone.DecalDataName = Util.CloneArray<string>(this.DecalDataName);
 		return clone;
 	}
+}
+
+/// <summary>
+/// Wrap the trail render effect data.
+/// </summary>
+[System.Serializable]
+public class TrailRenderEffectData
+{
+	public string Name = "";
+	public TrailRenderer trailRenderObject = null;
+	/// <summary>
+	/// if enabled = false, the trail render data would not be used.
+	/// </summary>
+	public bool enabled = true;
+	[HideInInspector]
+	public bool IsActive = false;
+	[HideInInspector]
+	public float LastDisplayTime = 0;
+	[HideInInspector]
+	public float DisplayLength = 0;
+} 
+
+/// <summary>
+/// Instantiation data defines the position/quaternion to instanitate a gameobject.
+/// </summary>
+[System.Serializable]
+public class InstantiationData
+{
+	/// <summary>
+	/// The basic anchor transform.
+	/// </summary>
+	public Transform BasicAnchor = null;
+	/// <summary>
+	/// If RandomPositionInsideSphere = true, create the instance at position = BasicAnchor + Random unit inside sphere
+	/// </summary>
+	public bool RandomPositionInsideSphere = false;
+	/// <summary>
+	/// if RandomInsideSphere = true, the radius of the random sphere
+	/// </summary>
+	public float RandomSphereUnit = 1;
+	/// <summary>
+	/// The final position = BasicAnchor + RandomInsideSphereUnit + WorldOffset.
+	/// </summary>
+	public Vector3 WorldOffset = Vector3.zero;
+	
+	/// <summary>
+	/// if RandomQuaternion = true, RandomQuaternion
+	/// </summary>
+	public bool RandomQuaternion = false;
 }
 
 /// <summary>
@@ -211,10 +271,13 @@ public class EffectData
     #endregion
 
     #region use custom effect object
-    /// <summary>
-    /// Instantiate the EffectObject at the position/rotation of the EffectObject
-    /// </summary>
-    public Transform Anchor = null;
+	public InstantiationData instantiationData = new InstantiationData();
+	/// <summary>
+	/// When creating effect object instance, the creation anchor location = Anchor + random position inside a sphere of radius = RandomSphereRadius.
+	/// If the RandomSphereRadius = 0, creation anchor location = Anchor position.
+	/// </summary>
+//	public float RandomSphereRadius = 0;
+	
     public GameObject EffectObject = null;
     /// <summary>
     /// if DestoryInTimeOut = true, the EffectObject will be destory in %DestoryTimeOut% seconds.
@@ -229,7 +292,10 @@ public class EffectData
 	/// </summary>
 	public bool CreateDelay = true;
 	public float CreateDelayTime = 1;
-	
+	/// <summary>
+	/// The type of the instantion. create new instance, or play existing gameobject particle system.
+	/// </summary>
+	public EffectObjectInstantiation InstantionType = EffectObjectInstantiation.creat;
 	public EffectData GetClone()
 	{
 		EffectData clone = new EffectData();
@@ -254,7 +320,7 @@ public class EffectData
 public class DecalData
 {
     public string Name = string.Empty;
-
+	 
 #region use global decal object
     public bool UseGlobalDecal = true;
     public GlobalDecalType GlobalType = GlobalDecalType.HumanBlood_Splatter01_Static;
@@ -344,6 +410,11 @@ public class AttackData : UnitAnimationData
 	/// The hit test angular discrepancy.
 	/// </summary>
 	public float HitTestAngularDiscrepancy = 10;
+	
+	/// <summary>
+	/// if LookAtTarget = true, AI face to target before attacking.
+	/// </summary>
+	public bool LookAtTarget = true;
 	
     /// <summary>
     /// When target distance lesser than AttackableRange, begin attack.

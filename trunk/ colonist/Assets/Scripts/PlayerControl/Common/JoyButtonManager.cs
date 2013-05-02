@@ -59,7 +59,19 @@ public class JoyButtonManager : MonoBehaviour {
         joyButtons = new JoyButton[tempList.Count];
         tempList.CopyTo(joyButtons, 0);
     }
-
+	
+	public JoyButton GetButton(string name)
+	{
+		foreach(JoyButton b in joyButtons)
+		{
+			if(b.JoyButtonName == name)
+			{
+				return b;
+			}
+		}
+		return null;
+	}
+	
     /// <summary>
     /// 
     /// </summary>

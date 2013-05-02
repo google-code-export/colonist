@@ -126,6 +126,7 @@ public class Projectile : MonoBehaviour {
         if (HitEffect != null)
         {
             Object effectObject = Object.Instantiate(HitEffect, transform.position, transform.rotation);
+//			Debug.Log("Instantiate effectObject:" + HitEffect.name + " at pos:" + transform.position);
             if (HitEffectTimeout > 0)
             {
                 Destroy(effectObject, HitEffectTimeout);
@@ -306,7 +307,7 @@ public class Projectile : MonoBehaviour {
 
     void OnTriggerEnter(Collider other)
     {
-        //Debug.Log("OnTriggerEnter Hit with:" + other.gameObject.name);
+//        Debug.Log("OnTriggerEnter Hit with:" + other.gameObject.name);
         HitSomething = true;
         if (Util.CheckLayerWithinMask(other.gameObject.layer, this.AttackableLayer))
         {
@@ -316,7 +317,7 @@ public class Projectile : MonoBehaviour {
 
     void OnTriggerStay(Collider other)
     {
-        Debug.Log("OnTriggerStay Hit with:" + other.gameObject.name);
+//        Debug.Log("OnTriggerStay Hit with:" + other.gameObject.name);
         HitSomething = true;
         if (Util.CheckLayerWithinMask(other.gameObject.layer, this.AttackableLayer))
         {

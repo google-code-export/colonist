@@ -1,29 +1,22 @@
 using UnityEngine;
 using System.Collections;
 
-public class SpawnEnemyLift : SpawnEnemy {
+public class SpawnEnemyLift : SpawnEnemyPoint {
 	
 	public float DetachTime = 1.7f;
+	private GameObject spawnedUnit = null;
 	
-	public override void DoSpawn()
+	public override GameObject DoSpawn()
 	{
-		base.DoSpawn();
+		spawnedUnit = base.DoSpawn();
 		spawnedUnit.transform.parent = this.transform;
 		Invoke("Detach",DetachTime);
+		return spawnedUnit;
 	}
 	
 	void Detach()
 	{
 		spawnedUnit.transform.parent = null;
-		Debug.Log("Detach!!");
 	}
 	
-	void Update()
-	{
-		if(spawnedUnit == null && Spawning == false)
-		{
-			Debug.Log("It's dead!");
-			Invoke("Spawn",0);
-		}
-	}
 }

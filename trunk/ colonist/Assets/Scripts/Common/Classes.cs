@@ -73,189 +73,6 @@ public class DamageParameter
         this.damageForm = form;
         this.damagePoint = point;
     }
-
-}
-
-
-/// <summary>
-/// ReceiveDamageBeheavior - defines animation/function beheavior when receiving damage.
-/// This class specially works for AI. 
-/// It define how the AI should react to damage.
-/// Take AIApplyDamage for an example, when applying damage,  firstly look up the correct ReceiveDamageBeheavior
-/// by searching DamageForm, and then, if a) IndependateFunctioning = false, CrossFade animation, SendMessage(Function)
-/// else if b)IndependateFunctioning = true, NOT CrossFade animation, just SendMessage(Function)
-/// 
-/// </summary>
-[System.Serializable]
-public class ReceiveDamageBeheavior
-{
-    public string Name = "Description here";
-    /// <summary>
-    /// if Animation is not empty, will do animation.CrossFade(Animation) every time when receiving damage.
-    /// </summary>
-    public string[] animation;
-    /// <summary>
-    /// if Animation is not empty, will do animation[Animation].layer = AnimationLayer in Awake()
-    /// </summary>
-    public int AnimationLayer = 0;
-    public WrapMode wrapMode = WrapMode.Default;
-
-    /// <summary>
-    /// The corresponding damageForm on this ReceiveDamageBeheavior
-    /// </summary>
-    public DamageForm damageForm = DamageForm.Common;
-
-    /// <summary>
-    /// If Function != string.empty, will call SendMessage(Function, DamageParameter)
-    /// </summary>
-    public string Function = "";
-
-    /// <summary>
-    /// If IndependentFunctioning = true, will not execute the default animating code, just 
-    /// SendMessage(Function, DamageParameter) and exit the applying damage routine.
-    /// If IndependentFunctioning = true, Function MUST BE NON-EMPTY.
-    /// </summary>
-    public bool IndependentFunctioning = false;
-
-    /// <summary>
-    /// If isTumble = true, then it means the character is disabled when animation is playing
-    /// </summary>
-    public bool isTumble = false;
-    /// <summary>
-    /// Used when isTumble = true
-    /// </summary>
-    public MoveDirection tumbleDirection;
-    /// <summary>
-    /// If canMove = true, then it means the character is moving when animation is playing
-    /// </summary>
-    public bool canMove = false;
-    /// <summary>
-    /// Used when canMove = true
-    /// </summary>
-    public MoveDirection moveDirection;
-    public float MoveSpeed = 0.2f;
-
-
-    /// <summary>
-    /// Find the ReceiveDamageBeheavior by criteria, and if there's more than one match, result will be randomly
-    /// </summary>
-    /// <param name="direction"></param>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    public static ReceiveDamageBeheavior FindMatchRandomly(DamageForm DamageForm, MoveDirection direction, 
-        ReceiveDamageBeheavior[] input, ReceiveDamageBeheavior DefaultIfNoMatch)
-    {
-        ArrayList list = new ArrayList();
-        foreach (ReceiveDamageBeheavior beheavior in input)
-        {
-            if (beheavior.damageForm == DamageForm && beheavior.moveDirection == direction)
-            {
-                list.Add(beheavior);
-            }
-        }
-        //No precisely matched? Skip the direction and research
-        if (list.Count == 0)
-        {
-            ReceiveDamageBeheavior beheavior = FindMatchRandomly(DamageForm, input, DefaultIfNoMatch);
-            return beheavior;
-        }
-        //Only one? Return
-        else if (list.Count == 1)
-        {
-            return (ReceiveDamageBeheavior)list[0];
-        }
-        //Nice, return a random one
-        else
-        {
-            int randomdex = Random.Range(0, list.Count);
-            return input[randomdex];
-        }
-    }
-
-    public static ReceiveDamageBeheavior FindMatchRandomly(DamageForm DamageForm, ReceiveDamageBeheavior[] input, ReceiveDamageBeheavior DefaultIfNoMatch)
-    {
-        ArrayList list = new ArrayList();
-        foreach (ReceiveDamageBeheavior beheavior in input)
-        {
-            if (beheavior.damageForm == DamageForm)
-            {
-                list.Add(beheavior);
-            }
-        }
-        if (list.Count == 0)
-        {
-            return DefaultIfNoMatch;
-        }
-        else if (list.Count == 1)
-        {
-            return (ReceiveDamageBeheavior)list[0];
-        }
-        else
-        {
-            int randomdex = Random.Range(0, list.Count);
-            return input[randomdex];
-        }
-    }
-}
-
-[System.Serializable]
-public class DieBeheavior
-{
-    public string Name = "Description here";
-    /// <summary>
-    /// The Damage Parameter which cause the death
-    /// </summary>
-    [HideInInspector]
-	public DamageParameter damageParameter;
-
-    public DamageForm damageForm;
-
-    /// <summary>
-    /// If DieReplacement != null, will instantiate a DieReplacement object and destory the attached gameobject
-    /// </summary>
-    public GameObject DieReplacement;
-    /// <summary>
-    /// If CopyTransfromToReplacement = true, will copy all the current tansform to replacement's transform
-    /// </summary>
-    public bool CopyTransfromToReplacement;
-
-    /// <summary>
-    /// If FunctionName != string.empty, will call Component.SendMessage(FunctionName)
-    /// </summary>
-    public string FunctionName = "";
-
-    public GameObject[] ObjectToDestory = null;
-
-    /// <summary>
-    /// Find the DieBeheavior by criteria, and if there's more than one match, result will be randomly
-    /// </summary>
-    /// <param name="direction"></param>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    public static DieBeheavior FindMatchRandomly(DieBeheavior[] input, DamageForm damageForm, DieBeheavior defaultBeheavior)
-    {
-        ArrayList list = new ArrayList();
-        foreach (DieBeheavior beheavior in input)
-        {
-            if (beheavior.damageForm == damageForm)
-            {
-                list.Add(beheavior);
-            }
-        }
-        if (list.Count == 0)
-        {
-            return defaultBeheavior;
-        }
-        else if (list.Count == 1)
-        {
-            return (DieBeheavior)list[0];
-        }
-        else
-        {
-            int randomdex = Random.Range(0, list.Count);
-            return input[randomdex];
-        }
-    }
 }
 
 /// <summary>
@@ -290,108 +107,68 @@ public class TossParameter
     }
 }
 
-/// <summary>
-/// This class defines the camera shifting beheavior in scenario mode.
-/// </summary>
-[System.Serializable]
-public class CameraDock
+public enum ParameterType
 {
-    /// <summary>
-    /// The position, rotation of this dock
-    /// </summary>
-    public Transform Transform;
-
-    /// <summary>
-    /// How long should the camera arrive this dock ?
-    /// If the FleetTime == zero, camera will be forced to set in the dock immediately.
-    /// </summary>
-    public float FleetTime;
-
-    public string function = string.Empty;
-
-    /// <summary>
-    /// If set true, Yield return the coroutine 
-    /// </summary>
-    public bool YieldExecution = false;
-
-    public static IEnumerator DockTo(CameraDock dock, Camera camera, MonoBehaviour mono)
-    {
-        //If FleetTime == zero, aligh at once !
-            if (dock.FleetTime == 0)
-            {
-                camera.transform.position = dock.Transform.position;
-                camera.transform.rotation = dock.Transform.rotation;
-            }
-            //Smooth damp the camera to dock transform
-            else
-            {
-                float Overtime = dock.FleetTime;
-                float _t = Time.time;
-                Vector3 vel = new Vector3();
-                Vector3 direction = dock.Transform.position - camera.transform.position;
-                Vector3 normalizedDirection = direction.normalized;
-                float distance = direction.magnitude;
-                float movementSpeed = distance / Overtime;
-
-                float AngleDistance = Quaternion.Angle(camera.transform.rotation, dock.Transform.rotation);
-                float rotateAnglarSpeed = AngleDistance / Overtime;
-                while ((Time.time - _t) <= Overtime)
-                {
-                    //camera.transform.rotation = Quaternion.Slerp(camera.transform.rotation, dock.Transform.rotation, (1 / Overtime) * Time.deltaTime);
-                    camera.transform.rotation = Quaternion.RotateTowards(camera.transform.rotation, dock.Transform.rotation, rotateAnglarSpeed * Time.deltaTime);
-                    camera.transform.position += normalizedDirection * movementSpeed * Time.deltaTime;
-                    yield return null;
-                }
-            }
-            if (dock.function != string.Empty)
-            {
-                if (dock.YieldExecution)
-                {
-                    yield return mono.StartCoroutine(dock.function);
-                }
-                else
-                {
-                    mono.SendMessage(dock.function);
-                }
-            }
-            yield return null;
-    }
-
-    /// <summary>
-    /// The default routine to control the camera docking
-    /// </summary>
-    public static IEnumerator AutoDock(CameraDock[] cameraDock, Camera camera, MonoBehaviour mono)
-    {
-        foreach (CameraDock dock in cameraDock)
-        {
-            yield return mono.StartCoroutine(DockTo(dock, camera, mono));
-        }
-        yield break;
-    }
+	None = 0,
+	Int = 1,
+	Float = 2,
+	String = 3,
+	Bool = 4,
 }
 
+/// <summary>
+/// MessageData wrap the message send to game object.
+/// Includes: 
+/// 1. Message.
+/// 2. Parameter type - Int, Float, String, Bool
+/// 3. Parameter - Int, Float, String, Bool
+/// </summary>
+//[System.Serializable]
+//public class MessageData
+//{
+//	public GameObject Receiver = null;
+//	public string Message = "FunctionName";
+//	public MessageParameterType messageParameterType = MessageParameterType.None;
+//	public int IntParameter;
+//	public float FloatParameter;
+//	public string StringParameter = "";
+//	public bool BoolParameter;
+//}
 
+/// <summary>
+/// Game event definition.
+/// GameEvent can be used in many purpose. It can be fired in run time, or defined in Inspector.
+/// 
+/// </summary>
+[System.Serializable]
 public class GameEvent
 {
+	public string Name = "";
     public GameEventType type;
+	
+	/// <summary>
+	/// The receiver, if SendToLevelManager is true, the receiver is ignored.
+	/// </summary>
+	public GameObject receiver;
+	[HideInInspector]
     public GameObject sender;
 	
-	public const string Parameter_Apply_Damage = "DamageParameter";
+	public float delaySend = 0;
 	
-    public IDictionary<GameEventParameter, object> parameters = new Dictionary<GameEventParameter,object>();
-
-    public GameEvent(GameEventType type, GameObject sender)
-    {
-        this.type = type;
-        this.sender = sender;
-    }
+	public string CustomMessage = "FunctionName";
+	public ParameterType parameterType = ParameterType.None;
+	public int IntParameter;
+	public float FloatParameter;
+	public string StringParameter = "";
+	public bool BoolParameter;
+	public object ObjectParameter = null;
+	public Vector2 Vector2Parameter = Vector2.zero;
+	public Vector3 Vector3Parameter = Vector3.zero;
+	public GameEvent(){}
 	
-    public GameEvent(GameEventType type, GameObject sender, DamageParameter dp)
-    {
-        this.type = type;
-        this.sender = sender;
-		this.parameters[GameEventParameter.DamageParameter] = dp;
-    }
+	public GameEvent(GameEventType _type){
+		this.type = _type;
+	}
 }
 
 public class TouchInfomation
@@ -405,6 +182,7 @@ public class TouchInfomation
         Time = time;
     }
 }
+
 
 /// <summary>
 /// One combat is one hit information of the predator
@@ -468,4 +246,92 @@ public class ComboCombat
 	}
 	[HideInInspector]
 	public string token;
+}
+
+/// <summary>
+/// Represent a float curve, which can be edited in inspector.
+/// </summary>
+[System.Serializable]
+public class FloatCurve
+{
+	public AnimationCurve curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
+	public float FromValue;
+	public float ToValue;
+	/// <summary>
+	/// if UseRandomValue = true, the FromValue, ToValue is not replaced by Random(RandomFromValueMin, RandomFromValueMax) and Random(RandomToValueMin, RandomToValueMax) 
+	/// 
+	/// </summary>
+	public bool UseRandomValue;
+	public float RandomFromValueMin;
+	public float RandomFromValueMax;
+	public float RandomToValueMin;
+	public float RandomToValueMax;
+	
+	/// <summary>
+	/// Gets the value at given percentage.
+	/// The percentage must be between 0..1
+	/// </summary>
+	public float GetValueAtPercentage(float percentage)
+	{
+		float _from = UseRandomValue ? Random.Range(RandomFromValueMin, RandomFromValueMax) : FromValue;
+		float _to = UseRandomValue ? Random.Range(RandomToValueMin, RandomToValueMax) : ToValue;
+		float valueAtTime = curve.Evaluate(percentage);
+		float v = Mathf.Lerp(_from, _to, valueAtTime);
+		return v;
+	}
+}
+
+/// <summary>
+/// Represent a Vector2 curve, which can be edited in inspector.
+/// </summary>
+[System.Serializable]
+public class Vector2Curve
+{
+	public FloatCurve XCurve;
+	public FloatCurve YCurve;
+	/// <summary>
+	/// Gets the value at given percentage.
+	/// The percentage must be between 0..1
+	/// </summary>
+	public Vector2 GetValueAtPercentage(float percentage)
+	{
+		return new Vector2(XCurve.GetValueAtPercentage(percentage),YCurve.GetValueAtPercentage(percentage));
+	}
+}
+
+/// <summary>
+/// Represent a Vector3 curve, which can be edited in inspector.
+/// </summary>
+[System.Serializable]
+public class Vector3Curve
+{
+	public FloatCurve XCurve;
+	public FloatCurve YCurve;
+	public FloatCurve ZCurve;
+	/// <summary>
+	/// Gets the value at given time.
+	/// The percentage must be between 0..1
+	/// </summary>
+	public Vector3 GetValueAtPercentage(float percentage)
+	{
+		return new Vector3(XCurve.GetValueAtPercentage(percentage),YCurve.GetValueAtPercentage(percentage),ZCurve.GetValueAtPercentage(percentage));
+	}
+}
+
+[System.Serializable]
+public class ColorCurve
+{
+	public AnimationCurve curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
+	public Color fromColor = Color.white;
+	public Color toColor = Color.white;
+	/// <summary>
+	/// Gets the value at given time.
+	/// The percentage must be between 0..1
+	/// </summary>
+	public Color GetValueAtPercentage(float percentage)
+	{
+		float valueAtTime = curve.Evaluate(percentage);
+		Color v = Color.Lerp(fromColor, toColor, valueAtTime);
+		return v;
+	}
 }

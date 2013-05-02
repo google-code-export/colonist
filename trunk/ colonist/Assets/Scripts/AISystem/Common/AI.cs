@@ -11,7 +11,6 @@ using Pathfinding;
 /// is usually one AI running at one time, so if you want to define more than one AI
 /// component in game object ,you need to use Character class to coordinate the AI components.
 /// </summary>
-[RequireComponent(typeof(Seeker))]
 [RequireComponent(typeof(Unit))]
 [RequireComponent(typeof(CharacterController))]
 public class AI : MonoBehaviour, I_AIBehaviorHandler {
@@ -95,7 +94,8 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// Define the beheviors of the AI
     /// </summary>
     public AIBehavior[] Behaviors = new AIBehavior[] {};
-
+	public IDictionary<string,AIBehavior> behaviorDict = new Dictionary<string,AIBehavior>();
+	
     /// <summary>
     /// Sort the prefab Behaviors and save in the list from higher to lower priority
     /// </summary>
@@ -110,6 +110,11 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 	/// </summary>
 	public bool PrintDebugMessage = false;
 	
+	/// <summary>
+	/// The first behavior to be executed when the AI component start.
+	/// </summary>
+	public string FirstBehavior = "";
+	
     void Awake()
     {
         InitAI();
@@ -117,7 +122,10 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 
     void Start()
     {
-        StartCoroutine(StartAI());
+		if(FirstBehavior != string.Empty)
+		{
+           StartCoroutine(StartAI());
+		}
     }
 
     void Update()
@@ -129,6 +137,10 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         //Refresh CurrentTarget in every Time.fixDeltaTime seconds
         FindTarget(DetectiveRange);
 		this.Unit.CurrentTarget = this.CurrentTarget;
+	//		if(PrintDebugMessage)
+	//		{
+	//			Debug.Log("Current target unit is:" + this.CurrentTarget.name);
+	//		}
     }
 	
 	void OnEnable()
@@ -154,19 +166,20 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         this.Unit = GetComponent<Unit>();
         controller = GetComponent<CharacterController>();
 		navigator = GetComponent<Navigator>();
+		
+		//initialize the alternate behavior condition data
+		foreach(AIBehavior behavior in Behaviors)
+		{
+			behavior.InitBehavior();
+		}
+		
+		
         //Put the behavior into a sort list first, which sort the beheavior priority from lower to higher 
-        SortedList<int,AIBehavior> tempList = new SortedList<int,AIBehavior>();
         foreach (AIBehavior beheavior in Behaviors)
         {
-            tempList.Add(beheavior.Priority,beheavior);
-			beheavior.StartConditionWrapper.InitDictionary();
 			beheavior.EndConditionWrapper.InitDictionary();
-        }
-        //Then insert the behavior from higher to lower priority
-        for (int i = tempList.Count-1; i>=0; i--)
-        {
-            BehaviorList_SortedPriority.Add(tempList.Values[i]);
-        }        
+			behaviorDict.Add(beheavior.Name, beheavior);
+        }    
     }
 	
 	/// <summary>
@@ -175,7 +188,9 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 	/// </summary>
     public virtual IEnumerator StartAI()
     {
-        StartCoroutine("AlterBehavior", AlterBehaviorInterval);
+//        StartCoroutine("AlterBehavior", AlterBehaviorInterval);
+		AIBehavior firstBehavior = this.behaviorDict[FirstBehavior];
+		this.StartBehavior(firstBehavior);
         yield break;
     }
 
@@ -188,6 +203,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     public virtual void StopAI()
     {
 		StopAllCoroutines();
+		this.enabled = false;
     }
 	
     /// <summary>
@@ -387,16 +403,18 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 	
 	/// <summary>
 	/// Helper functions - navigating AI to transform.
-	/// The function returns when distance to target transform lesser than BreakDistance
+	/// The function returns when distance to target transform lesser than BreakDistance, 
+	/// or Navigation time exceeds given BreakTime.
 	/// </summary>
 	public virtual IEnumerator NavigateToTransform(Transform TargetTransform, 
 		                               MoveData moveData, 
-		                               float BreakDistance)
+		                               float BreakDistance, float BreakTime)
 	{
+		float _navigationStartTime = Time.time;
 		float _lastNavigationTime = Time.time;
 		StartNavigation(CurrentTarget, true, moveData);
 		while (TargetTransform != null &&
-			Vector3.Distance(transform.position,TargetTransform.position) > BreakDistance)
+			(Vector3.Distance(transform.position,TargetTransform.position) > BreakDistance && (Time.time - _navigationStartTime) <= BreakTime) )
 		{
 			//we need to refresh the navigation path in a fixed time
              if ((Time.time - _lastNavigationTime) >= moveData.RedirectTargetInterval)
@@ -458,89 +476,112 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 #region AI Behavior determination
 
     /// <summary>
+    /// Deprecated!!
+    /// 
     /// ALter current behavior at every %ScanBehaviorInterval% seconds
     /// </summary>
     public virtual IEnumerator AlterBehavior(float Interval)
     {
-		float lastScanEndConditionTime = 0;
-        while (true)
-        {
-			if(this.Halt)
-			{
+//		float lastScanEndConditionTime = Time.time;
+//        while (true)
+//        {
+//			if(this.Halt)
+//			{
+//				yield return null;
+//				continue;
+//			}
+//			if(((Time.time - lastScanEndConditionTime) < Interval) && AlternateBehaviorFlag == false)
+//			{
+//				yield return null;
+//				continue;
+//			}
+//			
+//			if(AlternateBehaviorFlag)
+//			{
+//				AlternateBehaviorFlag = false;
+//			}
+//            //if the current behavior is still running, check if it meets end condition.
+//			// if the current behavior status is not running, it means it can stop at anytime
+//            if (CurrentBehavior != null && CurrentBehavior.Phase == AIBehaviorPhase.Running)
+//            {
+//				lastScanEndConditionTime = Time.time;
+//                //If CurrentBehavior's end condition = false, do nothing
+//				if(CheckConditionWrapper(CurrentBehavior.EndConditionWrapper, CurrentBehavior) == false)
+//                {
+//					if(PrintDebugMessage)
+//					{
+//                       Debug.Log("Behavior:" + CurrentBehavior.Name + " do not meet end condition, not ended yet.");
+//					}
+//                    yield return null;
+//                    continue;
+//                }
+//            }
+//            AIBehavior behaviorToGo = null;
+//            //Choose next behavior whose StartCondition = True
+//            foreach (AIBehavior behavior in BehaviorList_SortedPriority)
+//            {
+//                if(behavior.Name=="SwitchToAttack") 
+//					Debug.DebugBreak();
+//				if(CheckConditionWrapper(behavior.StartConditionWrapper, behavior))
+//                {
+//                    behaviorToGo = behavior;
+//                    break;
+//                }
+//            }
+//            //if no behavior meets start condition, let it be, print a message and wait for next loop
+//            if (behaviorToGo == null)
+//            {
+//                Debug.LogWarning("No behavior can start - " + gameObject.name);
+//				yield return null;
+//                continue;
+//            }
+//            //Good, there is a behavior can be started - behaviorToGo
+//            else
+//            {
+//                //Do nothing if the new behavior is already running
+//                if (CurrentBehavior == behaviorToGo || behaviorToGo.Phase == AIBehaviorPhase.Running)
+//                {
+//					if(PrintDebugMessage)
+//                       Debug.Log("Behavior : " + behaviorToGo.Name + " is already running! No need to start again.");
+//                }
+//                else
+//                {
+//                    if (CurrentBehavior != null)
+//                    {
+//                        this.StopBehavior(CurrentBehavior);
+//						Debug.Log("Stop behavior:" + CurrentBehavior.Name + " and start behavior:" + behaviorToGo.Name);
+//                        //Wait one frame to let StopBehavior complete.
+//                        yield return null;
+//                    }
+//                    StartBehavior(behaviorToGo);
+//                    CurrentBehavior = behaviorToGo;
+//                }
+//                //yield return new WaitForSeconds(Interval);
 				yield return null;
-				continue;
-			}
-			if(((Time.time - lastScanEndConditionTime) < Interval) && AlternateBehaviorFlag == false)
-			{
-				yield return null;
-				continue;
-			}
-			
-			if(AlternateBehaviorFlag)
-			{
-				AlternateBehaviorFlag = false;
-			}
-            //if the current behavior is still running, check if it meets end condition.
-			// if the current behavior status is not running, it means it can stop at anytime
-            if (CurrentBehavior != null && CurrentBehavior.Phase == AIBehaviorPhase.Running)
-            {
-				lastScanEndConditionTime = Time.time;
-                //If CurrentBehavior's end condition = false, do nothing
-				if(CheckConditionWrapper(CurrentBehavior.EndConditionWrapper, CurrentBehavior) == false)
-                {
-					if(PrintDebugMessage)
-					{
-                       Debug.Log("Behavior:" + CurrentBehavior.Name + " do not meet end condition, not ended yet.");
-					}
-                    yield return null;
-                    continue;
-                }
-            }
-            AIBehavior behaviorToGo = null;
-            //Choose next behavior whose StartCondition = True
-            foreach (AIBehavior behavior in BehaviorList_SortedPriority)
-            {
-                if(behavior.Name=="SwitchToAttack") 
-					Debug.DebugBreak();
-				if(CheckConditionWrapper(behavior.StartConditionWrapper, behavior))
-                {
-                    behaviorToGo = behavior;
-                    break;
-                }
-            }
-            //if no behavior meets start condition, let it be, print a message and wait for next loop
-            if (behaviorToGo == null)
-            {
-                Debug.LogWarning("No behavior can start - " + gameObject.name);
-				yield return null;
-                continue;
-            }
-            //Good, there is a behavior can be started - behaviorToGo
-            else
-            {
-                //Do nothing if the new behavior is already running
-                if (CurrentBehavior == behaviorToGo || behaviorToGo.Phase == AIBehaviorPhase.Running)
-                {
-					if(PrintDebugMessage)
-                       Debug.Log("Behavior : " + behaviorToGo.Name + " is already running! No need to start again.");
-                }
-                else
-                {
-                    if (CurrentBehavior != null)
-                    {
-                        this.StopBehavior(CurrentBehavior);
-						Debug.Log("Stop behavior:" + CurrentBehavior.Name + " and start behavior:" + behaviorToGo.Name);
-                        //Wait one frame to let StopBehavior complete.
-                        yield return null;
-                    }
-                    StartBehavior(behaviorToGo);
-                    CurrentBehavior = behaviorToGo;
-                }
-                //yield return new WaitForSeconds(Interval);
-				yield return null;
-            }
-        }
+//            }
+//        }
     }
+	
+	/// <summary>
+	/// Scans the alternate behavior condition of the given behavior.
+	/// Return true if one of the alternate behavior condition matches, and assign next behavior to behavior.NextBehavior varaible.
+	/// </summary>
+	public virtual bool CheckAlternateBehaviorCondition(AIBehavior behavior)
+	{
+		bool hasConditionMatched = false;
+		behavior.NextBehaviorName = string.Empty;
+		for(int i=0; i<behavior.alternateBehaviorConditionArray.Length; i++)
+		{
+			AlternateBehaviorData alternateBehaviorData = behavior.alternateBehaviorConditionArray[i];
+			if(CheckConditionWrapper( alternateBehaviorData.AlternateCondition, behavior)){
+				behavior.NextBehaviorName = alternateBehaviorData.NextBehaviorName;
+				hasConditionMatched = true;
+//				Debug.Log("At frame:" + Time.frameCount + " behavior:" + behavior.Name + " condition match at: " + alternateBehaviorData.Name + " alter to next behavior:" + alternateBehaviorData.NextBehaviorName);
+				break;
+			}
+		}
+		return hasConditionMatched;
+	}
 	
 	public virtual bool CheckConditionWrapper(CompositeConditionWrapper compositeConditionWrapper,AIBehavior behavior)
 	{
@@ -639,7 +680,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 break;
             //See if current transform located within the predefined area?
             case AIBooleanConditionEnum.InArea:
-                LeftValue = Util.IsTransformInsideBounds(transform, AIBehaviorCondition.CheckAreaes);
+			    LeftValue = Util.IsTransformInsideBounds(transform, AIBehaviorCondition.CheckArea);
                 break;
             //See if the CurrentTarget's gameObject layer within the layermask
             case AIBooleanConditionEnum.CurrentTargetInLayer:
@@ -771,6 +812,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 		
         //By defaut, set the behavior phase = running at StartBehavior()
         behavior.Phase = AIBehaviorPhase.Running;
+		CurrentBehavior = behavior;
         foreach (string startMessage in behavior.MessageAtStart)
         {
             SendMessage(startMessage);
@@ -795,8 +837,14 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         foreach (string endMessage in behavior.MessageAtEnd)
         {
             SendMessage(endMessage);
+//			Debug.Log("Send message:" + endMessage);
         }
         StartCoroutine(Coroutine, behavior);
+		
+		//Start next behavior
+	    string NextBehavior = behavior.NextBehaviorName;
+//		Debug.Log("Stop behavior:" + behavior.Name + " and start next behavior:" + behavior.NextBehaviorName);
+		StartBehavior(this.behaviorDict[behavior.NextBehaviorName]);
     }
 
     /// <summary>
@@ -811,7 +859,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         IdleData _IdleData = Unit.IdleDataDict[behavior.IdleDataName];
 		
         string IdleAnimationName = _IdleData.AnimationName;
-        
+        float lastScanEndConditionTime = Time.time;
         while (true)
         {
             if (Halt)
@@ -823,6 +871,21 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
             else
             {
                 animation.CrossFade(IdleAnimationName);
+				
+                //if this behavior's end condition matches, end this behavior
+                if((Time.time - lastScanEndConditionTime) >= behavior.ScanEndConditionInterval)
+                {
+			       lastScanEndConditionTime = Time.time;
+					if(CheckAlternateBehaviorCondition(behavior))
+					{
+						if(PrintDebugMessage)
+						{
+							Debug.Log("Idle behavior:" + behavior.Name + " is end.");
+						}
+						break;
+					}
+                }
+				//if the current target is not null and idle data mean to be keep facing at the target, face to the target.
 				if(CurrentTarget != null && _IdleData.KeepFacingTarget)
 				{
 					Vector3 LookAtPosition = new Vector3(CurrentTarget.position.x, transform.position.y, CurrentTarget.position.z);
@@ -845,6 +908,8 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 yield return null;
             }
         }
+		
+		StopBehavior(behavior);
     }
 
     /// <summary>
@@ -853,7 +918,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// <returns></returns>
     public virtual IEnumerator Stop_Idle(AIBehavior behavior)
     {
-        Debug.Log("Stop behavior:" + behavior.Name + " .IdleDataName:" + behavior.IdleDataName);
+//        Debug.Log("Stop behavior:" + behavior.Name + " .IdleDataName:" + behavior.IdleDataName);
         StopCoroutine("Start_Idle");
         string IdleAnimationName = Unit.IdleDataDict[behavior.IdleDataName].AnimationName;
         animation.Stop(IdleAnimationName);
@@ -869,6 +934,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     {
         MoveData MoveData = Unit.MoveDataDict[behavior.MoveDataName];
         StartNavigation(behavior.MoveToTarget, true, MoveData);
+		float lastScanEndConditionTime = Time.time;
         while (true)
         {
             if (Halt)
@@ -876,12 +942,23 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 yield return null;
                 continue;
             }
+			
+			//if this behavior's end condition matches, end this behavior
+			if((Time.time - lastScanEndConditionTime) >= behavior.ScanEndConditionInterval)
+			{
+			  lastScanEndConditionTime = Time.time;
+			  if(CheckAlternateBehaviorCondition(behavior))
+			  {
+			     break;
+			  }
+			}
+			
             float distance = Util.DistanceOfCharacters(gameObject, behavior.MoveToTarget.gameObject);
             if (distance <= 1)
             {
                 break;
             }
-            yield return new WaitForSeconds(0.3333f);
+            yield return null;
         }
         StopBehavior(behavior);
     }
@@ -907,6 +984,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         Vector3 direction = behavior.IsWorldDirection ? behavior.MoveDirection : transform.InverseTransformDirection(behavior.MoveDirection);
         MoveData MoveData = Unit.MoveDataDict[behavior.MoveDataName];
         Vector3 velocity = direction.normalized * MoveData.MoveSpeed;
+		float LastCheckEndConditionTime = 0;
         while (true)
         {
             if (Halt)
@@ -914,10 +992,22 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 yield return null;
                 continue;
             }
+			//if this behavior's end condition matches, end this behavior
+			if( (Time.time - LastCheckEndConditionTime) >= behavior.ScanEndConditionInterval)
+			{
+				LastCheckEndConditionTime = Time.time;
+				if(CheckAlternateBehaviorCondition(behavior))
+				{
+				   break;
+				}
+			}
+			
             controller.SimpleMove(velocity);
             animation.CrossFade(MoveData.AnimationName);
             yield return null;
         }
+		
+		StopBehavior(behavior);
     }
 	
 	public virtual IEnumerator Start_MoveToCurrentTarget(AIBehavior behavior)
@@ -929,6 +1019,8 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 		MoveData MoveData = Unit.MoveDataDict[behavior.MoveDataName];
         float refreshNavigationInterval = 0.3333f;
 		float lastNavigationTime = 0;
+		float lastScanEndConditionTime = Time.time;
+		
         while (true)
         {
             if ((Halt) || (CurrentTarget == null))
@@ -936,6 +1028,15 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 yield return null;
                 continue;
             }
+			//if this behavior's end condition matches, end this behavior
+			if((Time.time - lastScanEndConditionTime) >= behavior.ScanEndConditionInterval)
+			{
+			  lastScanEndConditionTime = Time.time;
+			  if(CheckAlternateBehaviorCondition(behavior))
+			  {
+				 break;
+			  }
+			}
 			if((Time.time - lastNavigationTime)>=refreshNavigationInterval)
 			{
 			   animation.CrossFade( MoveData.AnimationName);
@@ -943,12 +1044,12 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 			   lastNavigationTime = Time.time;
 			}
 			
-            float distance = Util.DistanceOfCharacters(gameObject, CurrentTarget.gameObject);
-            if (distance <= 1)
-            {
-                break;
-            }
-            yield return new WaitForSeconds(0.3333f);
+//            float distance = Util.DistanceOfCharacters(gameObject, CurrentTarget.gameObject);
+//            if (distance <= 1)
+//            {
+//                break;
+//            }
+            yield return null;
         }
         StopBehavior(behavior); 
 	}
@@ -982,6 +1083,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     public virtual IEnumerator Start_Attack(AIBehavior behavior)
     {
 		AttackData attackData = null;
+		float lastScanEndConditionTime = Time.time;
         while (true)
         {
             //If no target is found, do nothing
@@ -1000,6 +1102,17 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 		       string attackDataName = Util.RandomFromArray<string>(behavior.AttackDataNameArray);
 			   attackData = Unit.AttackDataDict[attackDataName];
 			}
+			
+			//if this behavior's end condition matches, end this behavior
+			if((Time.time - lastScanEndConditionTime) >= behavior.ScanEndConditionInterval)
+			{
+			    lastScanEndConditionTime = Time.time;
+			    if(CheckAlternateBehaviorCondition(behavior))
+			    {
+				   break;
+			    }
+			}
+			
 			//Animating attack
             string AttackAnimationName = attackData.AnimationName;
             //If can see target, and target distance <= AttackableRange, do this:
@@ -1008,8 +1121,10 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
             //3. if #2 pass, animating, send hit message
             if (this.CanSeeCurrentTarget && CurrentTargetDistance <= attackData.AttackableRange)
             {
-				
-                transform.LookAt(new Vector3(CurrentTarget.position.x, transform.position.y, CurrentTarget.position.z));
+				if(attackData.LookAtTarget)
+				{
+                   transform.LookAt(new Vector3(CurrentTarget.position.x, transform.position.y, CurrentTarget.position.z));
+				}
 				//If hitTriggerType is HitTriggerType.ByAnimationEvent, the function will be invoked by animation event
 				if(attackData.hitTriggerType == HitTriggerType.ByTime)
 				{
@@ -1017,9 +1132,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 				}
 				animation.CrossFade(attackData.AnimationName);
 				yield return new WaitForSeconds(animation[attackData.AnimationName].length);
-				//After attack animation complete, set this flag AlternateBehaviorFlag to true, to enable altering to higher priority behavior.
-				AlternateBehaviorFlag = true;
-				yield return null;
+				
 				if(behavior.AttackInterrupt)
 				{
 					IdleData idleData = this.Unit.IdleDataDict[behavior.IdleDataName];
@@ -1038,21 +1151,13 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
             {
                 MoveData moveData = Unit.MoveDataDict[behavior.MoveDataName];
 				yield return StartCoroutine(NavigateToTransform(CurrentTarget,
-					moveData, attackData.AttackableRange));
+					moveData, attackData.AttackableRange, 1));
                 continue;
             }
             yield return null;
         }
-    }
-
-    public virtual IEnumerator CreateProjectile(AttackData attackData,float delay)
-    {
-        if (delay > 0)
-            yield return new WaitForSeconds(delay);
-        GameObject projectile = (GameObject)Object.Instantiate(attackData.Projectile.gameObject, attackData.ProjectileInstantiateAnchor.position, attackData.ProjectileInstantiateAnchor.rotation);
-        projectile.GetComponent<Projectile>().Src = gameObject;
-        projectile.GetComponent<Projectile>().Target = CurrentTarget.gameObject;
-        projectile.GetComponent<Projectile>().DamageParameter = attackData.GetDamageParameter(gameObject);
+		animation.Stop(attackData.AnimationName);
+		StopBehavior(behavior);
     }
 
     public virtual IEnumerator Stop_Attack(AIBehavior behavior)

@@ -79,11 +79,12 @@ public class AnimationEditorUtility
 	}
 	
 	/// <summary>
-	/// Pollutes the animation.
-	/// Select an GameObject and a project folder when calling this function.
+	/// Populate the animation.
+	/// Select an GameObject and a project folder when calling this function, then all animation clip 
+	/// under the selected project folder, will be populated to the selected gameobject.
 	/// </summary>
 	[MenuItem("Component/Animation/Copy animation clips from select asset folder into selected game object")]
-	static void PolluteAnimation ()
+	static void PopulateAnimation ()
 	{
 		IList<AnimationClip> animationClips = null;
 		foreach (Object selection in Selection.objects) {

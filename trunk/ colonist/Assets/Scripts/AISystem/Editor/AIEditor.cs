@@ -113,9 +113,9 @@ public class AIEditor
 	
 	public void EditAI ()
 	{
-#region Edit AI
-		EnableEditAIBehavior = EditorGUILayout.BeginToggleGroup ("Edit AI : " + AI.Name, EnableEditAIBehavior);
-		if (EnableEditAIBehavior) {
+
+//		EnableEditAIBehavior = EditorGUILayout.BeginToggleGroup ("Edit AI : " + AI.Name, EnableEditAIBehavior);
+//		if (EnableEditAIBehavior) {
 			EditBaseAIProperty (AI);
 			EditorGUILayout.LabelField ("-------------------------Edit AI behaviors---------------");
 			if (GUILayout.Button ("Add new AI behavior")) {
@@ -124,14 +124,14 @@ public class AIEditor
 				l.Add (AIBehavior);
 				AI.Behaviors = l.ToArray<AIBehavior> ();
 			}
-			AI.Behaviors = AI.Behaviors.OrderBy (x => x.Priority).ToArray ();
+			
 			for (int i = 0; i < AI.Behaviors.Length; i++) {
 				AIBehavior behavior = AI.Behaviors [i];
 				EditAIBehavior (behavior);
 			}
-		}
-		EditorGUILayout.EndToggleGroup ();
-#endregion
+//		}
+//		EditorGUILayout.EndToggleGroup ();
+
 	}
 	
 	public void EditUnitAndAI ()
@@ -156,8 +156,11 @@ public class AIEditor
 		GUILayout.Label (new GUIContent ("Attack Obstacle:", "攻击障碍物层,如果目标和AI之间存在该层的碰撞器,则AI无法攻击到目标."));
 		AI.AttackObstacle = EditorGUILayoutx.LayerMaskField ("", AI.AttackObstacle);
 		EditorGUILayout.EndHorizontal ();
-		AI.AlterBehaviorInterval = EditorGUILayout.FloatField (new GUIContent ("Behavior alternation time",
-            "Interval to alter behavior."), AI.AlterBehaviorInterval);
+//		AI.AlterBehaviorInterval = EditorGUILayout.FloatField (new GUIContent ("Behavior alternation time",
+//            "Interval to alter behavior."), AI.AlterBehaviorInterval);
+		
+		AIBehavior[] AIBehaviors = this.AI.Behaviors; 
+		this.AI.FirstBehavior = EditorCommon.EditPopup ("First Behavior:", this.AI.FirstBehavior , AIBehaviors.Select (x => x.Name).ToArray ());
 	}
 
 	public virtual void EditAIBehavior (AIBehavior behavior)
@@ -168,36 +171,44 @@ public class AIEditor
 			AIBehaviorEnableEditFlags [behavior.Name] = false;
 		}
 		AIBehaviorEnableEditFlags [behavior.Name] = EditorGUILayout.BeginToggleGroup (new GUIContent (
-			string.Format ("------------- Edit AI Behavior: {0} -Priority: {1} ---------------------", behavior.Name, behavior.Priority), ""),
+			string.Format ("------------- Edit AI Behavior: {0} ----------------------", behavior.Name), ""),
 			AIBehaviorEnableEditFlags [behavior.Name]);
 		
 		if (AIBehaviorEnableEditFlags [behavior.Name]) {
 			behavior.Type = (AIBehaviorType)EditorGUILayout.EnumPopup (new GUIContent ("Behavior type:", ""), behavior.Type);
-			behavior.Priority = EditorGUILayout.IntField (new GUIContent ("Priority:", " 行为优先级,每个行为必须有独立的优先级,优先级不能冲突."), behavior.Priority);
-			if (AI.Behaviors.Where (x => x.Priority == behavior.Priority).Count () > 1) {
-				EditorGUILayout.LabelField (new GUIContent ("!!! You can not have more than one behavior in priority:" + behavior.Priority));
-			}
+			
+            AIBehavior[] AIBehaviors = this.AI.Behaviors; 
+			behavior.NextBehaviorName = EditorCommon.EditPopup ("Next Behavior:", behavior.NextBehaviorName, AIBehaviors.Select (x => x.Name).ToArray ());
+			
+			behavior.ScanEndConditionInterval = EditorGUILayout.FloatField("Scan end condition interval:" , behavior.ScanEndConditionInterval);
+			
 			behavior.SelectTargetRule = (SelectTargetRule)EditorGUILayout.EnumPopup (new GUIContent ("Select enemy rule:", "当这个行为生效的时候,选择敌人的规则, 默认是Closest,也就是选择最近的敌人做为当前目标."), behavior.SelectTargetRule);
 			//Edit behavior data
 			EditAIBehaviorData (behavior);
 			
 			//Edit Start Condition Wrapper:
-			EditorGUILayout.LabelField ("Start condition:");
-			EditorGUILayout.LabelField (GetCompositeConditionDescription (behavior.StartConditionWrapper.RootCompositeCondition, behavior.StartConditionWrapper));			
-			if (GUILayout.Button ("Edit start condition")) {
-				ConditionEditorWindow.DisplayConditionEditorWindow (this, behavior.StartConditionWrapper);
-			}
-			EditorGUILayout.Space ();
+//			EditorGUILayout.LabelField ("Start condition:");
+//			EditorGUILayout.LabelField (GetCompositeConditionDescription (behavior.StartConditionWrapper.RootCompositeCondition, behavior.StartConditionWrapper));			
+//			if (GUILayout.Button ("Edit start condition")) {
+//				ConditionEditorWindow.DisplayConditionEditorWindow (this, behavior.StartConditionWrapper);
+//			}
+//			EditorGUILayout.Space ();
 			
 			
 			//Edit End Condition Wrapper, for behavior type = SwitchToAI, it's not necessary to edit end condition.
 			if (behavior.Type != AIBehaviorType.SwitchToAI) {
-				EditorGUILayout.LabelField ("End condition:");
-				EditorGUILayout.LabelField (GetCompositeConditionDescription (behavior.EndConditionWrapper.RootCompositeCondition, behavior.EndConditionWrapper));			
-				if (GUILayout.Button ("Edit end condition")) {
-					ConditionEditorWindow.DisplayConditionEditorWindow (this, behavior.EndConditionWrapper);
+//				EditorGUILayout.LabelField ("Alternate to behavior data:");
+//				EditorGUILayout.LabelField (GetCompositeConditionDescription (behavior.EndConditionWrapper.RootCompositeCondition, behavior.EndConditionWrapper));			
+//				if (GUILayout.Button ("Edit end condition")) {
+//					ConditionEditorWindow.DisplayConditionEditorWindow (this, behavior.EndConditionWrapper);
+//				}
+//				EditorGUILayout.Space ();
+				EditorGUILayout.Space();
+				if(GUILayout.Button("Edit alternate behavior data"))
+				{
+					AlternateBehaviorEditorWindow.DisplayConditionEditorWindow (this, behavior);
 				}
-				EditorGUILayout.Space ();
+				EditorGUILayout.Space();
 			}
 
 			if (GUILayout.Button ("Delete " + behavior.Type.ToString () + " behavior: " + behavior.Name)) {
@@ -458,7 +469,7 @@ public class AIEditor
 		case AIBooleanConditionEnum.EnemyInOffensiveRange:
 			break;
 		case AIBooleanConditionEnum.InArea:
-			EditorGUILayout.LabelField (new GUIContent ("Use inspector to assign Area !", "AIEditor 暂不支持编辑这个字段."));
+			ConditionData.CheckArea = (Collider)EditorGUILayout.ObjectField("Check against collider:", ConditionData.CheckArea, typeof(Collider));
 			break;
 		case AIBooleanConditionEnum.LatestBehaviorNameIs:
 			string[] AllBehaviorName = AI.Behaviors.Select (x => x.Name).ToArray ();

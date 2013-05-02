@@ -114,45 +114,75 @@ public class GlobalBloodEffectDecalSystem : MonoBehaviour {
             GlobalEffectDataDict.Add(globalEffectData.EffectType, globalEffectData);
         }
 	}
-
+	
+	/// <summary>
+	/// Creates the effect.
+	/// center: optional, used when using effect type = global type.
+	/// </summary>
+	/// <param name='center'>
     public static void CreateEffect(Vector3 center, EffectData EffectData)
     {
         Instance.StartCoroutine(Instance._CreateEffect(center,EffectData));
     }
 	
-    IEnumerator _CreateEffect(Vector3 center, EffectData EffectData)
+	/// <summary>
+	/// Call this function to create effectobject when effectData.useglobalsetting = false.
+	/// Only appliable to create custom (non-global defined) effect object.
+	/// </summary>
+    public static void CreateEffect(EffectData effectData)
     {
-        if(EffectData.CreateDelay)
+        Instance.StartCoroutine(Instance._CreateEffect(Vector3.zero,effectData));
+    }
+	
+    IEnumerator _CreateEffect(Vector3 center, EffectData effectData)
+    {
+        if(effectData.CreateDelay)
 		{
-			yield return new WaitForSeconds(EffectData.CreateDelayTime);
+			yield return new WaitForSeconds(effectData.CreateDelayTime);
 		}
-		for(int i=0; i < EffectData.Count; i++)
+		for(int i=0; i < effectData.Count; i++)
 		{
-        if (EffectData.UseGlobalEffect)
-        {
-            GlobalEffectData globalEffectData = Instance.GlobalEffectDataDict[EffectData.GlobalType];
-            Object effect = Object.Instantiate(Util.RandomFromArray<Object>(globalEffectData.Effect_Object),
-                center + Random.insideUnitSphere * globalEffectData.Radius,
-                Random.rotation);
-            //Destory the effect object after life time
-            Destroy(effect, globalEffectData.EffectLifetime);
-        }
-        else
-        {
-			Object effectObject = null;
-			if(EffectData.Anchor != null)
+			//if effectData is using global setting:
+            if (effectData.UseGlobalEffect)
+            {
+              GlobalEffectData globalEffectData = Instance.GlobalEffectDataDict[effectData.GlobalType];
+              Object effect = Object.Instantiate(Util.RandomFromArray<Object>(globalEffectData.Effect_Object),
+                                                 center + Random.insideUnitSphere * globalEffectData.Radius,
+                                                 Random.rotation);
+              //Destory the effect object after life time
+              Destroy(effect, globalEffectData.EffectLifetime);
+            }
+			//Else it's using custom effect object.
+            //If Type == EffectObjectInstantiation.creat, create a instance by the prefab
+            else if(effectData.InstantionType == EffectObjectInstantiation.creat)
+            {
+			  Object effectObject = null;
+			  Vector3 instantiationPosition = effectData.instantiationData.BasicAnchor.position;
+			  if(effectData.instantiationData.RandomPositionInsideSphere)
+			  {
+			     instantiationPosition += Random.insideUnitSphere * effectData.instantiationData.RandomSphereUnit;
+			  }
+			  instantiationPosition += effectData.instantiationData.WorldOffset;
+			  Quaternion instantiationQuaternion = effectData.instantiationData.RandomQuaternion ? 
+						                                  Random.rotation : 
+						                                  effectData.instantiationData.BasicAnchor.rotation;
+			  effectObject = Object.Instantiate(effectData.EffectObject,instantiationPosition,instantiationQuaternion);
+			
+			  if(effectData.DestoryInTimeOut)
+			  {
+                 Destroy(effectObject, effectData.DestoryTimeOut);
+			  }
+            }
+			else if(effectData.InstantionType == EffectObjectInstantiation.play && effectData.EffectObject != null)
 			{
-              effectObject = Object.Instantiate(EffectData.EffectObject, EffectData.Anchor.position, EffectData.Anchor.rotation);
+				GameObject effectObject = effectData.EffectObject;
+				ParticleSystem ps = effectObject.GetComponent<ParticleSystem>();
+				ps.Play();
+				if (effectData.DestoryInTimeOut)
+                {
+                    Destroy(effectObject, effectData.DestoryTimeOut);
+                }
 			}
-			else 
-			{
-			  effectObject = Object.Instantiate(EffectData.EffectObject, center + Random.insideUnitSphere, Quaternion.identity);
-			}
-			  if (EffectData.DestoryInTimeOut)
-              {
-                Destroy(effectObject, EffectData.DestoryTimeOut);
-              }
-        }
 		}
     }
 	

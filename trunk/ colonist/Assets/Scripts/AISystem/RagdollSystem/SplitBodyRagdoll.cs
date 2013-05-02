@@ -39,9 +39,7 @@ public class SplitBodyRagdoll : MonoBehaviour
 		StartRagdoll ();
         foreach (EffectData effect in EffectData)
         {
-            GameObject effectObject = (GameObject)GameObject.Instantiate(effect.EffectObject, effect.Anchor.position, effect.Anchor.rotation);
-            if (effect.DestoryInTimeOut)
-                Destroy(effectObject, effect.DestoryTimeOut);
+			GlobalBloodEffectDecalSystem.CreateEffect(root.position, effect);
         }
 	}
 
