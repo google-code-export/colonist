@@ -24,7 +24,7 @@ public class CombatHint : HUD {
 	public float height = 32;
 	
 	private IList<UserInputType> PlayerCombatList = new List<UserInputType>();
-    private int MaxCount = ComboCombat.ComboCombatMaxCount;
+    private int MaxCount = PredatorComboCombat.ComboCombatMaxCount;
 	
 	// Use this for initialization
 	void Start () {
