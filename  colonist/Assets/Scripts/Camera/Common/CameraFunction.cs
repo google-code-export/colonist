@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class CameraWhiteInOut : MonoBehaviour,I_GameEventReceiver {
+public class CameraFunction : MonoBehaviour,I_GameEventReceiver {
 
     public Material WhiteInOutMaterial;
 	/// <summary>
