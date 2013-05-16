@@ -7,7 +7,7 @@ public class Joystick_Predator : JoyButton {
 	
 	public Texture ForeGroundTexture;
 	public float ForeGroundTextureSize = 25;
-
+	public float JoyButtonSize = 50;
     /// <summary>
     /// If FlexibleMode = true, joy sticker is not shown by default
     /// When user leave a finger on touchpad, sticker will dock to finger position automatically and shown
@@ -15,15 +15,19 @@ public class Joystick_Predator : JoyButton {
     public bool FlexibleMode;
     public ScreenOccupancy ScreenOccupancy = ScreenOccupancy.LeftScreen;
     private Predator3rdPersonMovementController PredatorMovementController = null;
-    //private MovementControlMode playerControlMode;
+	
+	/// <summary>
+	/// In OnGUI(), draws the Background text at FlexibleButtonRect.
+	/// </summary>
     private Rect FlexibleButtonRect = new Rect();
-    
+    /// <summary>
+    /// When the button being moved by the JoyButtonBoundOffset, the modifier of the output offset value
+    /// </summary>
+    public float ValueOffsetModifier = 20;
     void Awake()
     {
         this.JoyButtonName = "Joystick_Predator";
         PredatorMovementController = this.GetComponent<Predator3rdPersonMovementController>();
-        ValueOffsetModifier = ((float)JoyButtonSize / 2) - 15;
-        JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate(Location, JoyButtonSize);
     }
 
     void Start()
@@ -34,7 +38,7 @@ public class Joystick_Predator : JoyButton {
         }
         else
         {
-            JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate(Location, JoyButtonSize);
+            JoyButtonBound = this.GetAdaptiveBound();
         }
     }
 
@@ -88,7 +92,7 @@ public class Joystick_Predator : JoyButton {
         //If flexiblemode == false, draw the ButtionTexture at fix location
         if (FlexibleMode == false)
         {
-            Rect backgroundRectArea = new Rect(JoyButtonBound.x, JoyButtonBound.y, JoyButtonSize, JoyButtonSize);
+            Rect backgroundRectArea = JoyButtonBound;
             GUI.DrawTexture(backgroundRectArea, ButtonTexture);
 
             Rect foregroundRectArea = new Rect(JoyButtonBound.center.x - ForeGroundTextureSize / 2 + JoyButtonRuntimeOffset.x,

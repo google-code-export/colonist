@@ -5,7 +5,6 @@ using System.Collections.Generic;
 [RequireComponent(typeof(Predator3rdPersonalAttackController))]
 public class GestureHandler_Predator : JoyButton {
 
-    public ThirdPersonFollowCamera_Predator camera_controller = null;
     public ScreenOccupancy ScreenOccupancy = ScreenOccupancy.RightScreen;
 	/// <summary>
 	/// This list stores the touches during one user touch

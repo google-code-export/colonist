@@ -8,39 +8,49 @@ using System;
 public class Predator3rdPersonalAttackController : MonoBehaviour
 {
 	/// <summary>
+	/// If player not enter next combat within ComboCombatOperationTimeout, the current combo token will be erased.
+	/// </summary>
+	public float ComboCombatOperationTimeout = 1.5f;
+	
+	/// <summary>
 	/// The default combat - left claw
 	/// </summary>
-	private Combat DefaultCombat_LeftClaw;
+	private PredatorCombatData DefaultCombat_LeftClaw;
 	/// <summary>
 	/// The default combat_ right claw.
 	/// </summary>
-	private Combat DefaultCombat_RightClaw;
+	private PredatorCombatData DefaultCombat_RightClaw;
 	/// <summary>
 	/// The default combat_ dual claw.
 	/// </summary>
-	private Combat DefaultCombat_DualClaw;
+	private PredatorCombatData DefaultCombat_DualClaw;
 	/// <summary>
 	/// The ComboCombat in prefab which is to be setup by designer.
 	/// </summary>
-	private ComboCombat[] ComboCombats;
+	private PredatorComboCombat[] ComboCombats;
 
 	/// <summary>
-	/// The length the predator's claw can reach
+	/// if enemy farer than RushRadius, predator will fastly approaching the enemy.
 	/// </summary>
-	private float AttackRadius;
+	private float RushRadius;
 	/// <summary>
 	/// The gesture cool down time. 
 	/// Gesture process routine check user gesture input at every %GestureCooldown% seconds.
 	/// </summary>
 	private float CombatCooldown;
-
+	
+	/// <summary>
+	/// The current target.
+	/// </summary>
+	private GameObject CurrentTarget = null;
+	
 	/// <summary>
 	/// Key = combo combat token
 	/// Value = combo combat
 	/// </summary>
-	private Dictionary<string, ComboCombat> ComboCombatTokenDict = new Dictionary<string, ComboCombat> ();
+	private Dictionary<string, PredatorComboCombat> ComboCombatTokenDict = new Dictionary<string, PredatorComboCombat> ();
 	private IList<UserInputData> UnprocessGestureList = new List<UserInputData> ();
-	private IList<Combat> UnprocessCombatList = new List<Combat> ();
+	private IList<PredatorCombatData> UnprocessCombatList = new List<PredatorCombatData> ();
 	private PredatorPlayerStatus predatorStatus = null;
 	private CharacterController controller = null;
 	private LayerMask EnemyLayer;
@@ -56,14 +66,14 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 		predatorStatus = GetComponent<PredatorPlayerStatus> ();
 		PredatorPlayerUnit = GetComponent<Predator3rdPersonalUnit> ();
 		EnemyLayer = PredatorPlayerUnit.EnemyLayer;
-		AttackRadius = PredatorPlayerUnit.AttackRadius;
+		RushRadius = PredatorPlayerUnit.RushRadius;
 		CombatCooldown = PredatorPlayerUnit.CombatCoolDown;
         
 		DefaultCombat_LeftClaw = PredatorPlayerUnit.DefaultCombat_LeftClaw;
 		DefaultCombat_RightClaw = PredatorPlayerUnit.DefaultCombat_RightClaw;
 		DefaultCombat_DualClaw = PredatorPlayerUnit.DefaultCombat_DualClaw;
 		ComboCombats = PredatorPlayerUnit.ComboCombat;
-		foreach (ComboCombat comboCombat in ComboCombats) {
+		foreach (PredatorComboCombat comboCombat in ComboCombats) {
 			comboCombat.Init ();
 			ComboCombatTokenDict [comboCombat.token] = comboCombat;
 		}
@@ -71,22 +81,31 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	
 	void Start ()
 	{
-		StartCoroutine (RepeatCheckCombatList ());
+//		StartCoroutine (RepeatCheckCombatList ());
 	}
 
+	
+    void OnEnable() {
+		StartCoroutine("RepeatCheckCombatList");
+	}
+	
+	void OnDisable()
+	{
+		StopCoroutine("RepeatCheckCombatList");
+	}
+	
 	void Update ()
 	{
 		//when BlockUserGestureInput = true, block the player's gesture input
 		if (BlockUserGestureInput && UnprocessGestureList.Count > 0) {
 			UnprocessGestureList.Clear ();
 		}
-		//In case application quit abnormally that the player could never gain control again, 
-		//hereby it's necessary to reflag the BlockUserGestureInput to false
-		if (BlockUserGestureInput && (Time.time - LastBlockPlayerGestureInputTime) >= this.CombatCooldown * 1.5f) {
+		//Release user input block, if time expires
+		if (BlockUserGestureInput && Time.time >= ReleaseUserInputBlockTime) {
 			BlockUserGestureInput = false;
 		}
 		//If player do not append combat in 1 second, reset the playerComboToken and clear HUD hint
-		if (((Time.time - LastProcessPlayerGestureInputTime) > 1f) && playerComboToken != string.Empty) {
+		if (((Time.time - LastProcessPlayerGestureInputTime) > ComboCombatOperationTimeout) && playerComboToken != string.Empty) {
 			playerComboToken = "";
 			PredatorPlayerUnit.HUDObject.SendMessage ("ClearHint");
 		}
@@ -98,12 +117,15 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	}
 
 #region User gesture and combat token processing
-
+	/// <summary>
+	/// The current being processed combat.
+	/// </summary>
+	private PredatorCombatData currentProcessCombat = null;
 	string playerComboToken = "";
 	/// <summary>
-	/// variable the last time of blocking player gesture input
+	/// Time vaiables, when current time greater than this value, the block should be removed.
 	/// </summary>
-	float LastBlockPlayerGestureInputTime = -1;
+	float ReleaseUserInputBlockTime = float.MaxValue;
 	/// <summary>
 	/// variable the last time of receiving player gesture input
 	/// </summary>
@@ -113,19 +135,22 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	/// 1. New HUD Hint
 	/// 2. Search combo combat by playerComboToken
 	/// 3. Determine the playerCombo can go ahead , or terminated(unmatched)
-	/// Push a new user gesture into queue - UnprocessGestureList
+	/// Put a new user gesture into queue - UnprocessGestureList
 	/// </summary>
 	/// <param name="gestureInfo"></param>
 	public void NewUserGesture (UserInputData gestureInfo)
 	{
 		if (!BlockUserGestureInput) {
-			//New Hint in GUI (HUD)
-			PredatorPlayerUnit.HUDObject.SendMessage ("NewHint", gestureInfo.Type);
+
 			//Accumulate player combo token string
 			playerComboToken += ((int)gestureInfo.Type).ToString ();
+			UserInputType[] nextCombat = PredictNextMatchedCombo(playerComboToken);
+			SendMessage("ShowButtonHints", nextCombat);
+//			Debug.Log("Current playerComboToken:" + playerComboToken);
+			
 			//Check if player combo token has a matched prefab
 			bool playerTokenMatched = false, isLastCombat = false;
-			Combat combat = GetComboCombatByToken (playerComboToken, gestureInfo.Type, out playerTokenMatched, out isLastCombat);
+			PredatorCombatData combat = GetComboCombatByToken (playerComboToken, gestureInfo.Type, out playerTokenMatched, out isLastCombat);
 			if(combat == null)
 			{
 				return;
@@ -135,7 +160,6 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 			//reset playerComboToken
 			if (playerTokenMatched == false) {
 				combat.FinalCombat = true;
-				LastBlockPlayerGestureInputTime = Time.time;
 				BlockUserGestureInput = true;
 				playerComboToken = "";
 			} else if (isLastCombat && playerTokenMatched) {
@@ -148,6 +172,31 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 			UnprocessCombatList.Add (combat);
 		}
 	}
+	
+	void ClearUnprocessCombatList()
+	{
+		UnprocessCombatList.Clear();
+	}
+	
+	/// <summary>
+	/// Given a current combo string token, predicts what player taps can perform the next matched combo.
+	/// This function is used to hint player, that clicks what button can trigger the next matched combocombat.
+	/// </summary>
+	UserInputType[] PredictNextMatchedCombo(string currentToken)
+	{
+		List<UserInputType> nextUserInputType = new List<UserInputType>();
+		foreach(PredatorComboCombat comboCombat in this.ComboCombats)
+		{
+			if(comboCombat.token.StartsWith(currentToken) && comboCombat.token.Length > currentToken.Length)
+			{
+				string nextCombatToken = comboCombat.token[currentToken.Length].ToString();
+				UserInputType type = (UserInputType)Enum.Parse(typeof(UserInputType), nextCombatToken);
+				nextUserInputType.Add(type);
+//				Debug.Log("Found input:" + type.ToString());
+			}
+		}
+		return nextUserInputType.ToArray();
+	}
 
 	/// <summary>
 	/// Daemon  routine, check if UnprocessCombatList contains element, then processing it.
@@ -157,110 +206,92 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	{
 		while (true) {
 			if (UnprocessCombatList.Count > 0) {
-				Combat combat = UnprocessCombatList [0];
+				PredatorCombatData combat = UnprocessCombatList [0];
 				UnprocessCombatList.Remove (combat);
-				if (combat.specialCombatFunction != string.Empty) {
-					yield return StartCoroutine(combat.specialCombatFunction, combat);
-				} else {
-					yield return StartCoroutine(DefaultCombat(combat));
-				}
+				//New Hint in GUI (HUD)
+			    PredatorPlayerUnit.HUDObject.SendMessage ("NewHint", combat.userInput);
+				yield return StartCoroutine(DoCombat(combat));
 				if (combat.FinalCombat) {
 					BlockUserGestureInput = false;
 					PredatorPlayerUnit.HUDObject.SendMessage ("ClearHint");
+					SendMessage("DontHint");
 				}
 			}
-			yield return new WaitForSeconds(CombatCooldown);
-		}
-        
-	}
-
-    void OnEnable() {
-		StartCoroutine("RepeatCheckCombatList");
-	}
-	
-	void OnDisable()
-	{
-		StopCoroutine("RepeatCheckCombatList");
-	}
-
-
-	/// <summary>
-	/// The default routine to process combat
-	/// </summary>
-	/// <param name="combat"></param>
-	/// <returns></returns>
-	IEnumerator DefaultCombat (Combat combat)
-	{
-		string attackAnimation = Util.RandomFromArray (combat.specialAnimation);
-		//If combat.BlockUserInput = TRUE, user gesture input will be dropped during combat processing
-		if (combat.BlockPlayerInput == true) {
-			LastBlockPlayerGestureInputTime = Time.time;
-			BlockUserGestureInput = combat.BlockPlayerInput;
-		}
-        
-		//Look for enemy - in near radius
-		float DistanceToEnemy = 0;
-		GameObject target = LookforBestTarget (null, PredatorPlayerUnit.OffenseRadius, out DistanceToEnemy);
-		if (target != null) {
-			Util.RotateToward (transform, target.transform.position, false, 0);
-			if (DistanceToEnemy > AttackRadius) {
-				yield return StartCoroutine(RushTo(target.transform,0.3f));
-			}
-			StartCoroutine (SendHitMessage (combat.damageForm, target, combat.HitPoint, animation [attackAnimation].length / 2));
-		}
-		animation.CrossFade (attackAnimation);
-		//Send hit message in 1/2 time of animation
-		//If the WaitUntilAnimationReturn = TRUE, then wait for animation over
-		if (combat.WaitUntilAnimationReturn) {
-			yield return new WaitForSeconds(animation[attackAnimation].length);
-		} else {
-			//re-accept user gesture input 
 			yield return null;
 		}
 	}
 
-	private GameObject lastTarget = null;
-	/// <summary>
-	/// Deprecated.
-	/// </summary>
-	/// <param name="gesture"></param>
-	/// <returns></returns>
-	//IEnumerator ProcessUserGesture(GestureInfomation gesture)
-	//{
-	//    Vector3? worldDirection = null;
-	//    GameObject target = null;
-	//    //Find for the target:
-	//    if(gesture.gestureDirection.HasValue)
-	//    {
-	//        worldDirection = Util.GestureDirectionToWorldDirection(gesture.gestureDirection.Value);
-	//        target = LookforBestTarget(worldDirection);
-	//    }
-	//    else 
-	//    {
-	//        target = LookforBestTarget(transform.forward);
-	//    }
-	//    //Process the gesture:
-	//    switch(gesture.Type)
-	//    {
-	//        case GestureType.Single_Tap:
-	//        string single_spike_animation = Util.RandomFromArray(Strike_SingleClaw);
-	//        DamageForm damageForm = DamageForm.Predator_Strike_Single_Claw;
-			
-	//        if(target && Util.DistanceOfCharacters(this.gameObject, target) >= ClawRadius)
-	//        {
-	//           yield return StartCoroutine(RushTo(target.transform));
-	//        }
-	//        yield return StartCoroutine(Strike(single_spike_animation,damageForm,target,10));
-	//        break;
-	//    }
-	//}
+
 
 	/// <summary>
-	/// Return the default tap/slice combat.
+	/// Process a PredatorCombatData and perform attack behavior.
 	/// </summary>
-	/// <param name="InputType"></param>
+	/// <param name="combat"></param>
 	/// <returns></returns>
-	private Combat GetDefaultCombat (UserInputType InputType)
+	IEnumerator DoCombat (PredatorCombatData combat)
+	{
+		string useAttackDataName = Util.RandomFromArray<string>(combat.useAttackDataName);
+		PredatorPlayerAttackData attackData = this.PredatorPlayerUnit.PredatorAttackDataDict[useAttackDataName];
+		if(combat.OverrideAttackData)
+		{
+			attackData = attackData.GetClone() as PredatorPlayerAttackData;
+			attackData.DamagePointBase = combat.DamagePointBase;
+			attackData.MinDamageBonus = combat.MinDamagePointBonus;
+			attackData.MaxDamageBonus = combat.MaxDamagePointBonus;
+			attackData.CanDoCriticalAttack = combat.CanDoCriticalAttack;
+			attackData.CriticalAttackBonusRate = combat.CriticalAttackBonusRate;
+			attackData.CriticalAttackChance = combat.CriticalAttackChance;
+		}
+		currentProcessCombat = combat;
+		//If combat.BlockUserInput = TRUE, user gesture input will be dropped during combat processing
+		if (combat.BlockPlayerInput == true) {
+			ReleaseUserInputBlockTime = Time.time + animation[attackData.AnimationName].length;
+			BlockUserGestureInput = true;
+		}
+        
+		//Look for enemy - in near radius
+		float DistanceToEnemy = 0;
+		FindTarget (transform.forward,attackData.AttackableRange, RushRadius, out DistanceToEnemy);
+		if (CurrentTarget != null) {
+			Util.RotateToward (transform, CurrentTarget.transform.position, false, 0);
+			//if target farer than attack attackableRange, rush to the target.
+			if (DistanceToEnemy > attackData.AttackableRange) {
+				yield return StartCoroutine(RushTo (CurrentTarget.transform,0.3f));
+			}
+			//if attackData.hitTriggerType = ByTime, means the message should be sent N seconds after animation.
+			//else if attackData.hitTriggerType = ByEvent, the message should be triggered by animation event.
+			if(attackData.hitTriggerType == HitTriggerType.ByTime)
+			{
+			   StartCoroutine (SendHitMessage (attackData, CurrentTarget));
+			}
+		}
+		animation.CrossFade (attackData.AnimationName);
+		if(combat.FinalCombat)
+		{
+			Invoke("ClearUnprocessCombatList", animation[attackData.AnimationName].length * 0.5f);
+		}
+		if (combat.WaitUntilAnimationReturn) {
+		    yield return new WaitForSeconds(animation[attackData.AnimationName].length);
+		}
+		else 
+			yield return new WaitForSeconds(CombatCooldown);
+	}
+	
+	void _Attack(string AttackDataName)
+	{
+		PredatorPlayerAttackData attackData = this.PredatorPlayerUnit.PredatorAttackDataDict[AttackDataName];
+	    if(CurrentTarget != null && IsTargetDead(CurrentTarget) == false)
+		{
+			StartCoroutine (SendHitMessage (attackData, CurrentTarget));
+		}
+	}
+
+	private GameObject lastTarget = null;
+
+	/// <summary>
+	/// Return the default left/right/dual claw combat.
+	/// </summary>
+	private PredatorCombatData GetDefaultCombat (UserInputType InputType)
 	{
 		switch (InputType) {
 		case UserInputType.Button_Left_Claw_Tap:
@@ -301,9 +332,9 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	/// <param name="tokenMatched">output, indicate if the token matched to a prefab combat</param>
 	/// <param name="IsLastCombat">output, indicated if the matched combat is the last combat in combo</param>
 	/// <returns></returns>
-	private Combat GetComboCombatByToken (string playerComboToken, UserInputType gestureType, out bool tokenMatched, out bool IsLastCombat)
+	private PredatorCombatData GetComboCombatByToken (string playerComboToken, UserInputType gestureType, out bool tokenMatched, out bool IsLastCombat)
 	{
-		ComboCombat comboCombat = null;
+		PredatorComboCombat comboCombat = null;
 		IsLastCombat = false;
 		//Search matched prefab combo combat, by playerCombatToken 
 		foreach (string prefabComboTokenKey in ComboCombatTokenDict.Keys) {
@@ -335,7 +366,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	{
 		Vector3 direction = target.position - transform.position;
 		Vector3 position = target.position;
-		float distance = Util.DistanceOfCharacters (this.gameObject, target.gameObject) - AttackRadius + 0.8f;
+		float distance = Util.DistanceOfCharacters (this.gameObject, target.gameObject) - 0.8f;
 		float _start = Time.time;
 		Vector3 velocity = direction.normalized * (distance / time);
 		predatorStatus.DisableUserMovement = true;
@@ -346,42 +377,95 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 		}
 		predatorStatus.DisableUserMovement = false;
 	}
-
-	private IEnumerator SendHitMessage (DamageForm DamageForm, GameObject enemy, float HitPoint, float lagTime)
+	
+	
+	
+    /// <summary>
+	/// Given an AttackData, check by its HitTestType, 
+	/// return true/false to indicate if AI has hit the target.
+	/// </summary>
+	bool CheckHitCondition (GameObject target, AttackData AttackData)
+	{
+		bool ShouldSendHitMessage = false;
+		float TargetAngularDiscrepancy = 0, TargetDistance = 0;
+		switch (AttackData.HitTestType) {
+		case HitTestType.AlwaysTrue:
+			ShouldSendHitMessage = true;
+			break;
+		case HitTestType.HitRate:
+			float randomNumber = UnityEngine.Random.Range (0f, 1f);
+			ShouldSendHitMessage = (randomNumber <= AttackData.HitRate);
+			break;
+		case HitTestType.CollisionTest:
+			ShouldSendHitMessage = AttackData.HitTestCollider.bounds.Intersects (target.collider.bounds);
+			break;
+		case HitTestType.DistanceTest:
+			TargetDistance = Util.DistanceOfCharacters (gameObject, CurrentTarget); 
+			ShouldSendHitMessage = TargetDistance <= AttackData.HitTestDistance;
+			break;
+		case HitTestType.AngleTest:
+			TargetAngularDiscrepancy = Util.Angle_XZ (transform.forward, (CurrentTarget.transform.position - transform.position).normalized);
+			ShouldSendHitMessage = TargetAngularDiscrepancy <= AttackData.HitTestAngularDiscrepancy;
+			break;
+		case HitTestType.DistanceAndAngleTest:
+			TargetDistance = Util.DistanceOfCharacters (gameObject, CurrentTarget.gameObject); 
+//			    TargetAngularDiscrepancy = Vector3.Angle(transform.forward, (CurrentTarget.position - transform.position).normalized);
+			TargetAngularDiscrepancy = Util.Angle_XZ (transform.forward, (CurrentTarget.transform.position - transform.position).normalized);
+			ShouldSendHitMessage = TargetDistance <= AttackData.HitTestDistance && TargetAngularDiscrepancy <= AttackData.HitTestAngularDiscrepancy;
+			break;
+		}
+		return ShouldSendHitMessage;
+	}
+	
+	/// <summary>
+	/// Sends the ApplyDamage message to enemy.
+	/// </summary>
+	private IEnumerator SendHitMessage (PredatorPlayerAttackData attackData, GameObject enemy)
 	{
 		if (enemy == null) {
 			yield break;
 		}
-		float health = enemy.GetComponent<UnitHealth> ().GetCurrentHP ();
-		if ((health - HitPoint) <= 0) {
-			Transform topestParent = Util.GetTopestParent (transform);
-			topestParent.BroadcastMessage ("SlowMotion",
-                enemy.transform.position + enemy.GetComponent<CharacterController> ().center,
-                SendMessageOptions.DontRequireReceiver);
+		//if attackData.hitTime > 0, wait for the hitTime.
+		if (Mathf.Approximately (attackData.HitTime, 0) == false) {
+			yield return new WaitForSeconds(attackData.HitTime);
 		}
-
-		if (Mathf.Approximately (lagTime, 0) == false) {
-			yield return new WaitForSeconds(lagTime);
+	    //in case the enemy object is destoryed between the previous yield time.
+		if (enemy == null) 
+		{
+			yield break;
 		}
-		float distance = Util.DistanceOfCharacters (enemy, this.gameObject);
-		if (distance <= AttackRadius) {
-			if (enemy == null) {
-				yield break;
+		//if attack type = Instant, means there is only one target to be attacked.
+	    if(attackData.Type == AIAttackType.Instant)
+		{
+		    if(CheckHitCondition(enemy, attackData)) 
+			{
+			   //send applyDamage to target.
+			   DamageParameter damageParam = GetDamageParameter(attackData);
+			   enemy.SendMessage ("ApplyDamage", damageParam);
+			   //send GameEvent to HUD to display the damage text.
+			   GameEvent _e = new GameEvent(GameEventType.DisplayDamageParameterOnNPC);
+			   _e.receiver = enemy;
+			   _e.ObjectParameter = damageParam;
+			   PredatorPlayerUnit.HUDObject.SendMessage("OnGameEvent", _e);
+		    }
+		}
+		else if(attackData.Type == AIAttackType.Regional)
+		{
+			Collider[] colliders = Physics.OverlapSphere(transform.position, this.RushRadius, this.EnemyLayer);
+			foreach(Collider collider in colliders)
+			{
+				if(attackData.HitTestCollider.bounds.Intersects(collider.bounds))
+				{
+			       //send applyDamage to every object intersect with the hitTestCollider.
+			       DamageParameter damageParam = GetDamageParameter(attackData);
+			       collider.gameObject.SendMessage ("ApplyDamage", damageParam);
+			       //send GameEvent to HUD to display the damage text.
+			       GameEvent _e = new GameEvent(GameEventType.DisplayDamageParameterOnNPC);
+			       _e.receiver = collider.gameObject;
+			       _e.ObjectParameter = damageParam;
+			       PredatorPlayerUnit.HUDObject.SendMessage("OnGameEvent", _e);
+				}
 			}
-			DamageParameter damageParam = new DamageParameter (this.gameObject, DamageForm, HitPoint);
-			enemy.SendMessage ("ApplyDamage", damageParam);
-			GameEvent _e = new GameEvent(GameEventType.DisplayDamageParameterOnNPC);
-			_e.receiver = enemy;
-			_e.ObjectParameter = damageParam;
-			PredatorPlayerUnit.HUDObject.SendMessage("OnGameEvent", _e);
-			health = enemy.GetComponent<UnitHealth> ().GetCurrentHP ();
-			if ((health - HitPoint) <= 0) {
-				Transform topestParent = Util.GetTopestParent (transform);
-				topestParent.BroadcastMessage ("SlowMotion",
-                    enemy.transform.position + enemy.GetComponent<CharacterController> ().center,
-                    SendMessageOptions.DontRequireReceiver);
-			}
-            
 		}
 	}
 
@@ -395,7 +479,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Physics.CapsuleCastAll to detect enemy.
+	/// Physics.CapsuleCastAll to detect enemy at designed direction.
 	/// </summary>
 	/// <param name="radius"></param>
 	/// <param name="direction"></param>
@@ -418,7 +502,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Physics.OverlapSphere to detect enemy
+	/// Physics.OverlapSphere to detect enemy around
 	/// </summary>
 	/// <param name="radius"></param>
 	/// <returns></returns>
@@ -434,52 +518,109 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 		}
 		return ret;
 	}
-	
-/// <summary>
-/// Lookingfors the best target.
-/// If direction.HasValue = true, then use Physics.CapsuleCastAll to sweep in direction to detect enemy target
-/// Else if direction == null, then Physics.Oversphere to find enemy around
-/// </summary>
-/// <param name="direction"></param>
-/// <param name="Radius"></param>
-/// <param name="distance">out - the distance to target, 0 if target not found</param>
-/// <returns></returns>
-	GameObject LookforBestTarget (Vector3? direction, float Radius, out float distance)
+    /// <summary>
+    /// Lookingfors the best target, and if there is, set the varaiable CurrentTarget.
+    /// If direction.HasValue = true, then use Physics.CapsuleCastAll to sweep in direction to detect enemy target
+    /// Else if direction == null, then Physics.Oversphere to find enemy around.
+    /// The rule is:
+    /// 1. If there's no current target, find a new target, if no found any, return null.
+    /// 2. If there's current target, and current target is attackable (within AttackRadius), return current target
+    /// 3. If there's current target, and current target is not attackable, but rushable (within Unit.RushRadius), return current target
+    /// 4. If there's current target, and current target is not reachable and not rushable, find a new target and return.
+    /// 5. If #4 failed to find a target, then return null.
+    /// </summary>
+    /// <returns>
+    /// The target.
+    /// </returns>
+    /// <param name='direction'>
+    /// Direction to detect target.
+    /// </param>
+    /// <param name='AttackRadius'>
+    /// Attack radius = within the radius, the target can be attacked.
+    /// </param>
+    /// <param name='RushToRadius'>
+    /// Rush radius = within the radius, predator will rush to the target.
+    /// RushToRadius also = Detect radius, that within RushToRadius, predator detect enemy.
+    /// </param>
+    /// <param name='distance'>
+    /// Distance.
+    /// </param>
+	GameObject FindTarget (Vector3? direction, float AttackRadius, float RushToRadius,
+	                       out float distance)
 	{
-		GameObject enemy = null;
-		distance = 0;
-		if (direction.HasValue) {
-			float CapsuleRadius = controller.radius;
-			enemy = _FindEnemyAtDirection (direction.Value, CapsuleRadius, Radius, out distance);
+		if(CurrentTarget != null && IsTargetDead(CurrentTarget))
+		{
+			CurrentTarget = null;
 		}
-		if (enemy == null) {
-			enemy = _FindEnemy (Radius, out distance);
+		//situation #1
+		if(CurrentTarget == null)
+		{
+			CurrentTarget = _FindEnemyAtDirection(direction.Value, controller.radius, RushToRadius, out distance);
+			if(CurrentTarget == null)
+			{
+				CurrentTarget = _FindEnemy(RushToRadius, out distance);
+			}
+			return CurrentTarget;
 		}
-		if (enemy != null) {
-			distance = Util.DistanceOfCharacters (gameObject, enemy);
+		else //already have a current target
+		{
+			float distanceOfTarget = Util.DistanceOfCharacters(CurrentTarget, this.gameObject);
+			//#2, attackable
+			if(distanceOfTarget <= AttackRadius)
+			{
+				distance = distanceOfTarget;
+				return CurrentTarget;
+			}
+			//#3 not attackable, but rushable
+			else if(distanceOfTarget <= RushToRadius)
+			{
+				distance = distanceOfTarget;
+				return CurrentTarget;
+			}
+			//#4 and #5 nor attackable nor rushable, find a new target
+			else 
+			{
+				CurrentTarget = _FindEnemyAtDirection(direction.Value, controller.radius, RushToRadius, out distance);
+				if(CurrentTarget == null)
+				{
+				   CurrentTarget = _FindEnemy(RushToRadius, out distance);
+				}
+				if(CurrentTarget == null)
+				{
+					distance = 0;
+				}
+			    return CurrentTarget;
+			}
 		}
-		return enemy;
 	}
 	
-	public GameObject PuntureUnit;
-	public Transform attachJoint;
-
-	void PunctureUnit ()
+	public DamageParameter GetDamageParameter(PredatorPlayerAttackData attackData)
 	{
-		StartCoroutine ("KeepPos");
+		DamageParameter dp = new DamageParameter(this.gameObject, attackData.DamageForm, 0);
+		UnityEngine.Random.seed = DateTime.Now.Millisecond;
+		dp.damagePoint = attackData.DamagePointBase + UnityEngine.Random.Range(attackData.MinDamageBonus, attackData.MaxDamageBonus);
+		//if critical attack is enabled and random chance matches, multiple the bonus rate.
+		if(attackData.CanDoCriticalAttack && UnityEngine.Random.Range(0f,1f) <= attackData.CriticalAttackChance)
+		{
+			dp.damagePoint *= attackData.CriticalAttackBonusRate;
+			dp.extraParameter.Add(DamageParameter.ExtraParameterKey.IsCriticalStrike, true);
+			dp.extraParameter.Add(DamageParameter.ExtraParameterKey.CritcialStrikeRate, attackData.CriticalAttackBonusRate);
+		}
+		return dp;
 	}
 	
-	IEnumerator KeepPos ()
+    /// <summary>
+    /// Determines whether the target is dead:
+    /// 1. character controller . enabled = false
+    /// 2. unit hp lesser than 0
+    /// </summary>
+	bool IsTargetDead(GameObject gameObject)
 	{
-		Vector3 EulerDis = attachJoint.rotation.eulerAngles - PuntureUnit.transform.rotation.eulerAngles;
-		
-		while (true) {
-			PuntureUnit.transform.position = attachJoint.position;
-			//PuntureUnit.transform.rotation = attachJoint.rotation;
-			Quaternion newRotation = attachJoint.rotation;
-			newRotation.eulerAngles -= EulerDis;
-			PuntureUnit.transform.rotation = newRotation;
-			yield return null;
+		bool isDead = false;
+		if(gameObject.GetComponent<UnitBase>() != null && gameObject.GetComponent<UnitBase>().GetCurrentHP()<=0)
+		{
+			isDead = true;
 		}
+		return isDead;
 	}
 }

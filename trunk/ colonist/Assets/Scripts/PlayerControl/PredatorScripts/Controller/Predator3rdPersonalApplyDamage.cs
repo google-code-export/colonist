@@ -31,14 +31,6 @@ public class Predator3rdPersonalApplyDamage : MonoBehaviour {
                 electricityHitEffect.Play();
                 break;
         }
-//        if (HP <= 0)
-//        {
-//            StartCoroutine("Die");
-//        }
-        //if (cameraController.LookAtTarget == null)
-        //{
-        //    cameraController.LookAtTarget = param.src.transform;
-        //}
         yield return null;
     }
 

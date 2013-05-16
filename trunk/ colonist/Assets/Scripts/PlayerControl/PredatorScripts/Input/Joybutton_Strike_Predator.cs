@@ -23,6 +23,10 @@ public class Joybutton_Strike_Predator : JoyButton
 	/// If Hold == UserInputType.None, the hold message will not be sent.
 	/// </summary>
 	public UserInputType Hold = UserInputType.Button_Left_Claw_Hold;
+	
+	public Texture HintTexture;
+	public float HintRotateAngluarSpeed = 150;
+	
 	/// <summary>
 	/// The hold detection seconds.
 	/// If player hold button longer than HoldDetectionSeconds, the 
@@ -30,7 +34,14 @@ public class Joybutton_Strike_Predator : JoyButton
 	private float HoldDetectionSeconds = 0.3333f;
 	private Predator3rdPersonalAttackController attackController = null;
 	private float holdStart = -1;
+	/// <summary>
+	/// messageSent flag is used for tap/hold , when hold, message is sent at stationary phase.
+	/// when tap, message is sent at touch end phase.
+	/// </summary>
 	private bool messageSent = false;
+	private bool showHint = true;
+	private float stopHintTime = 0;
+
 	void Awake ()
 	{
 		attackController = this.GetComponent<Predator3rdPersonalAttackController> ();
@@ -38,11 +49,35 @@ public class Joybutton_Strike_Predator : JoyButton
 
 	void Start ()
 	{
-		JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate (Location, JoyButtonSize);
+		JoyButtonBound = this.GetAdaptiveBound();
+//		JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate (Location, JoyButtonSize);
 	}
 
 	void Update ()
 	{
+		if(showHint && Time.time > stopHintTime)
+		{
+			showHint = false;
+		}
+	}
+	
+	void DontHint()
+	{
+		
+		showHint = false;
+	}
+	
+	IEnumerator ShowButtonHints(UserInputType[] hintTypes)
+	{
+		yield return new WaitForEndOfFrame();
+		foreach(UserInputType t in hintTypes)
+		{
+			if(t == this.Tap || t == this.Hold)
+			{
+				showHint = true;
+				stopHintTime = Time.time + 3;
+			}
+		}
 	}
 
 	/// <summary>
@@ -76,6 +111,7 @@ public class Joybutton_Strike_Predator : JoyButton
 		{
 			UserInputData gestInfo = new UserInputData( Hold, null, holdStart, Time.time);
 			attackController.NewUserGesture(gestInfo);
+			SendMessage("DontHint");
 			messageSent = true;
 		}
 	}
@@ -90,17 +126,22 @@ public class Joybutton_Strike_Predator : JoyButton
 		{
 			UserInputData gestInfo = new UserInputData( Tap, null, this.TouchStartTime, Time.time);
 			attackController.NewUserGesture(gestInfo);		
+			SendMessage("DontHint");
 		}
 	}
 
 	void OnGUI ()
 	{
-		JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate (Location, JoyButtonSize);
-		JoyButtonBound.x += JoyButtonScreenOffset.x;
-		JoyButtonBound.y += JoyButtonScreenOffset.y;
-		Rect r = new Rect (JoyButtonBound.x + JoyButtonRuntimeOffset.x, JoyButtonBound.y + JoyButtonRuntimeOffset.y,
-            JoyButtonSize, JoyButtonSize);
-		GUI.DrawTexture (r, ButtonTexture, ScaleMode.ScaleToFit,true);
+		if(Application.platform == RuntimePlatform.WindowsEditor)
+		{
+			JoyButtonBound = this.GetAdaptiveBound();
+		}
+		GUI.DrawTexture (JoyButtonBound, ButtonTexture);
+		if(showHint)
+		{
+			GUIUtility.RotateAroundPivot(Time.time % 360 * HintRotateAngluarSpeed, JoyButtonBound.center);
+			GUI.DrawTexture (JoyButtonBound, HintTexture, ScaleMode.ScaleToFit,true);
+		}
 	}
  
 }
