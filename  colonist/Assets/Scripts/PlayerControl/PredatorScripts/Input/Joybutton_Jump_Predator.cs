@@ -7,20 +7,19 @@ using System.Collections;
 public class Joybutton_Jump_Predator : JoyButton {
 
     private Predator3rdPersonalJumpController JumpController;
-    public Color BaseColor;
     private float LastJumpTime = 0;
 
     void Awake()
     {
         JumpController = this.GetComponent<Predator3rdPersonalJumpController>();
-        ValueOffsetModifier = 5;
     }
 
 	// Use this for initialization
 	void Start () {
-        JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate(Location, JoyButtonSize);
-        JoyButtonBound.x += JoyButtonScreenOffset.x;
-        JoyButtonBound.y += JoyButtonScreenOffset.y;
+//        JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate(Location, JoyButtonSize);
+//        JoyButtonBound.x += JoyButtonScreenOffset.x;
+//        JoyButtonBound.y += JoyButtonScreenOffset.y;
+		JoyButtonBound = GetAdaptiveBound();
 	}
 	
 	// Update is called once per frame
@@ -65,12 +64,10 @@ public class Joybutton_Jump_Predator : JoyButton {
 
     void OnGUI()
     {
-        GUI.color = this.BaseColor;
-		JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate (Location, JoyButtonSize);
-		JoyButtonBound.x += JoyButtonScreenOffset.x;
-		JoyButtonBound.y += JoyButtonScreenOffset.y;
-		Rect r = new Rect (JoyButtonBound.x + JoyButtonRuntimeOffset.x, JoyButtonBound.y + JoyButtonRuntimeOffset.y,
-            JoyButtonSize, JoyButtonSize);
-		GUI.DrawTexture (r, ButtonTexture);
+		if(Application.platform == RuntimePlatform.WindowsEditor)
+		{
+			JoyButtonBound = this.GetAdaptiveBound();
+		}
+		GUI.DrawTexture (JoyButtonBound, ButtonTexture);
     }
 }

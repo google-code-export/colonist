@@ -8,12 +8,15 @@ using System.Collections.Generic;
 public class Editor_Predator3rdPersonalUnit : Editor
 {
 	bool UseBaseInspector, UseAdvancedInspector;
-	bool EnableEditIdleData = false, EnableEditComboCombatData = false, EnableEditAttackData = false,
+	bool EnableEditIdleData = false, EnableEditComboCombatData = false, 
+	     EnableEditCombatData = false, EnableEditAttackData = false,
          EnableEditMoveData = false, EnableEditEffectData = false, EnableEditJumpData = false,
 	     EnableEditReceiveDamageData = false, EnableEditDecalData = false, EnableEditDeathData = false,
 	     EnableEditAttackAnimation = false, EnableEditAudioData = false;
 	bool EnableEditDefaultLeftClawCombat = false, EnableEditDefaultRightClawCombat = false, EnableEditDefaultDualClawCombat;
-	static IDictionary<ComboCombat,bool> DynamicEditingComboCombatSwitch = new Dictionary<ComboCombat,bool> ();
+	static IDictionary<PredatorComboCombat,bool> DynamicEditingComboCombatSwitch = new Dictionary<PredatorComboCombat,bool> ();
+	
+	static IDictionary<string, bool> DynamicalToggle = new Dictionary<string, bool>();
 	
 	public Editor_Predator3rdPersonalUnit ()
 	{
@@ -30,7 +33,10 @@ public class Editor_Predator3rdPersonalUnit : Editor
 		if (UseAdvancedInspector = EditorGUILayout.BeginToggleGroup ("Advanced Inspector", UseAdvancedInspector)) {	
 
 			PlayerPredatorUnit = (Predator3rdPersonalUnit)EditorCommon.EditBasicUnitProperty (PlayerPredatorUnit);
-			
+			if(GUILayout.Button("Save change"))
+			{
+				EditorUtility.SetDirty(PlayerPredatorUnit.gameObject);
+			}
 			//Edit Idle Data 
 			if (EnableEditIdleData = EditorGUILayout.BeginToggleGroup ("---Edit Idle Data", EnableEditIdleData)) {
 				PlayerPredatorUnit.IdleData = EditorCommon.EditIdleData (PlayerPredatorUnit.gameObject, PlayerPredatorUnit.IdleData);
@@ -49,26 +55,32 @@ public class Editor_Predator3rdPersonalUnit : Editor
 			}
 			EditorGUILayout.EndToggleGroup ();
 			
+			//Edit PredatorPlayerAttackData array
+			if(EnableEditAttackData = EditorGUILayout.BeginToggleGroup ("---Edit Predator Attack Data", EnableEditAttackData)) {
+			    PlayerPredatorUnit.PredatorAttackData = EditPredatorPlayerAttackDataArray(PlayerPredatorUnit, PlayerPredatorUnit.PredatorAttackData);
+			}
+			EditorGUILayout.EndToggleGroup ();
+			
 			//Edit attack basic variables
-			if (EnableEditAttackData = EditorGUILayout.BeginToggleGroup ("---Edit attack variables", EnableEditAttackData)) {
-				PlayerPredatorUnit.AttackRadius = EditorGUILayout.FloatField ("Attack radius:", PlayerPredatorUnit.AttackRadius);
-				PlayerPredatorUnit.AttackAnimationLayer = EditorGUILayout.IntField ("Attack animation layer:", PlayerPredatorUnit.AttackAnimationLayer);
+			if (EnableEditCombatData = EditorGUILayout.BeginToggleGroup ("---Edit attack variables", EnableEditCombatData)) {
+				PlayerPredatorUnit.RushRadius = EditorGUILayout.FloatField (new GUIContent("Rush radius:", "Inside rush radius, predator rush to the target"), PlayerPredatorUnit.RushRadius);
+//				PlayerPredatorUnit.AttackAnimationLayer = EditorGUILayout.IntField ("Attack animation layer:", PlayerPredatorUnit.AttackAnimationLayer);
 				PlayerPredatorUnit.CombatCoolDown = EditorGUILayout.FloatField ("common combat cooldown:", PlayerPredatorUnit.CombatCoolDown);
 				//Edit attack animation array
-				if (EnableEditAttackAnimation = EditorGUILayout.BeginToggleGroup ("    ----- Edit attack animation string array ----", EnableEditAttackAnimation)) {
-					PlayerPredatorUnit.AttackAnimations = EditorCommon.EditStringArray ("All attack animation:",
-				                                                                    PlayerPredatorUnit.AttackAnimations,
-				                                                                    EditorCommon.GetAnimationNames (PlayerPredatorUnit.gameObject));
-				}
-				EditorGUILayout.EndToggleGroup ();
-
+//				if (EnableEditAttackAnimation = EditorGUILayout.BeginToggleGroup ("    ----- Edit attack animation string array ----", EnableEditAttackAnimation)) {
+//					PlayerPredatorUnit.AttackAnimations = EditorCommon.EditStringArray ("All attack animation:",
+//				                                                                    PlayerPredatorUnit.AttackAnimations,
+//				                                                                    EditorCommon.GetAnimationNames (PlayerPredatorUnit.gameObject));
+//				}
+//				EditorGUILayout.EndToggleGroup ();
+				
 				//Edit default combat - left claw 
 				if (EnableEditDefaultLeftClawCombat = EditorGUILayout.BeginToggleGroup ("  ---Edit default combat : left claw", EnableEditDefaultLeftClawCombat)) {
 					PlayerPredatorUnit.DefaultCombat_LeftClaw = Editor_Predator3rdPersonalUnit.EditCombat (
 					                                                                 "Edit default left claw combat:",
 					                                                                 PlayerPredatorUnit,
 					                                                                 PlayerPredatorUnit.DefaultCombat_LeftClaw);
-					PlayerPredatorUnit.DefaultCombat_LeftClaw.gestureType = UserInputType.Button_Left_Claw_Tap;
+					PlayerPredatorUnit.DefaultCombat_LeftClaw.userInput = UserInputType.Button_Left_Claw_Tap;
 				}
 				EditorGUILayout.EndToggleGroup ();
 				
@@ -78,7 +90,7 @@ public class Editor_Predator3rdPersonalUnit : Editor
 					                       "Edit default right claw combat:", 
 						                   PlayerPredatorUnit, 
 						                   PlayerPredatorUnit.DefaultCombat_RightClaw);
-					PlayerPredatorUnit.DefaultCombat_RightClaw.gestureType = UserInputType.Button_Right_Claw_Tap;
+					PlayerPredatorUnit.DefaultCombat_RightClaw.userInput = UserInputType.Button_Right_Claw_Tap;
 				}
 				EditorGUILayout.EndToggleGroup ();
 
@@ -88,7 +100,7 @@ public class Editor_Predator3rdPersonalUnit : Editor
 					                       "Edit default dual claw combat:", 
 					                       PlayerPredatorUnit, 
 					                       PlayerPredatorUnit.DefaultCombat_DualClaw);
-					PlayerPredatorUnit.DefaultCombat_DualClaw.gestureType = UserInputType.Button_Dual_Claw_Tap;
+					PlayerPredatorUnit.DefaultCombat_DualClaw.userInput = UserInputType.Button_Dual_Claw_Tap;
 				}
 				EditorGUILayout.EndToggleGroup ();
 				
@@ -122,27 +134,27 @@ public class Editor_Predator3rdPersonalUnit : Editor
 		EditorGUILayout.EndToggleGroup ();
 	}
 	
-	public static ComboCombat[] EditComboCombatData (Predator3rdPersonalUnit Unit, 
-		                                          ComboCombat[] ComboCombatArray)
+	public static PredatorComboCombat[] EditComboCombatData (Predator3rdPersonalUnit Unit, 
+		                                          PredatorComboCombat[] ComboCombatArray)
 	{
 		if (GUILayout.Button ("Add ComboCombat")) {
-			ComboCombat ComboCombat = new ComboCombat ();
-			ComboCombatArray = Util.AddToArray<ComboCombat> (ComboCombat, ComboCombatArray);
+			PredatorComboCombat ComboCombat = new PredatorComboCombat ();
+			ComboCombatArray = Util.AddToArray<PredatorComboCombat> (ComboCombat, ComboCombatArray);
 		}
 		for (int i=0; i<ComboCombatArray.Length; i++) {
-			ComboCombat ComboCombat = ComboCombatArray [i];
+			PredatorComboCombat ComboCombat = ComboCombatArray [i];
 			
 			if (DynamicEditingComboCombatSwitch.ContainsKey (ComboCombat) == false) {
 				DynamicEditingComboCombatSwitch [ComboCombat] = false;
 			}
-			if (DynamicEditingComboCombatSwitch [ComboCombat] = EditorGUILayout.BeginToggleGroup (new GUIContent ("      ------- Edit combo combat:" + ComboCombat.comboName, ""),
+			if (DynamicEditingComboCombatSwitch [ComboCombat] = EditorGUILayout.BeginToggleGroup (new GUIContent ("------- Edit combo combat:" + ComboCombat.comboName, ""),
 				       DynamicEditingComboCombatSwitch [ComboCombat])) {
 			
 				ComboCombat.comboName = EditorGUILayout.TextField ("Combo combat name:", ComboCombat.comboName);
 				ComboCombat.combat = EditCombatDataArray (Unit, ComboCombat.combat);
 
 				if (GUILayout.Button ("Delete combo combat:" + ComboCombat.comboName)) {
-					ComboCombatArray = Util.CloneExcept<ComboCombat> (ComboCombatArray, ComboCombat);
+					ComboCombatArray = Util.CloneExcept<PredatorComboCombat> (ComboCombatArray, ComboCombat);
 				}
 			}
 			EditorGUILayout.EndToggleGroup ();
@@ -151,41 +163,50 @@ public class Editor_Predator3rdPersonalUnit : Editor
 		return ComboCombatArray;
 	}
 	
-	public static Combat EditCombat (string label,
+	public static PredatorCombatData EditCombat (string label,
 		                            Predator3rdPersonalUnit Unit, 
-		                            Combat Combat)
+		                            PredatorCombatData Combat)
 	{
 		EditorGUILayout.LabelField (label);
-		Combat.name = EditorGUILayout.TextField ("Combat name:", Combat.name);
-		Combat.damageForm = (DamageForm)EditorGUILayout.EnumPopup ("DamageForm:", Combat.damageForm);
-		Combat.gestureType = (UserInputType)EditorGUILayout.EnumPopup (new GUIContent ("Gesture:", "The matched gesture trigger this combat?"), Combat.gestureType);
-		
+		Combat.Name = EditorGUILayout.TextField ("Combat name:", Combat.Name);
+		Combat.userInput = (UserInputType)EditorGUILayout.EnumPopup (new GUIContent ("Gesture:", "The matched gesture trigger this combat?"), Combat.userInput);
+		string[] AllAttackDataName = Unit.PredatorAttackData.Select(x=>x.Name).ToArray();
+		Combat.useAttackDataName = EditorCommon.EditStringArray("Use these attack data:",Combat.useAttackDataName,AllAttackDataName);
 		EditorGUILayout.BeginHorizontal ();
-		Combat.WaitUntilAnimationReturn = EditorGUILayout.Toggle ("Pend for animation", Combat.WaitUntilAnimationReturn);
+		Combat.WaitUntilAnimationReturn = EditorGUILayout.Toggle ("Wait animation return:", Combat.WaitUntilAnimationReturn);
 		Combat.BlockPlayerInput = EditorGUILayout.Toggle ("Block player input", Combat.BlockPlayerInput);
 		EditorGUILayout.EndHorizontal ();
-		
-		Combat.HitPoint = EditorGUILayout.FloatField ("Hit point:", Combat.HitPoint);
-		Combat.specialCombatFunction = EditorGUILayout.TextField ("Special function:", Combat.specialCombatFunction);
-		Combat.specialAnimation = EditorCommon.EditStringArray ("Combat animation:",
-				                                                Combat.specialAnimation,
-				                                                EditorCommon.GetAnimationNames (Unit.gameObject));
+		Combat.OverrideAttackData = EditorGUILayout.BeginToggleGroup(new GUIContent("Override attackData setting", "If true, some of the attack data property would be overrided"), Combat.OverrideAttackData);
+		Combat.DamagePointBase = EditorGUILayout.FloatField("DamagePoint base:",Combat.DamagePointBase); 
+		EditorGUILayout.BeginHorizontal();
+		Combat.MinDamagePointBonus = EditorGUILayout.FloatField("Min damage bonus:",Combat.MinDamagePointBonus); 
+		Combat.MaxDamagePointBonus = EditorGUILayout.FloatField("Max damage bonus:",Combat.MaxDamagePointBonus); 
+		EditorGUILayout.EndHorizontal();
+		Combat.CanDoCriticalAttack = EditorGUILayout.Toggle("Can do critical attack", Combat.CanDoCriticalAttack);
+		if(Combat.CanDoCriticalAttack)
+		{
+			EditorGUILayout.BeginHorizontal();
+			Combat.CriticalAttackChance = EditorGUILayout.Slider("Critical chance:", Combat.CriticalAttackChance, 0, 1);
+			Combat.CriticalAttackBonusRate = EditorGUILayout.FloatField("Critical bonus rate", Combat.CriticalAttackBonusRate);
+			EditorGUILayout.EndHorizontal();
+		}
+		EditorGUILayout.EndToggleGroup();
 		return Combat;
 	}
 	
-	public static Combat[] EditCombatDataArray (Predator3rdPersonalUnit Unit, 
-		                                          Combat[] CombatArray)
+	public static PredatorCombatData[] EditCombatDataArray (Predator3rdPersonalUnit Unit, 
+		                                          PredatorCombatData[] CombatArray)
 	{
 		if (GUILayout.Button ("Add Combat")) {
-			Combat Combat = new Combat ();
-			CombatArray = Util.AddToArray<Combat> (Combat, CombatArray);
+			PredatorCombatData Combat = new PredatorCombatData ();
+			CombatArray = Util.AddToArray<PredatorCombatData> (Combat, CombatArray);
 		}
 		if (CombatArray != null) {
 			for (int i=0; i<CombatArray.Length; i++) {
-				Combat Combat = CombatArray [i];
-				Combat = EditCombat ("--- Edit combat:" + Combat.name, Unit, Combat);
-				if (GUILayout.Button ("Delete combat:" + Combat.name)) {
-					CombatArray = Util.CloneExcept<Combat> (CombatArray, Combat);
+				PredatorCombatData Combat = CombatArray [i];
+				Combat = EditCombat ("--- Edit combat:" + Combat.Name, Unit, Combat);
+				if (GUILayout.Button ("Delete combat:" + Combat.Name)) {
+					CombatArray = Util.CloneExcept<PredatorCombatData> (CombatArray, Combat);
 				}
 				EditorGUILayout.Space ();
 			}
@@ -275,5 +296,49 @@ public class Editor_Predator3rdPersonalUnit : Editor
 		}
 		EditorGUILayout.Space ();
 		return AudioDataArray;
+	}
+	
+	public static PredatorPlayerAttackData[] EditPredatorPlayerAttackDataArray(UnitBase unit, PredatorPlayerAttackData[] predatorPlayerAttackDataArray)
+	{
+		if(GUILayout.Button("Add PredatorPlayerAttackData:"))
+		{
+		   PredatorPlayerAttackData _p = new PredatorPlayerAttackData();
+		   predatorPlayerAttackDataArray = Util.AddToArray<PredatorPlayerAttackData>(_p, predatorPlayerAttackDataArray);
+		}
+		for(int i=0; i<predatorPlayerAttackDataArray.Length; i++)
+		{
+		   PredatorPlayerAttackData attackData = predatorPlayerAttackDataArray[i];
+		   if(DynamicalToggle.Keys.Contains(attackData.Name) == false)
+		   {
+				DynamicalToggle.Add(attackData.Name, true);
+		   }
+   		   EditorGUILayout.BeginHorizontal();
+		   EditorGUILayout.LabelField("Edit attack data:" + attackData.Name);
+		   DynamicalToggle[attackData.Name] = EditorGUILayout.Toggle(DynamicalToggle[attackData.Name]);
+		   EditorGUILayout.EndHorizontal();
+		   if(DynamicalToggle[attackData.Name] == false)
+		   {
+				continue;
+		   }
+		   attackData = EditPredatorPlayerAttackData(unit,attackData);
+		   predatorPlayerAttackDataArray[i] = attackData;
+		   if(GUILayout.Button("Delete PredatorPlayerAttackData:"+attackData.Name))
+		   {
+			  predatorPlayerAttackDataArray = Util.CloneExcept<PredatorPlayerAttackData>(predatorPlayerAttackDataArray, attackData);
+		   }
+		}
+		return predatorPlayerAttackDataArray;
+	}
+	
+	public static PredatorPlayerAttackData EditPredatorPlayerAttackData(UnitBase unit, PredatorPlayerAttackData predatorPlayerAttackData)
+	{
+		EditorCommon.EditAttackData(unit, predatorPlayerAttackData);
+		predatorPlayerAttackData.CanDoCriticalAttack = EditorGUILayout.Toggle("Can do critical attack ?" , predatorPlayerAttackData.CanDoCriticalAttack);
+		if(predatorPlayerAttackData.CanDoCriticalAttack)
+		{
+			predatorPlayerAttackData.CriticalAttackChance = EditorGUILayout.Slider("Critical attack chance:", 0,1,predatorPlayerAttackData.CriticalAttackChance);
+			predatorPlayerAttackData.CriticalAttackBonusRate = EditorGUILayout.FloatField("Critical attack bonus rate:", predatorPlayerAttackData.CriticalAttackBonusRate);
+		}
+		return predatorPlayerAttackData;
 	}
 }

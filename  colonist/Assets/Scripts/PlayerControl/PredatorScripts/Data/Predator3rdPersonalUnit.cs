@@ -58,36 +58,37 @@ public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
     #endregion
 	
 	#region variables for Attack
+	
+	public PredatorPlayerAttackData[] PredatorAttackData = new PredatorPlayerAttackData[]{};
+	public IDictionary<string, PredatorPlayerAttackData> PredatorAttackDataDict = new Dictionary<string, PredatorPlayerAttackData>();
+	
 	/// <summary>
-	/// The attack radius.
+	/// if enemy farer than RushRadius, predator will fastly approaching the enemy.
 	/// </summary>
-	public float AttackRadius = 3;
+	public float RushRadius = 3;
 
-    /// <summary>
-    /// When enemy within the radius, predator can move quickly to approach the enemy.
-    /// </summary>
-    public float OffenseRadius = 6;
 
 	public float CombatCoolDown = 0.15f;
 	
 	/// <summary>
 	/// All unmatched left claw combat performs by DefaultCombat_LeftClaw
 	/// </summary>
-    public Combat DefaultCombat_LeftClaw = new Combat();
+    public PredatorCombatData DefaultCombat_LeftClaw = new PredatorCombatData();
 	
     /// <summary>
 	/// All unmatched right claw combat performs by DefaultCombat_RightClaw
 	/// </summary>
-    public Combat DefaultCombat_RightClaw = new Combat();
+    public PredatorCombatData DefaultCombat_RightClaw = new PredatorCombatData();
 	
     /// <summary>
 	/// All unmatched dual claw combat performs by DeffaultCombat_DualClaw
 	/// </summary>
-	public Combat DefaultCombat_DualClaw = new Combat();
+	public PredatorCombatData DefaultCombat_DualClaw = new PredatorCombatData();
 
-	public ComboCombat[] ComboCombat = new ComboCombat[]{};
+	public PredatorComboCombat[] ComboCombat = new PredatorComboCombat[]{};
+	[HideInInspector]
 	public string[] AttackAnimations = new string[]{};
-	public int AttackAnimationLayer = 3;
+	
 	#endregion
 	
 	/// <summary>
@@ -120,12 +121,7 @@ public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
         animation[JumpData.PreJumpAnimation].layer = JumpData.AnimationLayer;
         //animation[JumpData.GroundingAnimation].layer = JumpData.AnimationLayer;
 
-        //Initalize attack animation:
-        foreach (string attackAnimation in AttackAnimations)
-        {
-            animation[attackAnimation].layer = AttackAnimationLayer;
-        }
-        foreach (ComboCombat comboCombat in this.ComboCombat)
+        foreach (PredatorComboCombat comboCombat in this.ComboCombat)
         {
             comboCombat.Init();
         }
@@ -138,6 +134,21 @@ public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
 		foreach(AudioData audioData in AudioData)
 		{
 			AudioDataDict.Add(audioData.Name, audioData);
+		}
+		
+		
+		animation[this.IdleData.AnimationName].wrapMode = this.IdleData.AnimationWrapMode;
+		animation[this.IdleData.AnimationName].speed = this.IdleData.AnimationSpeed;
+		animation[this.IdleData.AnimationName].layer = this.IdleData.AnimationLayer;
+		
+		
+		foreach(PredatorPlayerAttackData p in PredatorAttackData)
+		{
+			PredatorAttackDataDict.Add(p.Name, p);
+			this.AttackAnimations = Util.AddToArray<string>(p.AnimationName,this.AttackAnimations);
+			animation[p.AnimationName].wrapMode = p.AnimationWrapMode;
+			animation[p.AnimationName].speed = p.AnimationSpeed;
+			animation[p.AnimationName].layer = p.AnimationLayer;
 		}
 	}
 	
@@ -166,9 +177,7 @@ public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.white;
-        Gizmos.DrawWireSphere(transform.position, AttackRadius);
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, OffenseRadius);
+        Gizmos.DrawWireSphere(transform.position, RushRadius);
     }
 	
 	public void OnGameEvent(GameEvent gameEvent)

@@ -78,14 +78,6 @@ public class Predator3rdPersonMovementController : MonoBehaviour {
                          PredatorPlayerUnit.MoveData.RotateAngularSpeed);
     }
 
-    void OnPauseWalking()
-    {
-        if (PredatorPlayerStatus.IsMoving == false)
-        {
-            animation.Stop(PredatorPlayerUnit.MoveData.AnimationName);
-        }
-    }
-
     void AnimateWalking_CharacterRelative()
     {
         if (Mathf.Approximately(0, MoveDirection.magnitude))

@@ -13,18 +13,17 @@ public class JoybuttonStealth : JoyButton {
 
 	// Use this for initialization
 	void Start () {
-        JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate(Location, JoyButtonSize);
-        JoyButtonBound.x += JoyButtonScreenOffset.x;
-        JoyButtonBound.y += JoyButtonScreenOffset.y;
+		this.JoyButtonBound = this.GetAdaptiveBound();
 	}
 	
 	// Update is called once per frame
 	void Update () {
-	   
 	}
+	
     public override void onTouchMove(Touch touch)
     {
     }
+	
     /// <summary>
     /// Call when touch.phase = Move
     /// </summary>
@@ -38,11 +37,13 @@ public class JoybuttonStealth : JoyButton {
         base.onTouchEnd(touch);
         StealthController.ToggleStealth();
     }
+	
     void OnGUI()
     {
-        Rect r = new Rect(JoyButtonBound.x ,//+ this.JoyButtonScreenOffset.x,
-            JoyButtonBound.y,// + JoyButtonScreenOffset.y,
-            JoyButtonSize, JoyButtonSize);
-        GUI.DrawTexture(r, ButtonTexture);
+		if(Application.platform == RuntimePlatform.WindowsEditor)
+		{
+			JoyButtonBound = this.GetAdaptiveBound();
+		}
+        GUI.DrawTexture(JoyButtonBound, ButtonTexture);
     }
 }
