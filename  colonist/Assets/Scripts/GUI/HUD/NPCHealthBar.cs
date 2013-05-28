@@ -54,19 +54,29 @@ public class NPCHealthBar : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
 	{
-		
 		if (show) {
-			headWorldPos = controller.transform.position + new Vector3 (controller.center.x, controller.center.y + controller.height / 2, controller.center.z);
-			Camera camera = Camera.allCameras [0];
-			Vector3 screenPos = camera.WorldToScreenPoint (headWorldPos);
-			HealthBarGUIPos = GameGUIHelper.ConvertScreenTouchCoordToGUICoord (new Vector2 (screenPos.x, screenPos.y));
-			percentage = unit.GetCurrentHP () / unit.GetMaxHP ();
+			//if there is a charactercontroll attach to this gameObject, display HealthBar on the head position
+			if(this.controller != null)
+			{
+			   headWorldPos = controller.transform.position + new Vector3 (controller.center.x, controller.center.y + controller.height / 2, controller.center.z);
+			   Camera camera = Camera.allCameras [0];
+			   Vector3 screenPos = camera.WorldToScreenPoint (headWorldPos);
+			   HealthBarGUIPos = GameGUIHelper.ConvertScreenTouchCoordToGUICoord (new Vector2 (screenPos.x, screenPos.y));
+			   percentage = unit.GetCurrentHP () / unit.GetMaxHP ();
+			}
+			//if there is no characterController, display HealthBar on the transfrom.Position
+			else 
+			{
+				Camera camera = Camera.allCameras [0];
+				Vector3 screenPos = camera.WorldToScreenPoint (new Vector3(transform.position.x, transform.position.y+0.2f, transform.position.z));//hardcode offset = 0.2f
+				HealthBarGUIPos = GameGUIHelper.ConvertScreenTouchCoordToGUICoord (new Vector2 (screenPos.x, screenPos.y));
+				percentage = unit.GetCurrentHP () / unit.GetMaxHP ();
+			}
 		}
 		if(show && (((Time.time - lastChangeDisplayTime) >= ShowTimeLength) || percentage <= 0) )
 		{
 			show = false;
 		}
-		
 	}
 	
 	void OnGUI ()

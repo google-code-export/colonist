@@ -222,7 +222,7 @@ public class Predator3rdPersonalFetchController : MonoBehaviour {
         Collider[] colliders = Physics.OverlapSphere(this.transform.position, radius, FetchableLayer[0]);
         if (colliders != null && colliders.Length > 0)
         {
-            Collider c = Util.findClosest(Util.GetCharacterCenter(this.gameObject), colliders);
+            Collider c = Util.FindClosest(Util.GetCharacterCenter(this.gameObject), colliders);
             ret = c.gameObject;
         }
         return ret;

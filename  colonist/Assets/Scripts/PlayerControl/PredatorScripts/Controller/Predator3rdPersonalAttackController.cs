@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 [@RequireComponent(typeof(PredatorPlayerStatus))]
 [@RequireComponent(typeof(Predator3rdPersonalUnit))]
@@ -108,11 +109,6 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 		if (((Time.time - LastProcessPlayerGestureInputTime) > ComboCombatOperationTimeout) && playerComboToken != string.Empty) {
 			playerComboToken = "";
 			PredatorPlayerUnit.HUDObject.SendMessage ("ClearHint");
-		}
-		
-		//Test for puncture :
-		if (Input.GetKeyDown (KeyCode.P)) {
-			animation.CrossFade ("fetch_LeftClaw");
 		}
 	}
 
@@ -251,7 +247,10 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
         
 		//Look for enemy - in near radius
 		float DistanceToEnemy = 0;
-		FindTarget (transform.forward,attackData.AttackableRange, RushRadius, out DistanceToEnemy);
+		CurrentTarget = FindTarget (transform.forward, RushRadius, out DistanceToEnemy);
+		
+		Debug.Log(string.Format("Find the target:{0}, enemy distance:{1}, AttackableRange:{2}", CurrentTarget,DistanceToEnemy,attackData.AttackableRange) );
+		
 		if (CurrentTarget != null) {
 			Util.RotateToward (transform, CurrentTarget.transform.position, false, 0);
 			//if target farer than attack attackableRange, rush to the target.
@@ -480,118 +479,63 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 
 	/// <summary>
 	/// Physics.CapsuleCastAll to detect enemy at designed direction.
+	/// And return the cloest enemy.
 	/// </summary>
 	/// <param name="radius"></param>
 	/// <param name="direction"></param>
 	/// <returns></returns>
-	private GameObject _FindEnemyAtDirection (Vector3 direction, float capsuleRadius, float SweepDistance, out float distance)
+	private GameObject _FindEnemyAtDirection (Vector3 direction, float SweepDistance, out float distance)
 	{
-		float radius = controller.radius;
+		float CapsuleRadius = controller.radius;
 		Vector3 topPoint = controller.center + transform.position + Vector3.up * controller.height * 0.5f;
 		Vector3 bottomPoint = topPoint - Vector3.down * controller.height;
-		RaycastHit[] hits = Physics.CapsuleCastAll (topPoint, bottomPoint, capsuleRadius, direction, SweepDistance, EnemyLayer);
+		RaycastHit[] hits = Physics.CapsuleCastAll (topPoint, bottomPoint, CapsuleRadius, direction, SweepDistance, EnemyLayer);
 		if (hits != null && hits.Length > 0) {
-			IList<Collider> colliderList;
-			Util.CopyToList (hits, out colliderList);
-			Collider cloest = Util.findClosest (transform.position, colliderList, out distance);
-			return cloest.gameObject;
+			GameObject[] enemies = hits.Select(x=>x.collider.gameObject).ToArray<GameObject>();
+			GameObject closetEnemy = Util.FindClosestCharacter(this.gameObject, enemies, out distance);
+			return closetEnemy;
 		} else {
 			distance = 0;
 			return null;
 		}
 	}
 
-	/// <summary>
-	/// Physics.OverlapSphere to detect enemy around
-	/// </summary>
-	/// <param name="radius"></param>
-	/// <returns></returns>
-	private GameObject _FindEnemy (float radius, out float distance)
-	{
-		GameObject ret = null;
-		//Get attackable object
-		Collider[] colliders = Physics.OverlapSphere (this.transform.position, radius, EnemyLayer);
-		distance = 0;
-		if (colliders != null && colliders.Length > 0) {
-			Collider c = Util.findClosest (Util.GetCharacterCenter (this.gameObject), colliders, out distance);
-			ret = c.gameObject;
-		}
-		return ret;
-	}
     /// <summary>
-    /// Lookingfors the best target, and if there is, set the varaiable CurrentTarget.
-    /// If direction.HasValue = true, then use Physics.CapsuleCastAll to sweep in direction to detect enemy target
-    /// Else if direction == null, then Physics.Oversphere to find enemy around.
-    /// The rule is:
-    /// 1. If there's no current target, find a new target, if no found any, return null.
-    /// 2. If there's current target, and current target is attackable (within AttackRadius), return current target
-    /// 3. If there's current target, and current target is not attackable, but rushable (within Unit.RushRadius), return current target
-    /// 4. If there's current target, and current target is not reachable and not rushable, find a new target and return.
-    /// 5. If #4 failed to find a target, then return null.
+    /// Lookingfors the best target, and set the varaiable CurrentTarget.
+    /// 1. Make a capsule cast at forward direction, if there is enemy, select the closest as current target.
+    /// 2. If there is no enemy swapped by capsule cast at #1, check the previous target, if the target falls inside RushToRadius, use the previous target as current target. 
+    /// 3. If no target is found at #2, Physics.ShereOverlapped to find all enemy around, if enemy found, return the closest.
+    /// 4. If no target is found at #3, return null.
     /// </summary>
     /// <returns>
     /// The target.
     /// </returns>
-    /// <param name='direction'>
-    /// Direction to detect target.
-    /// </param>
-    /// <param name='AttackRadius'>
-    /// Attack radius = within the radius, the target can be attacked.
-    /// </param>
-    /// <param name='RushToRadius'>
-    /// Rush radius = within the radius, predator will rush to the target.
-    /// RushToRadius also = Detect radius, that within RushToRadius, predator detect enemy.
-    /// </param>
-    /// <param name='distance'>
-    /// Distance.
-    /// </param>
-	GameObject FindTarget (Vector3? direction, float AttackRadius, float RushToRadius,
-	                       out float distance)
+	GameObject FindTarget (Vector3 DetectDirection, float RushToRadius, out float distance)
 	{
-		if(CurrentTarget != null && IsTargetDead(CurrentTarget))
+		GameObject NextTarget = null;
+		//#1 - capsule cast at DetectDirection
+		NextTarget = _FindEnemyAtDirection(transform.forward, RushToRadius, out distance);
+		//#2 - check if previous target falls inside RushToRadius
+		if(NextTarget == null)
 		{
-			CurrentTarget = null;
-		}
-		//situation #1
-		if(CurrentTarget == null)
-		{
-			CurrentTarget = _FindEnemyAtDirection(direction.Value, controller.radius, RushToRadius, out distance);
-			if(CurrentTarget == null)
+			if(CurrentTarget != null && IsTargetDead(CurrentTarget) == false && 
+				((distance = Util.DistanceOfCharacters(this.gameObject, CurrentTarget)) <= RushToRadius))
 			{
-				CurrentTarget = _FindEnemy(RushToRadius, out distance);
-			}
-			return CurrentTarget;
-		}
-		else //already have a current target
-		{
-			float distanceOfTarget = Util.DistanceOfCharacters(CurrentTarget, this.gameObject);
-			//#2, attackable
-			if(distanceOfTarget <= AttackRadius)
-			{
-				distance = distanceOfTarget;
-				return CurrentTarget;
-			}
-			//#3 not attackable, but rushable
-			else if(distanceOfTarget <= RushToRadius)
-			{
-				distance = distanceOfTarget;
-				return CurrentTarget;
-			}
-			//#4 and #5 nor attackable nor rushable, find a new target
-			else 
-			{
-				CurrentTarget = _FindEnemyAtDirection(direction.Value, controller.radius, RushToRadius, out distance);
-				if(CurrentTarget == null)
-				{
-				   CurrentTarget = _FindEnemy(RushToRadius, out distance);
-				}
-				if(CurrentTarget == null)
-				{
-					distance = 0;
-				}
-			    return CurrentTarget;
+				NextTarget = CurrentTarget;
 			}
 		}
+		//#3 - Physics.Overlapped to find all enemy,
+		if(NextTarget == null)
+		{
+			Collider[] colliders = Physics.OverlapSphere(this.transform.position, RushToRadius, EnemyLayer);
+			if(colliders != null && colliders.Length > 0)
+			{
+			   Collider closest = Util.FindClosest(this.transform.position, colliders, out distance);
+			   NextTarget = closest.gameObject;
+			}
+		}
+		
+		return NextTarget;
 	}
 	
 	public DamageParameter GetDamageParameter(PredatorPlayerAttackData attackData)

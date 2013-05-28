@@ -13,7 +13,7 @@ public class JoybuttonStealth : JoyButton {
 
 	// Use this for initialization
 	void Start () {
-		this.JoyButtonBound = this.GetAdaptiveBound();
+		GUIBound = this.GetAdaptiveBound();
 	}
 	
 	// Update is called once per frame
@@ -40,10 +40,10 @@ public class JoybuttonStealth : JoyButton {
 	
     void OnGUI()
     {
-		if(Application.platform == RuntimePlatform.WindowsEditor)
-		{
-			JoyButtonBound = this.GetAdaptiveBound();
-		}
-        GUI.DrawTexture(JoyButtonBound, ButtonTexture);
+//		if(Application.platform == RuntimePlatform.WindowsEditor)
+//		{
+//			JoyButtonBound = this.GetAdaptiveBound();
+//		}
+        GUI.DrawTexture(GUIBound, ButtonTexture);
     }
 }

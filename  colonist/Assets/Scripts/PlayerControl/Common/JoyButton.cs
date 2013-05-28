@@ -235,12 +235,9 @@ public abstract class JoyButton : MonoBehaviour
     /// </summary>
     [HideInInspector]
     public float Joybutton_Right_Value = 0;
-    /// <summary>
-    /// The button's bound, must be a square.
-    /// assign this variable in runtime.
-    /// </summary>
-    [HideInInspector]
-    public Rect JoyButtonBound;
+	
+	[HideInInspector]
+	public Rect GUIBound;
 
     public virtual void PlayerControlOn()
     {
@@ -327,7 +324,8 @@ public abstract class JoyButton : MonoBehaviour
     public bool isTouchInsideBound(Vector2 touchScreenCoord)
     {
         Vector2 guiCoord = GameGUIHelper.ConvertScreenTouchCoordToGUICoord(touchScreenCoord);
-        bool ret = JoyButtonBound.Contains(guiCoord);
+        bool ret = GUIBound.Contains(guiCoord);
+		
         return ret;
     }
     public bool isTouchInsideBound(Touch t)

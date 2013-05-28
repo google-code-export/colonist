@@ -58,7 +58,15 @@ public class DamageParameter
 
     public enum ExtraParameterKey
     {
-        PuncturedAnchor = 0
+        PuncturedAnchor = 0,
+		/// <summary>
+		/// if extraParameter contains key = IsCriticalStrike and value = true, means this is CriticalStrike.
+		/// </summary>
+		IsCriticalStrike = 1,
+		/// <summary>
+		/// if IsCriticalStrike, this value stores the critical strike rate.
+		/// </summary>
+		CritcialStrikeRate = 2,
     }
     /// <summary>
     /// Use extraParameter to pass any non-standard parameter.
@@ -162,12 +170,18 @@ public class GameEvent
 	public string StringParameter = "";
 	public bool BoolParameter;
 	public object ObjectParameter = null;
+	public GameObject GameObjectParameter = null;
 	public Vector2 Vector2Parameter = Vector2.zero;
 	public Vector3 Vector3Parameter = Vector3.zero;
 	public GameEvent(){}
 	
 	public GameEvent(GameEventType _type){
 		this.type = _type;
+	}
+	
+	public GameEvent Clone()
+	{
+        return this.MemberwiseClone() as GameEvent;
 	}
 }
 
@@ -183,36 +197,95 @@ public class TouchInfomation
     }
 }
 
+/// <summary>
+/// Predator player attack data.
+/// One attackdata links to one animation.
+/// What's More that AttackData, is PredatorPlayerAttackData defines critical attack data.
+/// </summary>
+[System.Serializable]
+public class PredatorPlayerAttackData : AttackData
+{
+	/// <summary>
+	/// if CanDoCriticalAttack, then this PredatorPlayerAttackData
+	/// has %CriticalAttackChance% to do a %CriticalAttackBonusRate% critical attack.
+	/// </summary>
+	public bool CanDoCriticalAttack = false;
+	public float CriticalAttackChance = 0.3f;
+	public float CriticalAttackBonusRate = 1.2f;
+	public override AttackData GetClone()
+	{
+		PredatorPlayerAttackData clone = new PredatorPlayerAttackData();
+		base.CloneBasic(clone as UnitAnimationData);
+		clone.Type = this.Type;
+		clone.hitTriggerType = this.hitTriggerType;
+		clone.DamageForm = this.DamageForm;
+		clone.WeaponType = this.WeaponType;
+		clone.HitTestType = this.HitTestType;
+		clone.HitRate = this.HitRate;
+		clone.HitTestCollider = this.HitTestCollider;
+		clone.HitTestDistance = this.HitTestDistance;
+		clone.HitTestAngularDiscrepancy = this.HitTestAngularDiscrepancy;
+		clone.AttackableRange = this.AttackableRange;
+		clone.HitTime = this.HitTime;
+		clone.Projectile = this.Projectile;
+		clone.ProjectileInstantiateAnchor = this.ProjectileInstantiateAnchor;
+		clone.DamagePointBase = this.DamagePointBase;
+		clone.MinDamageBonus = this.MinDamageBonus;
+		clone.MaxDamageBonus = this.MaxDamageBonus;
+		clone.ScriptObjectAttachToTarget = this.ScriptObjectAttachToTarget;
+		clone.CanDoCriticalAttack = this.CanDoCriticalAttack;
+		clone.CriticalAttackBonusRate = this.CriticalAttackBonusRate;
+		clone.CriticalAttackChance = this.CriticalAttackChance;
+		return clone;
+	}
+}
 
 /// <summary>
 /// One combat is one hit information of the predator
 /// </summary>
 [System.Serializable]
-public class Combat
+public class PredatorCombatData
 {
-	public string name = "";
+	public string Name = "";
+	
+	/// <summary>
+	/// Defines the name of PredatorPlayerAttackData which is used in this combat.
+	/// </summary>
+	public string[] useAttackDataName = new string[] {};
+	
     /// <summary>
     /// If BlockUserInput = true, then will reject user input when animating.
     /// </summary>
 	public bool BlockPlayerInput;
-    public float HitPoint = 10;
+	
     /// <summary>
     /// If WaitUntilAnimationReturn = true, then will wait until animation is over.
     /// </summary>
     public bool WaitUntilAnimationReturn;
+	
 	/// <summary>
-	/// The special animation - if the special animation is null, will play default animation assoicating to the Gesture type.
+	/// If OverrideAttackData = true, these property of PredatorAttackData will be overrided by PredatorCombatData:
+	///  - DamagePointBase
+	///  - MinDamageBonus
+	///  - MaxDamageBonus
+	///  - CanDoCriticalAttack
+	///  - CriticalAttackBonusRate
+	///  - CriticalAttackChance
 	/// </summary>
-	public string[] specialAnimation = new string[]{};
-    public DamageForm damageForm;
-	public UserInputType gestureType;
-	public string specialCombatFunction="";
-
-    /// <summary>
-    /// the gesture information that assoicated to the combat
-    /// </summary>
-    [HideInInspector]
-    public UserInputData gestureInfo;
+	public bool OverrideAttackData = false;
+	
+	public float DamagePointBase = 10;
+	public float MinDamagePointBonus = 1;
+	public float MaxDamagePointBonus = 1;
+	public bool CanDoCriticalAttack = false;
+	public float CriticalAttackBonusRate = 1.2f;
+	public float CriticalAttackChance = 0.7f;
+	
+	/// <summary>
+	/// Bound to the user input type.
+	/// That what's the user input type will trigger this combat.
+	/// </summary>
+	public UserInputType userInput;
 
     /// <summary>
     /// If FinalCombat = true, then user input should be unblocked after this combat.
@@ -225,11 +298,11 @@ public class Combat
 /// Combo combat = a series of combat.
 /// </summary>
 [System.Serializable]
-public class ComboCombat
+public class PredatorComboCombat
 {
     public const int ComboCombatMaxCount = 5;
 	public string comboName = "";
-	public Combat[] combat = new Combat [] {};
+	public PredatorCombatData[] combat = new PredatorCombatData [] {};
 	/// <summary>
 	/// Initalize combat token.
 	/// 1111 = tap * 4
@@ -238,9 +311,9 @@ public class ComboCombat
 	/// </summary>
 	public void Init()
 	{
-		foreach(Combat ct in combat)
+		foreach(PredatorCombatData ct in combat)
 		{
-			int _gesturetype = (int)ct.gestureType;
+			int _gesturetype = (int)ct.userInput;
 			token += _gesturetype.ToString();
 		}
 	}
@@ -334,4 +407,30 @@ public class ColorCurve
 		Color v = Color.Lerp(fromColor, toColor, valueAtTime);
 		return v;
 	}
+}
+
+/// <summary>
+/// CameraDynamicalControlParameter represents parameter to control the camera.
+/// </summary>
+[System.Serializable]
+public class TopDownCameraControlParameter
+{
+	public string Name = "";
+//	/// <summary>
+//	/// The transform to look at. Can be changed in runtime. e.g. for Slow motion camera.
+//	/// </summary>
+//	public GameObject LookAt = null;
+	public float DynamicDistance = 1;
+	public float DynamicHeight = 1.5f;
+	/// <summary>
+	/// The target transform to look at. If this is null, than will pick DefaultViewPoint to look at.
+	/// </summary>
+	//[HideInInspector]
+	//public Transform LookAtTarget = null;
+	public float smoothLag = 0.3f;
+
+	/// <summary>
+	/// Layer mask to check if the current view sight has been blocked.
+	/// </summary>
+	public LayerMask lineOfSightMask = 0;
 }

@@ -26,12 +26,15 @@ public class EditorUtilityWindow : EditorWindow
 	bool copyAnimation = false;
 	AnimationClip CopyFromClipA = null;
 	AnimationClip CopyFromClipB = null;
-	
 	bool AddAnimationEvent = false;
 	string AnimationNameToEdit = "";
 	string AnimationFunctionName = "";
 	string AnimationParam = "";
 	AnimationParameterType animationParameterType = AnimationParameterType.FloatParam;
+	
+	bool EnableCopyRagdollJointData = false;
+	Ragdoll copyRagdollFrom = null;
+	Ragdoll copyRagdollTo = null;
 	
 	void OnGUI ()
 	{
@@ -49,6 +52,13 @@ public class EditorUtilityWindow : EditorWindow
 		}
 		EditorGUILayout.EndToggleGroup ();
 #endregion
+		
+		#region print position and rotation
+		
+		if (GUILayout.Button ("Print selection active position + rotation")) {
+			Debug.Log (string.Format("Position:{0}, Rotation:{1}", Selection.activeGameObject.transform.position, Selection.activeGameObject.transform.rotation));
+		}
+		#endregion
 
 #region copy components from object to another object
 		copyUnitAndAIComponents = EditorGUILayout.BeginToggleGroup ("Copy unit and AI components", copyUnitAndAIComponents);
@@ -56,7 +66,7 @@ public class EditorUtilityWindow : EditorWindow
 			CopyUnitObjectA = (Unit)EditorGUILayout.ObjectField (CopyUnitObjectA, typeof(Unit));
 			CopyUnitObjectB = (GameObject)EditorGUILayout.ObjectField (CopyUnitObjectB, typeof(GameObject));
 			if (GUILayout.Button ("Copy component from object A to Object B")) {
-				 EditorCommon.CopyUnitAndAIComponent(CopyUnitObjectA, CopyUnitObjectB);
+				EditorCommon.CopyUnitAndAIComponent (CopyUnitObjectA, CopyUnitObjectB);
 			}
 		}
 		EditorGUILayout.EndToggleGroup ();
@@ -68,7 +78,7 @@ public class EditorUtilityWindow : EditorWindow
 			CopyFromClipA = (AnimationClip)EditorGUILayout.ObjectField (CopyFromClipA, typeof(AnimationClip));
 			CopyFromClipB = (AnimationClip)EditorGUILayout.ObjectField (CopyFromClipB, typeof(AnimationClip));
 			if (GUILayout.Button ("Copy animation event from A to B")) {
-				 EditorCommon.CopyAnimationEvents(CopyFromClipA, CopyFromClipB);
+				EditorCommon.CopyAnimationEvents (CopyFromClipA, CopyFromClipB);
 			}
 		}
 		EditorGUILayout.EndToggleGroup ();
@@ -76,31 +86,52 @@ public class EditorUtilityWindow : EditorWindow
 		
 #region add animation event
 		AddAnimationEvent = EditorGUILayout.BeginToggleGroup ("Add animation event", AddAnimationEvent);
-		if(AddAnimationEvent)
-		{
-			if(Selection.activeGameObject != null)
-			{
-               int index = 0;
-               string[] array = EditorCommon.GetAnimationNames (Selection.activeGameObject, AnimationNameToEdit, out index);
-			   if(index == -1)
-			   {
-				  index = 0;
-			   }
-               index = EditorGUILayout.Popup ("Animation:", index, array);
+		if (AddAnimationEvent) {
+			if (Selection.activeGameObject != null) {
+				int index = 0;
+				string[] array = EditorCommon.GetAnimationNames (Selection.activeGameObject, AnimationNameToEdit, out index);
+				if (index == -1) {
+					index = 0;
+				}
+				index = EditorGUILayout.Popup ("Animation:", index, array);
 			   
-               AnimationNameToEdit = array [index];
-			   AnimationFunctionName = EditorGUILayout.TextField ("Function name:", AnimationFunctionName);
-			   EditorGUILayout.BeginHorizontal();
-			   animationParameterType = (AnimationParameterType)EditorGUILayout.EnumPopup("Evnet param:",animationParameterType);
-			   AnimationParam =	EditorGUILayout.TextField("Animation param:" , AnimationParam);
-			   EditorGUILayout.EndHorizontal();
-			   if(GUILayout.Button("Add animation"))
-			   {
-				  AnimationClip clip = Selection.activeGameObject.animation.GetClip(AnimationNameToEdit);
-				  EditorCommon.AddAnimationEvent(clip,AnimationFunctionName,AnimationParam,animationParameterType);
-			   }
+				AnimationNameToEdit = array [index];
+				AnimationFunctionName = EditorGUILayout.TextField ("Function name:", AnimationFunctionName);
+				EditorGUILayout.BeginHorizontal ();
+				animationParameterType = (AnimationParameterType)EditorGUILayout.EnumPopup ("Evnet param:", animationParameterType);
+				AnimationParam = EditorGUILayout.TextField ("Animation param:", AnimationParam);
+				EditorGUILayout.EndHorizontal ();
+				if (GUILayout.Button ("Add animation")) {
+					AnimationClip clip = Selection.activeGameObject.animation.GetClip (AnimationNameToEdit);
+					EditorCommon.AddAnimationEvent (clip, AnimationFunctionName, AnimationParam, animationParameterType);
+				}
 			}
 		}
+		EditorGUILayout.EndToggleGroup ();
+#endregion
+		
+#region print playing animation
+		string logStr_animation = "Plaing animation:";
+		if (GUILayout.Button ("Print selection active animation status")) {
+			foreach (AnimationState ani in Selection.activeGameObject.animation) {
+				bool isplaying = Selection.activeGameObject.animation.IsPlaying (ani.name);
+				if(isplaying)
+				   logStr_animation += ani.name + "; ";
+			}
+			Debug.Log (logStr_animation);
+		}
+#endregion		
+		
+#region Copy ragdollJoint from one unit to another
+		if (EnableCopyRagdollJointData = EditorGUILayout.BeginToggleGroup("Edit ragdoll joint data", EnableCopyRagdollJointData)) {
+			copyRagdollFrom = (Ragdoll)EditorGUILayout.ObjectField("Copy ragdoll from:", copyRagdollFrom, typeof(Ragdoll));
+			copyRagdollTo = (Ragdoll)EditorGUILayout.ObjectField("Copy ragdoll to:", copyRagdollTo, typeof(Ragdoll));
+			if(GUILayout.Button("Copy ragdoll from-to"))
+			{
+				RagdollEditor.CopyRagdollData(copyRagdollFrom, copyRagdollTo, true);
+			}
+		}
+		EditorGUILayout.EndToggleGroup();
 #endregion
 	}
 }

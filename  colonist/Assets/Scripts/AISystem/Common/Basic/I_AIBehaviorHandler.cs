@@ -3,10 +3,7 @@ using System.Collections;
 
 public interface I_AIBehaviorHandler {
 
-    /// <summary>
-    /// AI birth function
-    /// </summary>
-    IEnumerator StartAI();
+    void StartAI();
 
     void StopAI();
 

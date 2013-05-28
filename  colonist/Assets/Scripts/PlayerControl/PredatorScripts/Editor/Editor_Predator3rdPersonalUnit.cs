@@ -259,10 +259,9 @@ public class Editor_Predator3rdPersonalUnit : Editor
 				EffectData.GlobalType = (GlobalEffectType)EditorGUILayout.EnumPopup (new GUIContent ("Global effect type", "是全局Effect类型"),
 						EffectData.GlobalType);
 			} else {
-				EffectData.DestoryInTimeOut = EditorGUILayout.Toggle (new GUIContent ("Auto Destory?", ""), EffectData.DestoryInTimeOut);
-				if (EffectData.DestoryInTimeOut) {
-					EffectData.DestoryTimeOut = EditorGUILayout.FloatField (new GUIContent ("LifeTime:", ""), EffectData.DestoryTimeOut);
-				}
+
+				EffectData.DestoryTimeOut = EditorGUILayout.FloatField (new GUIContent ("LifeTime:", ""), EffectData.DestoryTimeOut);
+				
 				EffectData.EffectObject = (GameObject)EditorGUILayout.ObjectField (new GUIContent ("Effect object", ""), EffectData.EffectObject, typeof(GameObject));
 				EffectData.instantiationData = EditorCommon.EditInstantiationData(" -----------  Edit instantiation data ----------- ", EffectData.instantiationData);
 				//Delete this effect data
@@ -287,8 +286,7 @@ public class Editor_Predator3rdPersonalUnit : Editor
 			AudioData audio = AudioDataArray [i];
 			EditorGUILayout.LabelField ("------------------------ " + audio.Name);
 			audio.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), audio.Name);
-			//audio.audioClip = (AudioClip)EditorGUILayout.ObjectField(new GUIContent ("Audio clip:", "Assign audio clip"), audio.audioClip, typeof(AudioClip));
-			audio.audioClip = EditorCommon.EditAudioClipArray("Edit audio clip", audio.audioClip);
+			audio.randomAudioClips = EditorCommon.EditAudioClipArray("Audio clips:", audio.randomAudioClips);
 			//Delete this audio data
 			if (GUILayout.Button ("Delete AduioData:" + audio.Name)) {
     			AudioDataArray = Util.CloneExcept<AudioData> (AudioDataArray, audio);

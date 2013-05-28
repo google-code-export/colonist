@@ -232,10 +232,6 @@ public class LevelArea : MonoBehaviour, I_GameEventReceiver {
 		}
     }
 
-    void OnTriggerExit(Collider other)
-    {
-    }
-	
 	/// <summary>
 	/// Spawn the specified AtomSpawnData.
 	/// </summary>

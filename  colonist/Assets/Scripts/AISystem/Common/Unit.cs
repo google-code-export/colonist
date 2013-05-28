@@ -98,7 +98,11 @@ public class Unit : UnitBase , I_GameEventReceiver
 #endregion
 
 #region Unit AI definition
-	
+	/// <summary>
+	/// If StartAIAtAwake = true, the AI is started automatically at Start()
+	/// If it's false, then you have to call "StartDefaultAI" to start.
+	/// </summary>
+	public bool StartAIAtAwake = false;
 	/// <summary>
 	/// The name of the start AI.
 	/// If StartAIName = "", it will be assigned to the first AI component's name by default.
@@ -112,41 +116,34 @@ public class Unit : UnitBase , I_GameEventReceiver
 	public AI CurrentAI = null;
 	
 	/// <summary>
-	/// Indicate if the unit has been initialized.
-	/// </summary>
-	[HideInInspector]
-	public bool UnitInitDone = false;
-	
-	/// <summary>
 	/// The current target variable, which will be updated by the current running AI component.
 	/// </summary>
 	[HideInInspector]
 	public Transform CurrentTarget = null;
 	
-	/// <summary>
-	/// Identity of which LevelArea and Which Wave spawn this unit.
-	/// </summary>
 	[HideInInspector]
-	public SpawnIdentity spawnIdentity = null;
+	public UnitReceiveDamageStatus receiveDamageStatus = UnitReceiveDamageStatus.vulnerable;
+	
 #endregion
 
 	CharacterController controller = null;
+	
+	
 	
 	void Awake ()
 	{
 		InitUnitData ();
 		InitAnimation ();
 		InitUnitAI ();
-		UnitInitDone = true;
 	}
 	
 	public void Start ()
 	{
 		foreach (AI _AI in GetComponents<AI>()) {
-			if (_AI.Name == StartAIName) {
-				_AI.enabled = true;
+			if (_AI.Name == StartAIName && StartAIAtAwake) {
+				_AI.StartAI();
 			} else {
-				_AI.enabled = false;
+				_AI.StopAI();
 			}
 		}
 	}
@@ -157,6 +154,11 @@ public class Unit : UnitBase , I_GameEventReceiver
 		if (Halt == true && Time.time >= ResetHaltTime) {
 			Halt = false;
 		}
+	}
+	
+	public void StartDefaultAI ()
+	{
+		SwitchAI(this.StartAIName);
 	}
 	
 	/// <summary>
@@ -245,6 +247,7 @@ public class Unit : UnitBase , I_GameEventReceiver
 			animation [data.AnimationName].speed = data.AnimationSpeed;
 		}
 		foreach (RotateData data in RotateData) {
+			//for rotateData, animation name can be empty
 			if (animation [data.RotateLeftAnimationName] != null) {
 				animation [data.RotateLeftAnimationName].layer = data.AnimationLayer;
 				animation [data.RotateLeftAnimationName].wrapMode = data.AnimationWrapMode;
@@ -257,9 +260,20 @@ public class Unit : UnitBase , I_GameEventReceiver
 			}
 		}
 		foreach (ReceiveDamageData data in ReceiveDamageData) {
-			animation [data.AnimationName].layer = data.AnimationLayer;
-			animation [data.AnimationName].wrapMode = data.AnimationWrapMode;
-			animation [data.AnimationName].speed = data.AnimationSpeed;
+			if(animation [data.AnimationName] != null)
+			{
+			  animation [data.AnimationName].layer = data.AnimationLayer;
+			  animation [data.AnimationName].wrapMode = data.AnimationWrapMode;
+			  animation [data.AnimationName].speed = data.AnimationSpeed;
+			}
+		}
+		foreach (DeathData data in this.DeathData) {
+			if (!(data.UseDieReplacement == true && data.ReplaceAfterAnimationFinish == false))
+			{
+			   animation [data.AnimationName].layer = data.AnimationLayer;
+			   animation [data.AnimationName].wrapMode = data.AnimationWrapMode;
+			   animation [data.AnimationName].speed = data.AnimationSpeed;
+			}
 		}
 	}
 	
@@ -268,23 +282,24 @@ public class Unit : UnitBase , I_GameEventReceiver
 	/// </summary>
 	public void InitUnitAI ()
 	{
-		if (StartAIName == "") {
-			StartAIName = GetComponent<AI> ().Name;
-		}
 		foreach (AI _AI in GetComponents<AI>()) {
 			AIDict.Add (_AI.Name, _AI);
 		}
 		controller = GetComponent<CharacterController> ();
-//		LevelManager.RegisterUnit (this);
 	}
 	
+	/// <summary>
+	/// Activate the %SwitchToAIName% AI.
+	/// And deactivate the other AI.
+	/// </summary>
 	public void SwitchAI (string SwitchToAIName)
 	{
-		if (CurrentAI != null) {
-			CurrentAI.StopAI ();
+		if (CurrentAI != null && CurrentAI.Name != SwitchToAIName) {
+//			CurrentAI.enabled = false;
+			CurrentAI.StopAI();
 		}
 		AI newAI = AIDict [SwitchToAIName];
-		newAI.StartAI ();
+		newAI.StartAI();
 		this.CurrentAI = newAI;
 	}
 	
@@ -322,6 +337,9 @@ public class Unit : UnitBase , I_GameEventReceiver
 			break;
 		case GameEventType.NPCStartAI:
 			SwitchAI(_event.StringParameter);
+			break;
+		case GameEventType.NPCStartDefaultAI:
+			StartDefaultAI();
 			break;
 		}
 	}

@@ -9,6 +9,10 @@ public class CameraFunction : MonoBehaviour,I_GameEventReceiver {
 	/// WhiteIn means : immediately cover the camera in a black box, then gradually dismiss the cover,
 	/// </summary>
     public float WhiteInLength = 3;
+	/// <summary>
+	/// Curve to control WhiteIn box's alpha value.
+	/// </summary>
+	public AnimationCurve WhiteInCurve = AnimationCurve.Linear(0,0,1,1);
 	
 	/// <summary>
 	/// The time length for white out.
@@ -57,16 +61,6 @@ public class CameraFunction : MonoBehaviour,I_GameEventReceiver {
 	
 	// Update is called once per frame
 	void Update () {
-//        if (Input.GetKeyDown("w"))
-//        {
-//            StopAllCoroutines();
-//            SendMessage("WhiteIn");
-//        }
-//        if (Input.GetKeyDown("s"))
-//        {
-//            StopAllCoroutines();
-//            SendMessage("WhiteOut");
-//        }
 	}
 
     void DestroyCameraCoverPlane()
@@ -91,15 +85,26 @@ public class CameraFunction : MonoBehaviour,I_GameEventReceiver {
 	public IEnumerator WhiteInTime (float WhiteInLength) {
          CreateCameraCoverPlane ();
 	     Material mat  = cookShadersObject.renderer.material;
+		 //Set alpha to 1, so the cube is a black box, the camera's sign is hidden by the cube.
          mat.SetColor("_Color", new Color(mat.color.r, mat.color.g, mat.color.b, 1.0f));	
-	     yield return null;;
+//	     yield return null;
          Color c = new Color(mat.color.r, mat.color.g, mat.color.b, 1.0f);
          float FadeSpeed = 1 / WhiteInLength;
-	     while (c.a > 0.0) {
-            c.a -= Time.deltaTime * FadeSpeed;
-            mat.SetColor("_Color", c);
-		    yield return null;;
-	     }
+		 float StartTime = Time.time;
+		 while((Time.time - StartTime) <= WhiteInLength)
+		 {
+			//normalize time, consider the percentage of current WhiteIn process.
+			float normalizeTime = (Time.time - StartTime)/WhiteInLength;
+			float normalizeValue = WhiteInCurve.Evaluate(normalizeTime);
+			c.a = Mathf.Lerp(1, 0, normalizeValue);
+			mat.SetColor("_Color", c);
+			yield return null;
+		 }
+//	     while (c.a > 0.0) {
+//            c.a -= Time.deltaTime * FadeSpeed;
+//            mat.SetColor("_Color", c);
+//		    yield return null;;
+//	     }
 	     DestroyCameraCoverPlane ();
 	}
 
@@ -137,4 +142,6 @@ public class CameraFunction : MonoBehaviour,I_GameEventReceiver {
 			break;
 		}
 	}
+	
+	
 }

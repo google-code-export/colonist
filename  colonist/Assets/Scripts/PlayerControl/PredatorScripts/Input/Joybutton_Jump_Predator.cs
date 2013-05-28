@@ -16,10 +16,7 @@ public class Joybutton_Jump_Predator : JoyButton {
 
 	// Use this for initialization
 	void Start () {
-//        JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate(Location, JoyButtonSize);
-//        JoyButtonBound.x += JoyButtonScreenOffset.x;
-//        JoyButtonBound.y += JoyButtonScreenOffset.y;
-		JoyButtonBound = GetAdaptiveBound();
+		GUIBound = GetAdaptiveBound();
 	}
 	
 	// Update is called once per frame
@@ -64,10 +61,6 @@ public class Joybutton_Jump_Predator : JoyButton {
 
     void OnGUI()
     {
-		if(Application.platform == RuntimePlatform.WindowsEditor)
-		{
-			JoyButtonBound = this.GetAdaptiveBound();
-		}
-		GUI.DrawTexture (JoyButtonBound, ButtonTexture);
+		GUI.DrawTexture (GUIBound, ButtonTexture);
     }
 }

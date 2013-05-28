@@ -110,6 +110,7 @@ public enum DamageForm
      Punctured = 3,
      Flame = 4,
 	 LaserSword = 5,
+	 BossHit = 6,
 #endregion
 
 #region PredatorPlayer 1000 ~ 1999
@@ -118,10 +119,8 @@ public enum DamageForm
      Predator_Strike_Single_Claw = 1002,
      Predator_Strike_Dual_Claw = 1003,
      Predator_Puncture = 1004,
+	 Predator_Fast_Spiking = 1005,
 #endregion
-
-
-
 }
 
 /// <summary>
@@ -166,11 +165,23 @@ public enum GameEventType
     LevelStart = 0,
     LevelPause = 1,
     LevelEnd = 2,
-    StartScenario = 3,//start a scenario , the scenario name is given in GameEvent.stringParameter
+	/// <summary>
+	/// notify that scenario has been started. Then the scenario control object set isPlayingScenario = true, to allow fast passing time scale.
+	/// </summary>
+    StartScenario = 3,
 	/// <summary>
 	/// LevelArea start spawning, the LevelArea Name is given in stringParameter
 	/// </summary>
 	LevelAreaStartSpawn = 4,
+	/// <summary>
+	/// Invoke a method in gameobject(given in GameEvent.receiver), method name is given in GameEvent.CustomMessage, 
+	/// parameter type is given at ParameterType.
+	/// </summary>
+	InvokeMethod = 5,
+	/// <summary>
+	/// Load a level in IntParameter.
+	/// </summary>
+	LoadLevel = 6,
 	
     //Player Character Event
     PlayerBirth = 100,
@@ -183,14 +194,33 @@ public enum GameEventType
     PlayerReloading = 107,
     PlayerControlOn = 108,//player gained control
     PlayerControlOff = 109,//player lost control
-	PlayerSetToInactive = 110, //Disable the player object
-	PlayerSetToActive = 111, //Enable the player object
+	/// <summary>
+	/// Deactivate the player object.
+	/// Note: this will deactivated the root object of player, includes player camera, player control, player HUD ..etc
+	/// </summary>
+	PlayerSetToInactive = 110, 
+	/// <summary>
+	/// Activate the player object.
+	/// Note: this will activated the root object of player, includes player camera, player control, player HUD ..etc
+	/// </summary>
+	PlayerSetToActive = 111, 
 	PlayerCameraWhiteIn = 112,//White In player camera
 	PlayerCameraWhiteOut = 113,//White out player camera
 	PlayerCameraOff = 114,//set off the player camera
 	PlayerCameraOn = 115,//set on the player camera
 	PlayerCameraAudioListenerOn = 116,//set on the player camera's audio listener
 	PlayerCameraAudioListenerOff = 117,//set on the player camera's audio listener
+	
+	/// <summary>
+	/// Requires player camera start slow motion mode, and focus on a fixed point (Not a transform).
+	/// </summary>
+	PlayerCameraSlowMotionOnFixedPoint = 118,
+	
+	/// <summary>
+	/// Requires player camera start slow motion mode, and focus on a transform (So it's MOVEABLE!).
+	/// The focus on Transform is given in GameEvent.GameObjectParameter.
+	/// </summary>
+	PlayerCameraSlowMotionOnTransform = 119,
 	
     //NPC Event
     NPCBirth = 200,
@@ -209,18 +239,71 @@ public enum GameEventType
 	/// Manipulate NPC to start AI, the AI name is given in GameEvent.StringParameter
 	/// </summary>
 	NPCStartAI = 209,
+	/// <summary>
+	/// NPC stop playing animation, the animation name is given in GameEvent.StringParameter
+	/// </summary>
+	NPCStopPlayingAnimation = 210,
+	/// <summary>
+	/// NPC start default A.
+	/// </summary>
+	NPCStartDefaultAI = 211,
+	/// <summary>
+	/// Manipulate NPC to face to player.
+	/// </summary>
+	NPCFaceToPlayer = 212,
+	
+	//Spawn NPC event:
+	/// <summary>
+	/// Manipulate a spawnNPC behavior to start spawning a SpawnData, 
+	/// GameEvent.receiver should be the spawnNPC object, the SpawnData name is given in GameEvent.StringParameter.
+	/// </summary>
+	SpecifiedSpawn = 300,
 	
 	//Scenario event:
 	ShowGameDialogue = 400,//display a Dialogue, MUST pass Dialogue ID in GameEvent.StringParameter
 	WhiteInScenarioCamera = 401,//White in scenario camera
 	WhiteOutScenarioCamera = 402,//white out scenario camera
-	ScenarioCameraDockComplete = 403, //Send when a camera dock is completed
+	
 	ScenarioComplete = 405,//indicate the scenario stop playing
 	ScenarioCameraOff = 406,//Set off the scenario camera
 	ScenarioCameraOn = 407,//Set on the scenario camera
 	ScenarioCameraAudioListenerOn = 408,//set on the Scenario camera's audio listener
 	ScenarioCameraAudioListenerOff = 409,//set on the Scenario camera's audio listener
+	/// <summary>
+	/// Starts docking behavior, the dock monobehavior's name is given in GameEvent.StringParameter.
+	/// </summary>
+	StartDocking = 410, 
+	/// <summary>
+	/// Deactivate a gameobject
+	/// </summary>
+	DeactivateGameObject = 411,
 	
+	/// <summary>
+	/// Destroy a gameobject, destroy delay is given at FloatParameter.
+	/// </summary>
+	DestroyGameObject = 412,
+	/// <summary>
+	/// Activate a game object in GameEvent.receiver field.
+	/// </summary>
+	ActivateGameObject = 413,
+	
+	//Game setting event
+	/// <summary>
+	/// Set language to a given value in StringParameter
+	/// </summary>
+	SetLanguage = 500,
+	/// <summary>
+	/// set quality to a given level in IntParameter.
+	/// </summary>
+	SetQuality = 501,
+	/// <summary>
+	/// Mute audio
+	/// </summary>
+	Mute = 502,
+	/// <summary>
+	/// Unmute audio
+	/// </summary>
+	UnMute = 503,
 }
 
 /// <summary>
@@ -268,6 +351,12 @@ public enum ValueComparisionOperator
 /// </summary>
 public enum HitTriggerType
 {
+	/// <summary>
+	/// Send the ApplyDamage message N seconds after animation.
+	/// </summary>
 	ByTime = 0,
+	/// <summary>
+	/// ApplyDamage will be triggered by AnimationEvent.
+	/// </summary>
 	ByAnimationEvent = 1,
 }

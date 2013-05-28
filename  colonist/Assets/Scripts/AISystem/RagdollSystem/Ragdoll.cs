@@ -47,6 +47,42 @@ public class RagdollJointData
     /// </summary>
     public float MinForceMagnitude = 1;
     public float MaxForceMagnitude = 2;
+	/// <summary>
+	/// If SelfcontrolDestruction = true, this joint will not be destroyed with the parent.
+	/// The destruction time is defined by SelfDestructionTime.
+	/// If SelfcontrolDestruction = true,  the Detach flag must be set true too, or else the 
+	/// object will be destroy with parent.
+	/// </summary>
+	public bool SelfcontrolDestruction = false;
+	public float SelfDestructionTime = 5;
+	/// <summary>
+	/// If JointGameObjectInitialEnable = false, the joint's gameobject should be deactivate when creating ragdoll.
+	/// </summary>
+	public bool JointGameObjectInitialActive = true;
+	
+	/// <summary>
+	/// Gets a clone of this RagdollJointData. The Joint object is null and need to be assigned other way.
+	/// </summary>
+	public RagdollJointData GetClone()
+	{		
+		RagdollJointData ragdollJointData = new RagdollJointData();
+		ragdollJointData.Name = this.Name;
+		ragdollJointData.CreateForce = this.CreateForce;
+		ragdollJointData.Detach = this.Detach;
+		ragdollJointData.DestoryJoint = this.DestoryJoint;
+		ragdollJointData.CreateForceDelay = this.CreateForceDelay;
+		ragdollJointData.ForceRandomDirection = this.ForceRandomDirection;
+		ragdollJointData.IsGlobalDirection = this.IsGlobalDirection;
+		ragdollJointData.ForceDirection = this.ForceDirection;
+		ragdollJointData.ForceRandomDirectionFrom = this.ForceRandomDirectionFrom;
+		ragdollJointData.ForceRandomDirectionTo = this.ForceRandomDirectionTo;
+		ragdollJointData.MinForceMagnitude = this.MinForceMagnitude;
+		ragdollJointData.MaxForceMagnitude = this.MaxForceMagnitude;
+		ragdollJointData.SelfcontrolDestruction = this.SelfcontrolDestruction;
+		ragdollJointData.SelfDestructionTime = this.SelfDestructionTime;
+		ragdollJointData.JointGameObjectInitialActive = this.JointGameObjectInitialActive;
+		return ragdollJointData;
+    }
 }
 
 public class Ragdoll : MonoBehaviour {
@@ -62,10 +98,7 @@ public class Ragdoll : MonoBehaviour {
     /// clip material function name in %DelgateFunction% .
     /// </summary>
     public string DelgateDestoryFunction = string.Empty;
-    /// <summary>
-    /// Assign the center for this ragdoll (because ragdoll has NO character controller.)
-    /// </summary>
-    public Transform RagdollCenter = null;
+   
     public EffectData[] EffectData = new EffectData[] { };
     public DecalData[] DecalData = new DecalData[] { };
     public RagdollJointData[] RagdollJointData = new RagdollJointData[] { };
@@ -87,11 +120,11 @@ public class Ragdoll : MonoBehaviour {
     {
         foreach (EffectData effectData in EffectData)
         {
-            GlobalBloodEffectDecalSystem.CreateEffect(RagdollCenter.position, effectData);
+            GlobalBloodEffectDecalSystem.CreateEffect(effectData);
         }
         foreach (DecalData decalData in DecalData)
         {
-            GlobalBloodEffectDecalSystem.CreateBloodDecal(RagdollCenter.position, decalData);
+            GlobalBloodEffectDecalSystem.CreateBloodDecal(transform.position, decalData);
         }
         foreach (RagdollJointData JointData in RagdollJointData)
         {
@@ -104,6 +137,10 @@ public class Ragdoll : MonoBehaviour {
                 CharacterJoint joint = JointData.Joint.GetComponent<CharacterJoint>();
                 Destroy(joint);
             }
+			if(JointData.JointGameObjectInitialActive == false)
+			{
+				JointData.Joint.gameObject.active = false;
+			}
             if (JointData.CreateForce == false)
                 continue;
             else
@@ -119,6 +156,11 @@ public class Ragdoll : MonoBehaviour {
         {
             yield return new WaitForSeconds(JointData.CreateForceDelay);
         }
+		//Activate the game object (if not)
+		if(JointData.Joint.gameObject.active == false)
+		{
+			JointData.Joint.gameObject.active = true;
+		}
         Vector3 ForceDirection = JointData.ForceRandomDirection ?
             Util.RandomVector(JointData.ForceRandomDirectionFrom, JointData.ForceRandomDirectionTo) :
             JointData.ForceDirection;
@@ -128,23 +170,24 @@ public class Ragdoll : MonoBehaviour {
         }
         Vector3 Force = ForceDirection.normalized * Random.Range(JointData.MinForceMagnitude, JointData.MaxForceMagnitude);
         JointData.Joint.AddForce(Force, ForceMode.Impulse);
-        
     }
 
     public virtual void DestoryRagdoll()
     {
-        if (DelgateDestoryFunction != null && DelgateDestoryFunction.Trim() != string.Empty)
-        {
-            SendMessage(DelgateDestoryFunction);
-        }
-        else
-        {
-            Destroy(gameObject);
-			for(int i=0; i<RagdollJointData.Length; i++)
+        
+		for(int i=0; i<RagdollJointData.Length; i++)
+		{
+		    GameObject jointObject = RagdollJointData[i].Joint.gameObject;
+			if(RagdollJointData[i].SelfcontrolDestruction)
 			{
-				GameObject jointObject = RagdollJointData[i].Joint.gameObject;
-				Destroy(jointObject);
+				RagdollJointData[i].Joint.gameObject.AddComponent<AutoDestroy>().destroyInTime = RagdollJointData[i].SelfDestructionTime;
+				//for self-control destruction joint object, automatically detach it from parent, to avoid being destroyed with parent.
+				RagdollJointData[i].Joint.gameObject.transform.parent = null;
 			}
-        }
+			else {
+		       Destroy(jointObject);
+			}
+		}
+        Destroy(gameObject);
     }
 }

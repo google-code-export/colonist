@@ -13,7 +13,7 @@ public class GestureHandler_Predator : JoyButton {
 	private Predator3rdPersonalAttackController attackController;
  	// Use this for initialization
 	void Awake () {
-        JoyButtonBound = Util.GetScreenOccupancy(ScreenOccupancy);
+        GUIBound = Util.GetScreenOccupancy(ScreenOccupancy);
 		attackController = GetComponent<Predator3rdPersonalAttackController>();
  	}
 	
