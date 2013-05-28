@@ -34,11 +34,11 @@ public class Joystick_Predator : JoyButton {
     {
         if (FlexibleMode == true)
         {
-            JoyButtonBound = Util.GetScreenOccupancy(ScreenOccupancy);
+            GUIBound = Util.GetScreenOccupancy(ScreenOccupancy);
         }
         else
         {
-            JoyButtonBound = this.GetAdaptiveBound();
+            GUIBound = this.GetAdaptiveBound();
         }
     }
 
@@ -92,11 +92,11 @@ public class Joystick_Predator : JoyButton {
         //If flexiblemode == false, draw the ButtionTexture at fix location
         if (FlexibleMode == false)
         {
-            Rect backgroundRectArea = JoyButtonBound;
+            Rect backgroundRectArea = GUIBound;
             GUI.DrawTexture(backgroundRectArea, ButtonTexture);
 
-            Rect foregroundRectArea = new Rect(JoyButtonBound.center.x - ForeGroundTextureSize / 2 + JoyButtonRuntimeOffset.x,
-                                               JoyButtonBound.center.y - ForeGroundTextureSize / 2 + JoyButtonRuntimeOffset.y,
+            Rect foregroundRectArea = new Rect(GUIBound.center.x - ForeGroundTextureSize / 2 + JoyButtonRuntimeOffset.x,
+                                               GUIBound.center.y - ForeGroundTextureSize / 2 + JoyButtonRuntimeOffset.y,
                                                ForeGroundTextureSize, 
                                                ForeGroundTextureSize);
             GUI.DrawTexture(foregroundRectArea, ForeGroundTexture);

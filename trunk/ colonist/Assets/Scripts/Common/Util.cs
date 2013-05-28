@@ -112,6 +112,16 @@ public class Util : MonoBehaviour {
         }
         return false;
     }
+	
+	public static IList<T> CopyArrayToList<T>(T[] src)
+	{
+		IList<T> ret = new List<T>();
+		for(int i=0; i<ret.Count; i++)
+		{
+			ret[i] = src[i];
+		}
+		return ret;
+	}
 
 	public static T[] CloneArray<T>(T[] src)
 	{
@@ -199,15 +209,6 @@ public class Util : MonoBehaviour {
         return totalMass;
     }
 
-    public static void CopyToList(RaycastHit[] Array, out IList<Collider> list)
-    {
-        list = new List<Collider>();
-        foreach (RaycastHit hit in Array)
-        {
-            list.Add(hit.collider);
-        }
-    }
-
     public static void CopyTransform(Transform src, Transform dst)
     {
         dst.position = src.position; 
@@ -270,14 +271,31 @@ public class Util : MonoBehaviour {
     {
         return transform.root;
     }
+	
+	public static GameObject FindClosestCharacter(GameObject character, IList<GameObject> Characters, out float Distance)
+	{
+		GameObject closest = null;
+        float closestDistance = 99999f;
+        foreach (GameObject c in Characters)
+        {
+            float distance = Util.DistanceOfCharacters(character, c);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closest = c;
+            }
+        }
+        Distance = closestDistance;
+        return closest;
+	}
 
-    public static Collider findClosest(Vector3 pos, IList<Collider> colliders)
+    public static Collider FindClosest(Vector3 pos, IList<Collider> colliders)
     {
         float d = 0f;
-        return findClosest(pos, colliders, out d);
+        return FindClosest(pos, colliders, out d);
     }
 
-    public static Collider findClosest(Vector3 pos, IList<Collider> colliders, out float Distance)
+    public static Collider FindClosest(Vector3 pos, IList<Collider> colliders, out float Distance)
     {
         Collider closest = null;
         float closestDistance = 99999f;
@@ -294,13 +312,13 @@ public class Util : MonoBehaviour {
         return closest;
     }
 
-	public static Collider findClosest(Vector3 pos, Collider[] colliders)
+	public static Collider FindClosest(Vector3 pos, Collider[] colliders)
     {
         float d = 0f;
-        return findClosest(pos,colliders,out d);
+        return FindClosest(pos,colliders,out d);
     }
 
-    public static Collider findClosest(Vector3 pos, Collider[] colliders, out float Distance)
+    public static Collider FindClosest(Vector3 pos, Collider[] colliders, out float Distance)
     {
         Collider closest = null;
         float closestDistance = 9999f;

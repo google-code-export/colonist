@@ -61,7 +61,7 @@ public class RagdollEditor : EditorWindow {
 	{
 		EditorGUILayout.LabelField ("-------------------------Edit Ragdoll---------------");
 		selectedRagdoll.Name = EditorGUILayout.TextField(new GUIContent("Name:",""), selectedRagdoll.Name);
-		selectedRagdoll.RagdollCenter = (Transform)EditorGUILayout.ObjectField(new GUIContent("Ragdoll center:",""),selectedRagdoll.RagdollCenter, typeof(Transform));
+//		selectedRagdoll.RagdollCenter = (Transform)EditorGUILayout.ObjectField(new GUIContent("Ragdoll center:",""),selectedRagdoll.RagdollCenter, typeof(Transform));
 		EditorGUILayout.BeginHorizontal();
 		selectedRagdoll.AutoDestory = EditorGUILayout.Toggle(new GUIContent("Auto destory in lifetime:",""),selectedRagdoll.AutoDestory);
 		if(selectedRagdoll.AutoDestory)
@@ -110,47 +110,6 @@ public class RagdollEditor : EditorWindow {
 		EditorGUILayout.EndToggleGroup ();
 	}
 	
-//	public virtual void EditEffectData ()
-//	{
-//		EnableEditEffectData = EditorGUILayout.BeginToggleGroup ("---Edit Effect Data", EnableEditEffectData);
-//		if (EnableEditEffectData) {
-//			if (GUILayout.Button ("Add Effect data")) {
-//				EffectData EffectData = new EffectData ();
-//				IList<EffectData> l = selectedRagdoll.EffectData.ToList<EffectData> ();
-//				l.Add (EffectData);
-//				selectedRagdoll.EffectData = l.ToArray<EffectData> ();
-//			}
-//			for (int i = 0; i < selectedRagdoll.EffectData.Length; i++) {
-//				EffectData EffectData = selectedRagdoll.EffectData [i];
-//				EditorGUILayout.LabelField ("------------------------ " + EffectData.Name);
-//				EffectData.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), EffectData.Name);
-//				
-//				EffectData.UseGlobalEffect = EditorGUILayout.Toggle (new GUIContent ("Use global effect?", "是否使用全局Effect?"), EffectData.UseGlobalEffect);
-//				if(EffectData.UseGlobalEffect)
-//				{
-//					EffectData.GlobalType = (GlobalEffectType)EditorGUILayout.EnumPopup(new GUIContent ("Global effect type", "是全局Effect类型"),
-//						EffectData.GlobalType);
-//				}
-//				else {
-//				  EffectData.EffectObject = (GameObject)EditorGUILayout.ObjectField (new GUIContent ("Effect object", ""), EffectData.EffectObject, typeof(GameObject));
-//				  EffectData.Anchor = (Transform)EditorGUILayout.ObjectField (new GUIContent ("Effect creation anchor", ""), EffectData.Anchor, typeof(Transform));
-//				  EffectData.DestoryInTimeOut = EditorGUILayout.Toggle (new GUIContent ("Destory this effect in timeout?", "是否在N秒内删除这个效果?"), EffectData.DestoryInTimeOut);
-//				  if (EffectData.DestoryInTimeOut) {
-//				    	EffectData.DestoryTimeOut = EditorGUILayout.FloatField (new GUIContent ("Destory Timeout:", ""), EffectData.DestoryTimeOut);
-//				  }
-//				  if (GUILayout.Button ("Delete EffectData:" + EffectData.Name)) {
-//  					  IList<EffectData> l = selectedRagdoll.EffectData.ToList<EffectData> ();  
-//					  l.Remove (EffectData);
-//				  	  selectedRagdoll.EffectData = l.ToArray<EffectData> ();
-//				  }
-//				}
-//				EditorGUILayout.Space ();
-//			}
-//		}
-//		EditorGUILayout.EndToggleGroup ();
-//	}
-	
-	
 	public virtual void EditRagdollJointData()
 	{
 		EnableEditRagdollData = EditorGUILayout.BeginToggleGroup ("---Edit RagdollJointData", EnableEditRagdollData);
@@ -168,8 +127,18 @@ public class RagdollEditor : EditorWindow {
 				
 				RagdollJointData.Joint = (Rigidbody)EditorGUILayout.ObjectField(new GUIContent("Joint","关节对象"),
 					                                         RagdollJointData.Joint, typeof(Rigidbody));
-				RagdollJointData.Detach = EditorGUILayout.Toggle(new GUIContent ("Detach joint?", "把关节分离?"),
+				RagdollJointData.JointGameObjectInitialActive = EditorGUILayout.Toggle(new GUIContent("Initial active:","If false, the gameobject will be deactivate when ragdoll created"),
+					                                                                   RagdollJointData.JointGameObjectInitialActive);
+				RagdollJointData.Detach = EditorGUILayout.Toggle(new GUIContent ("Detach joint?", "Detach this joint object from parent?"),
 					RagdollJointData.Detach);
+
+				RagdollJointData.SelfcontrolDestruction = EditorGUILayout.Toggle(new GUIContent ("Self control destruction?", "The joint control its destruction itself?"),
+						RagdollJointData.SelfcontrolDestruction);
+				if(RagdollJointData.SelfcontrolDestruction)
+				{
+				   RagdollJointData.SelfDestructionTime = EditorGUILayout.FloatField("Self destuction time:", RagdollJointData.SelfDestructionTime);
+				}
+				
 				RagdollJointData.DestoryJoint = EditorGUILayout.Toggle(new GUIContent ("Destory joint?", "销毁ChracterJoint组件?"),
 					RagdollJointData.DestoryJoint);
 				
@@ -204,6 +173,28 @@ public class RagdollEditor : EditorWindow {
 				  	  selectedRagdoll.RagdollJointData = l.ToArray<RagdollJointData> ();
 				  }
 			}
+		}
+	}
+	
+	
+	public static void CopyRagdollData(Ragdoll _from, Ragdoll to, bool Override)
+	{
+		IList<RagdollJointData> jointDataList = new List<RagdollJointData> ();
+		foreach(RagdollJointData jointData in _from.RagdollJointData)
+		{
+			 RagdollJointData cloned = jointData.GetClone();
+			 if(Override==false)
+			 { 
+				Util.AddToArray<RagdollJointData>(cloned, to.RagdollJointData);
+			 }
+			else 
+			{
+				jointDataList.Add(cloned);
+			}
+		}
+		if(Override==true)
+		{
+			to.RagdollJointData = jointDataList.ToArray();
 		}
 	}
 }

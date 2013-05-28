@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// Defines the data to alternate to another behavior.
@@ -13,6 +14,9 @@ using System.Collections.Generic;
 public class AlternateBehaviorData
 {
 	public string Name = "";
+	/// <summary>
+	/// The priority , 0 = lowest.
+	/// </summary>
 	public int priority = 0;
 	/// <summary>
 	/// The alternate condition, if matches, switch condition
@@ -40,20 +44,11 @@ public class AIBehavior
 	public AIBehaviorPhase Phase = AIBehaviorPhase.Sleeping;
 	public SelectTargetRule SelectTargetRule = SelectTargetRule.Default;
 
-#region variables for Start and End Condition
-	/// <summary>
-	/// Scan end condition at every %ScanEndConditionInterval% seconds
-	/// </summary>
-	public float ScanEndConditionInterval = 0.33333f;
-	public CompositeConditionWrapper EndConditionWrapper = new CompositeConditionWrapper ();
-	
-	
 	/// <summary>
 	/// The alternate behavior condition array. Sorted by priority.
 	/// </summary>
 	public AlternateBehaviorData[] alternateBehaviorConditionArray = new AlternateBehaviorData[] { } ;
-	
-#endregion
+	public float AlterBehaviorInterval = 0.3333f;
 
 #region variables for BehaviorType = Idle
 	public string IdleDataName = string.Empty;
@@ -144,8 +139,6 @@ public class AIBehavior
 	public AIBehavior GetClone ()
 	{
 		AIBehavior clone = new AIBehavior ();
-//		clone.StartConditionWrapper = this.StartConditionWrapper.GetClone();
-		clone.EndConditionWrapper = this.EndConditionWrapper.GetClone ();
 		clone.Name = this.Name;
 		clone.Type = this.Type;
 		clone.SelectTargetRule = this.SelectTargetRule;
@@ -165,51 +158,13 @@ public class AIBehavior
 	}
 	
 	/// <summary>
-	/// Ascendent sort AlternateBehaviorData.
-	/// </summary>
-	int SortAlternateBehaviorData(AlternateBehaviorData x, AlternateBehaviorData y)
-	{
-		int ret = 0;
-		if(x.priority == y.priority)
-			ret = 0;//equal
-		if(x.priority < y.priority)
-			ret = -1;//lesser
-		if(x.priority > y.priority)
-			ret = 1;//greater
-		return ret;
-	}
-	
-	/// <summary>
-	/// Descent sort AlternateBehaviorData.
-	/// </summary>
-	int DescSortAlternateBehaviorData(AlternateBehaviorData x, AlternateBehaviorData y)
-	{
-		int ret = 0;
-		if(x.priority == y.priority)
-			ret = 0;//equal
-		if(x.priority < y.priority)
-			ret = 1;//lesser
-		if(x.priority > y.priority)
-			ret = -1;//greater
-		return ret;
-	}
-	
-	/// <summary>
 	/// Inits the AIBehavior variable.
 	/// call this method in Awake of AI class.
 	/// </summary>
 	public void InitBehavior ()
 	{
 		//sort the alternateBehaviorConditionArray by priority, in descending order.
-		List <AlternateBehaviorData> sortedList = new List<AlternateBehaviorData> ();
-		
-		for (int i=0; i<alternateBehaviorConditionArray.Length; i++) {
-			sortedList.Add (alternateBehaviorConditionArray [i]);
-			//Initialize the condition wrapper data.
-			alternateBehaviorConditionArray[i].AlternateCondition.InitDictionary();
-		}
-		//Sort priority descendently from higher to lower, so the higher priority always get more chance to be executed.
-		sortedList.Sort(DescSortAlternateBehaviorData);
-		this.alternateBehaviorConditionArray = sortedList.ToArray();
+		IList <AlternateBehaviorData> sortedList = Util.CopyArrayToList<AlternateBehaviorData>(alternateBehaviorConditionArray);
+		this.alternateBehaviorConditionArray = sortedList.OrderBy(x=>x.priority).ToArray();
 	}
 }

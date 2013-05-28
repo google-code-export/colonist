@@ -27,9 +27,6 @@ public class LevelManager : MonoBehaviour {
 	/// The ScenarioControl object which control the scenario camera/scenario character behavior.
 	/// </summary>
 	ScenarioControl scenarioControlObject = null;
-	/// <summary>
-	/// The MagicalNumberGUITexture object which display the DamageHint number. 
-	/// </summary>
 	
     void Awake()
     {
@@ -45,7 +42,7 @@ public class LevelManager : MonoBehaviour {
 		GameEvent _e = new GameEvent();
 		_e.type = GameEventType.LevelStart;
 		_e.receiver = this.gameObject;
-        GameEvent(_e);
+        OnGameEvent(_e);
 	}
 	
 	// Update is called once per frame
@@ -61,7 +58,7 @@ public class LevelManager : MonoBehaviour {
 	/// <summary>
 	/// Sends a GameEvent.
 	/// </summary>
-    public static void GameEvent(GameEvent gameEvent)
+    public static void OnGameEvent(GameEvent gameEvent)
     {
 		if(gameEvent.delaySend > 0)
 		{
@@ -89,7 +86,6 @@ public class LevelManager : MonoBehaviour {
 			  break;
 		    case GameEventType.WhiteInScenarioCamera:
 		    case GameEventType.WhiteOutScenarioCamera:
-			case GameEventType.ScenarioCameraDockComplete:
 			case GameEventType.StartScenario:
 			case GameEventType.ScenarioComplete:
 		    case GameEventType.ScenarioCameraOff:
@@ -100,6 +96,9 @@ public class LevelManager : MonoBehaviour {
 			case GameEventType.PlayerCameraAudioListenerOn:
 			case GameEventType.ScenarioCameraAudioListenerOn:
 			case GameEventType.ScenarioCameraAudioListenerOff:
+		    case GameEventType.StartDocking:
+		    case GameEventType.PlayerCameraSlowMotionOnFixedPoint:
+			case GameEventType.PlayerCameraSlowMotionOnTransform:
 			  this.scenarioControlObject.OnGameEvent(gameEvent);
 			  break;
 		    case GameEventType.PlayerSetToActive:
@@ -115,13 +114,78 @@ public class LevelManager : MonoBehaviour {
 			  player.transform.root.BroadcastMessage("OnGameEvent", gameEvent, SendMessageOptions.DontRequireReceiver);
 			  break;
 		    case GameEventType.NPCPlayAnimation:
+			  gameEvent.receiver.animation.CrossFade(gameEvent.StringParameter);
+			  break;
+		    case GameEventType.NPCFaceToPlayer:
+			  gameEvent.sender.transform.LookAt(new Vector3(player.transform.position.x, gameEvent.sender.transform.position.y, player.transform.position.z));
+			  break;
+		    case GameEventType.NPCStopPlayingAnimation:
+			  gameEvent.receiver.animation.Stop(gameEvent.StringParameter);
+			  break;
 		    case GameEventType.NPCStartAI:
+			case GameEventType.NPCStartDefaultAI:
 			  gameEvent.receiver.SendMessage("OnGameEvent", gameEvent);
 			  break;
 		    case GameEventType.LevelAreaStartSpawn:
 			  LevelArea.GetArea(gameEvent.StringParameter).StartSpawn();
 			  break;
-
+		    case GameEventType.DeactivateGameObject:
+			  Util.DeactivateRecurrsive(gameEvent.receiver);
+			  break;
+			case GameEventType.DestroyGameObject:
+			  Destroy(gameEvent.receiver, gameEvent.FloatParameter);
+			  break;
+		    case GameEventType.ActivateGameObject:
+			   Util.ActivateRecurrsive(gameEvent.receiver);
+			   break;
+		    case GameEventType.SpecifiedSpawn:
+			  gameEvent.receiver.SendMessage("OnGameEvent", gameEvent);
+			  break;
+		    case GameEventType.InvokeMethod:
+			  if(gameEvent.parameterType == ParameterType.None)
+			     gameEvent.receiver.SendMessage(gameEvent.CustomMessage);
+			  else if(gameEvent.parameterType == ParameterType.Int)
+				 gameEvent.receiver.SendMessage(gameEvent.CustomMessage, gameEvent.IntParameter);
+			  else if(gameEvent.parameterType == ParameterType.Float)
+				 gameEvent.receiver.SendMessage(gameEvent.CustomMessage, gameEvent.FloatParameter);
+			  else if(gameEvent.parameterType == ParameterType.String)
+				 gameEvent.receiver.SendMessage(gameEvent.CustomMessage, gameEvent.StringParameter);
+			  else if(gameEvent.parameterType == ParameterType.Bool)
+				 gameEvent.receiver.SendMessage(gameEvent.CustomMessage, gameEvent.BoolParameter);
+			  break;
+		     case GameEventType.SetLanguage:
+			     SystemLanguage systemlanguage = (SystemLanguage)System.Enum.Parse(typeof(SystemLanguage),gameEvent.StringParameter);
+			     if(Persistence.GetPlayerLanguage() != systemlanguage)
+			     {
+			        Persistence.SetPlayerLanguage(systemlanguage);
+			        Debug.Log("Change language:" + systemlanguage);
+			     }
+			     break;
+			 case GameEventType.SetQuality:
+			     Persistence.SetPlayerQualityLevel(gameEvent.IntParameter);
+			     break;
+		     case GameEventType.LoadLevel:
+			     LoadLevel(gameEvent);
+			     break;
+		     case GameEventType.Mute:
+			     Persistence.Mute();
+			     break;
+		     case GameEventType.UnMute:
+			     Persistence.Unmute();
+			     break;
+		}
+	}
+	
+	void LoadLevel(GameEvent gameEvent)
+	{
+		switch(gameEvent.parameterType)
+		{
+		case ParameterType.Int:
+			Application.LoadLevel(gameEvent.IntParameter);
+			break;
+		case ParameterType.String:
+			Application.LoadLevel(gameEvent.StringParameter);
+			break;
 		}
 	}
 	

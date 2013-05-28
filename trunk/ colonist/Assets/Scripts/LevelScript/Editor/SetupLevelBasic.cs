@@ -37,6 +37,12 @@ public class SetupLevelBasic {
 		GloalEffectDecal.name = "GloalEffectDecal";
 		GloalEffectDecal.AddComponent<GlobalBloodEffectDecalSystem>();
 		GloalEffectDecal.transform.parent = levelManger.transform;
+		
+		//Create gamedialog system
+	    GameObject gameDialogObject = new GameObject();
+		gameDialogObject.name = "GameDialogue";
+		gameDialogObject.AddComponent<GameDialogue>();
+		gameDialogObject.transform.parent = levelManger.transform;
 	}
 
 }

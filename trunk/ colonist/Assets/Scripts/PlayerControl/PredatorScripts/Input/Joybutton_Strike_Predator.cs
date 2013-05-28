@@ -49,8 +49,7 @@ public class Joybutton_Strike_Predator : JoyButton
 
 	void Start ()
 	{
-		JoyButtonBound = this.GetAdaptiveBound();
-//		JoyButtonBound = GameGUIHelper.GetSquareOnGUICoordinate (Location, JoyButtonSize);
+		GUIBound = this.GetAdaptiveBound();
 	}
 
 	void Update ()
@@ -132,15 +131,19 @@ public class Joybutton_Strike_Predator : JoyButton
 
 	void OnGUI ()
 	{
-		if(Application.platform == RuntimePlatform.WindowsEditor)
+//		if(Application.platform == RuntimePlatform.WindowsEditor)
+//		{
+//			JoyButtonBound = this.GetAdaptiveBound();
+//		}
+		GUI.DrawTexture (GUIBound, ButtonTexture);
+		if(this.JoyButtonName == "LeftClaw" && Input.GetKeyDown(KeyCode.T))
 		{
-			JoyButtonBound = this.GetAdaptiveBound();
+			Debug.Log(GUIBound);
 		}
-		GUI.DrawTexture (JoyButtonBound, ButtonTexture);
 		if(showHint)
 		{
-			GUIUtility.RotateAroundPivot(Time.time % 360 * HintRotateAngluarSpeed, JoyButtonBound.center);
-			GUI.DrawTexture (JoyButtonBound, HintTexture, ScaleMode.ScaleToFit,true);
+			GUIUtility.RotateAroundPivot(Time.time % 360 * HintRotateAngluarSpeed, GUIBound.center);
+			GUI.DrawTexture (GUIBound, HintTexture, ScaleMode.ScaleToFit,true);
 		}
 	}
  

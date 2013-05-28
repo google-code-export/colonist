@@ -8,12 +8,8 @@ using System.Collections.Generic;
 public enum GlobalDecalType
 {
 #region human blood 0 - 100
-    HumanBlood_Splatter01_Static = 0,
-    HumanBlood_Splatter02_Static = 1,
-    HumanBlood_Splatter03_Static = 2,
-    HumanBlood_Splatter01_Dynamic = 3,
-    HumanBlood_Splatter02_Dynamic = 4,
-    HumanBlood_Splatter03_Dynamic = 5,
+    HumanBlood_Splatter_Static = 0,
+    HumanBlood_Splatter_Dynamic = 3,
 #endregion
 
 #region xenz blood 101 - 200
@@ -24,7 +20,9 @@ public enum GlobalDecalType
 public enum GlobalEffectType
 {
     #region human blood 0 - 100
-    HumanBlood_Splatter = 0,
+    HumanBlood_Splatter_Small = 0,
+	HumanBlood_Splatter_Middle = 1,
+	HumanBlood_Splatter_Large = 2,
     #endregion
 
     #region xenz blood 101 - 200
@@ -42,7 +40,7 @@ public enum GlobalEffectType
 public class GlobalDecalData
 {
     public string Name = "Global decal name";
-    public GlobalDecalType DecalType = GlobalDecalType.HumanBlood_Splatter01_Static;
+    public GlobalDecalType DecalType = GlobalDecalType.HumanBlood_Splatter_Static;
     /// <summary>
     /// Destory decal after life time.
     /// </summary>
@@ -73,20 +71,12 @@ public class GlobalDecalData
 public class GlobalEffectData
 {
     public string Name = "Global effect name";
-    public GlobalEffectType EffectType = GlobalEffectType.HumanBlood_Splatter;
+    public GlobalEffectType EffectType = GlobalEffectType.HumanBlood_Splatter_Small;
     /// <summary>
     /// Destory efect after life time.
     /// </summary>
     public float EffectLifetime = 3;
     public Object[] Effect_Object = new Object[] { };
-    /// <summary>
-    /// Should the effect created in random rotation?
-    /// </summary>
-    public bool RandomRotation = true;
-    /// <summary>
-    /// Effect will be created in a random sphere around the creation anchor, the sphere radius is defined by Radius.
-    /// </summary>
-    public float Radius = 1;
 }
 
 /// <summary>
@@ -97,7 +87,7 @@ public class GlobalBloodEffectDecalSystem : MonoBehaviour {
     public GlobalDecalData[] GlobalDecalData = new GlobalDecalData[] { };
     public IDictionary<GlobalDecalType, GlobalDecalData> GlobalDecalDataDict = new Dictionary<GlobalDecalType, GlobalDecalData>();
 
-    public GlobalEffectData[] GlobalEffectData = new GlobalEffectData[] { };
+    public GlobalEffectData[] globalEffectDataArray = new GlobalEffectData[] { };
     public IDictionary<GlobalEffectType, GlobalEffectData> GlobalEffectDataDict = new Dictionary<GlobalEffectType, GlobalEffectData>();
 
     public static GlobalBloodEffectDecalSystem Instance;
@@ -109,7 +99,7 @@ public class GlobalBloodEffectDecalSystem : MonoBehaviour {
         {
             GlobalDecalDataDict.Add(globalDecalData.DecalType, globalDecalData);
         }
-        foreach (GlobalEffectData globalEffectData in GlobalEffectData)
+        foreach (GlobalEffectData globalEffectData in globalEffectDataArray)
         {
             GlobalEffectDataDict.Add(globalEffectData.EffectType, globalEffectData);
         }
@@ -120,68 +110,73 @@ public class GlobalBloodEffectDecalSystem : MonoBehaviour {
 	/// center: optional, used when using effect type = global type.
 	/// </summary>
 	/// <param name='center'>
-    public static void CreateEffect(Vector3 center, EffectData EffectData)
-    {
-        Instance.StartCoroutine(Instance._CreateEffect(center,EffectData));
-    }
-	
-	/// <summary>
-	/// Call this function to create effectobject when effectData.useglobalsetting = false.
-	/// Only appliable to create custom (non-global defined) effect object.
-	/// </summary>
     public static void CreateEffect(EffectData effectData)
     {
-        Instance.StartCoroutine(Instance._CreateEffect(Vector3.zero,effectData));
+        Instance.StartCoroutine(Instance._CreateEffect(effectData));
     }
 	
-    IEnumerator _CreateEffect(Vector3 center, EffectData effectData)
+    IEnumerator _CreateEffect(EffectData effectData)
     {
+		//Then, wait for the delay
         if(effectData.CreateDelay)
 		{
 			yield return new WaitForSeconds(effectData.CreateDelayTime);
 		}
 		for(int i=0; i < effectData.Count; i++)
 		{
-			//if effectData is using global setting:
-            if (effectData.UseGlobalEffect)
+			//if effectData is using global setting or create mode:
+            if (effectData.UseGlobalEffect || effectData.InstantionType == EffectObjectInstantiation.create)
             {
-              GlobalEffectData globalEffectData = Instance.GlobalEffectDataDict[effectData.GlobalType];
-              Object effect = Object.Instantiate(Util.RandomFromArray<Object>(globalEffectData.Effect_Object),
-                                                 center + Random.insideUnitSphere * globalEffectData.Radius,
-                                                 Random.rotation);
-              //Destory the effect object after life time
-              Destroy(effect, globalEffectData.EffectLifetime);
-            }
-			//Else it's using custom effect object.
-            //If Type == EffectObjectInstantiation.creat, create a instance by the prefab
-            else if(effectData.InstantionType == EffectObjectInstantiation.creat)
-            {
-			  Object effectObject = null;
-			  Vector3 instantiationPosition = effectData.instantiationData.BasicAnchor.position;
-			  if(effectData.instantiationData.RandomPositionInsideSphere)
-			  {
-			     instantiationPosition += Random.insideUnitSphere * effectData.instantiationData.RandomSphereUnit;
-			  }
-			  instantiationPosition += effectData.instantiationData.WorldOffset;
-			  Quaternion instantiationQuaternion = effectData.instantiationData.RandomQuaternion ? 
-						                                  Random.rotation : 
-						                                  effectData.instantiationData.BasicAnchor.rotation;
-			  effectObject = Object.Instantiate(effectData.EffectObject,instantiationPosition,instantiationQuaternion);
-			
-			  if(effectData.DestoryInTimeOut)
-			  {
-                 Destroy(effectObject, effectData.DestoryTimeOut);
-			  }
+				//decide the position to create the effect object
+			    Vector3 instantiationPosition = Vector3.zero;
+				try{
+			       instantiationPosition = effectData.instantiationData.BasicAnchor.position;
+				}
+				catch(System.Exception exc)
+				{
+					Debug.LogError("Have trouble when access base anchor position on effect data:" + effectData.Name);
+					Debug.LogError(exc.StackTrace);
+				}
+				
+				//decide the quaternion to create the effectt object:
+				Quaternion instantiationQuaternion = Quaternion.identity;
+			    if(effectData.instantiationData.RandomPositionInsideSphere)
+			    {
+			       instantiationPosition += Random.insideUnitSphere * effectData.instantiationData.RandomSphereUnit;
+			    }
+			    instantiationPosition += effectData.instantiationData.WorldOffset;
+			    switch(effectData.instantiationData.rotationOfInstance)
+			    {
+				case InstantiationRotationMode.IdentityQuaternion:
+			       instantiationQuaternion = Quaternion.identity;
+			       break;
+				case InstantiationRotationMode.RandomQuaternion:
+			       instantiationQuaternion = Random.rotation;
+			       break;
+				case InstantiationRotationMode.AlignToAnchor:
+			       instantiationQuaternion = effectData.instantiationData.BasicAnchor.rotation;
+			       break;
+				case InstantiationRotationMode.SpecifiedQuaternion:
+				   instantiationQuaternion = effectData.instantiationData.specifiedQuaterion;
+			       break;
+			    }
+			  Object effectObjectPrototype = effectData.UseGlobalEffect ? Util.RandomFromArray<Object>(Instance.GlobalEffectDataDict[effectData.GlobalType].Effect_Object) 
+					                                                    : effectData.EffectObject;
+              Object effectObject = Object.Instantiate(effectObjectPrototype,
+                                                 instantiationPosition,
+                                                 instantiationQuaternion);
+			  float LifeTime = effectData.UseGlobalEffect ? Instance.GlobalEffectDataDict[effectData.GlobalType].EffectLifetime : effectData.DestoryTimeOut;
+              //Destory the effect object after life time, if life time > 0
+				if(LifeTime > 0)
+				{
+                   Destroy(effectObject, LifeTime);
+				}
             }
 			else if(effectData.InstantionType == EffectObjectInstantiation.play && effectData.EffectObject != null)
 			{
 				GameObject effectObject = effectData.EffectObject;
 				ParticleSystem ps = effectObject.GetComponent<ParticleSystem>();
 				ps.Play();
-				if (effectData.DestoryInTimeOut)
-                {
-                    Destroy(effectObject, effectData.DestoryTimeOut);
-                }
 			}
 		}
     }
@@ -198,13 +193,18 @@ public class GlobalBloodEffectDecalSystem : MonoBehaviour {
         if (DecalData.UseGlobalDecal)
         {
             GlobalDecalData globalDecalData = Instance.GlobalDecalDataDict[DecalData.GlobalType];
-            CreateBloodDecalOnGround(center,
-                                     Util.RandomFromArray<Object>(globalDecalData.Decal_OnGround),
-                                     globalDecalData.GroundLayer,
-                                     true,
-                                     globalDecalData.DecalLifetime,
-                                     Random.Range(globalDecalData.ScaleRateMin, globalDecalData.ScaleRateMax)
-                                     );
+			if(globalDecalData.Decal_OnGround.Length > 0)
+			{
+               CreateBloodDecalOnGround(center,
+                                        Util.RandomFromArray<Object>(globalDecalData.Decal_OnGround),
+                                        globalDecalData.GroundLayer,
+                                        true,
+                                        globalDecalData.DecalLifetime,
+                                        Random.Range(globalDecalData.ScaleRateMin, globalDecalData.ScaleRateMax)
+                                        );
+			}
+			if(globalDecalData.Decal_OnWall.Length > 0)
+			{
             CreateBloodDecalOnWall(center,
                                      Util.RandomFromArray<Object>(globalDecalData.Decal_OnWall),
                                      globalDecalData.WallLayer,
@@ -212,6 +212,7 @@ public class GlobalBloodEffectDecalSystem : MonoBehaviour {
                                      globalDecalData.DecalLifetime,
                                      Random.Range(globalDecalData.ScaleRateMin, globalDecalData.ScaleRateMax)
                                      );
+			}
         }
         //Create custom decal defined by Unit
         else
@@ -249,7 +250,7 @@ public class GlobalBloodEffectDecalSystem : MonoBehaviour {
                                         float scaleRate
                                         )
     {
-        float Radius = 2;
+        float Radius = 1;
         Vector2 randomFromCircle = Random.insideUnitCircle;
         randomFromCircle *= Radius;
         Vector3 random = new Vector3(center.x + randomFromCircle.x, center.y + 3, center.z + randomFromCircle.y);

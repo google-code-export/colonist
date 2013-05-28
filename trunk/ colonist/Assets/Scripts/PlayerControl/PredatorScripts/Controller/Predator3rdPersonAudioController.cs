@@ -13,6 +13,6 @@ public class Predator3rdPersonAudioController : MonoBehaviour {
 	public void PlaySound(string name)
 	{
 		AudioData audioData = predatorUnit.AudioDataDict[name];
-		AudioSource.PlayClipAtPoint( Util.RandomFromArray<AudioClip>(audioData.audioClip), transform.position);
+		GlobalAudioSystem.PlayAudioData(audioData);
 	}
 }

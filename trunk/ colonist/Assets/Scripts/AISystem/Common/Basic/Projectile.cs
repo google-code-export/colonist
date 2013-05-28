@@ -307,7 +307,7 @@ public class Projectile : MonoBehaviour {
 
     void OnTriggerEnter(Collider other)
     {
-//        Debug.Log("OnTriggerEnter Hit with:" + other.gameObject.name);
+//        Debug.Log("OnTriggerEnter Hit with:" + other.gameObject.name + " layer:" + LayerMask.LayerToName(other.gameObject.layer));
         HitSomething = true;
         if (Util.CheckLayerWithinMask(other.gameObject.layer, this.AttackableLayer))
         {

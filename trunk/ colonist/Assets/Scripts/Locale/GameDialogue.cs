@@ -7,10 +7,13 @@ using System.Collections.Generic;
 /// Language and corresponding font.
 /// </summary>
 [System.Serializable]
-public class LocaleFont
+public class LocaleStyle
 {
 	public SystemLanguage language;
-	public Font font;
+	public GUISkin guiSkin;
+	//if only use font = true, the guiSkin is ignore in GUI drawing. But the font will be used.
+	public bool OnlyUseFont;
+	public Font font = null;
 }
 
 /// <summary>
@@ -58,7 +61,7 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 	/// The width of the text, in letter count.
 	/// </summary>
 	public int textWidth = 60;
-	public LocaleFont[] LocaleFontArray = new LocaleFont[] { };
+	public LocaleStyle[] LocaleStyleArray = new LocaleStyle[] { };
 	
 	/// <summary>
 	/// After display a dialogue, delay N seconds.
@@ -100,22 +103,11 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 	/// word will be displayed integrallty at next line, 
 	/// </summary>
 	bool breakOnWholeWords = true;
-	Font customFont = null;
+	LocaleStyle CurrentLocaleStyle = null;
 	
 	void Awake ()
 	{
-		Localization.InitializeLevelDialogue (this.LevelName, targetLanguage);
-		displayedText = "";
-		Portrait = null;
-		//Pick custom font for the target language, if exists.
-		foreach (LocaleFont lf in LocaleFontArray) {
-			if (lf.language == targetLanguage) {
-				this.customFont = lf.font;
-				break;
-			}
-		}
-
-		SetupDisplayedRect ();
+		InitializeGameDialog();
 	}
 	
 	void SetupDisplayedRect ()
@@ -136,6 +128,23 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 		BackgroundArea.height = Screen.height - BackgroundArea.y + 10;
 	}
 	
+	void InitializeGameDialog()
+	{
+		targetLanguage = Persistence.GetPlayerLanguage();
+		Localization.InitializeLevelDialogue (this.LevelName, targetLanguage);
+		displayedText = "";
+		Portrait = null;
+		//Pick custom font for the target language, if exists.
+		foreach (LocaleStyle ls in LocaleStyleArray) {
+			if (ls.language == targetLanguage) {
+				CurrentLocaleStyle = ls;
+				break;
+			}
+		}
+
+		SetupDisplayedRect ();
+	}
+	
 	// Use this for initialization
 	void Start ()
 	{
@@ -152,6 +161,7 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 	{
 		switch (_event.type) {
 		case GameEventType.ShowGameDialogue:
+			Stop();//Stop any playing dialogue
 			string DialogueID = _event.StringParameter;
 			StartCoroutine ("DisplayDialogue", DialogueID);
 			break;
@@ -270,24 +280,41 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
 	void OnGUI ()
 	{
 		if (HasDialog) {
-			if (this.customFont != null) {
-				GUI.skin.font = this.customFont;
-			}
 			if (DialogueBackgroundTexture) {
 				GUI.DrawTexture (BackgroundArea, DialogueBackgroundTexture, ScaleMode.ScaleAndCrop, true);
 			}
 			if (Portrait != null) {
-				GUI.DrawTexture (this.PortraitArea, Portrait, ScaleMode.ScaleToFit, true);
+				GUI.DrawTexture (this.PortraitArea, Portrait);
 				if (SpearkerName != null) {
 					Rect speakerNameArea = new Rect(PortraitArea);
 					speakerNameArea.x += speakerNameArea.width + 20;
-				    GUI.Label (speakerNameArea, SpearkerName);
+					DrawLabelText(speakerNameArea, SpearkerName);
 				}
 			}
 			if (displayedText != "") {
-				GUI.Label (this.DialogueArea, displayedText);
+				DrawLabelText(this.DialogueArea, displayedText);
 			}
-			GUI.skin.font = null;
+		}
+	}
+	
+	void DrawLabelText(Rect Area, string Text)
+	{
+		if(CurrentLocaleStyle != null)
+		{
+	     if(this.CurrentLocaleStyle.OnlyUseFont == false)
+	     {
+			GUI.skin.font = CurrentLocaleStyle.guiSkin.font;
+	        GUI.Label (Area, Text, CurrentLocaleStyle.guiSkin.FindStyle("Label"));
+	     }
+	     else 
+	     {
+			GUI.skin.font = CurrentLocaleStyle.font;
+	        GUI.Label (Area, Text);
+	     }
+		}
+		else 
+		{
+			GUI.Label (Area, Text);
 		}
 	}
 }

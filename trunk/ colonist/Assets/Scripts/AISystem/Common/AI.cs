@@ -11,7 +11,7 @@ using Pathfinding;
 /// is usually one AI running at one time, so if you want to define more than one AI
 /// component in game object ,you need to use Character class to coordinate the AI components.
 /// </summary>
-[RequireComponent(typeof(Unit))]
+//[RequireComponent(typeof(Unit))]
 [RequireComponent(typeof(CharacterController))]
 public class AI : MonoBehaviour, I_AIBehaviorHandler {
 	/// <summary>
@@ -122,10 +122,6 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 
     void Start()
     {
-		if(FirstBehavior != string.Empty)
-		{
-           StartCoroutine(StartAI());
-		}
     }
 
     void Update()
@@ -137,21 +133,18 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         //Refresh CurrentTarget in every Time.fixDeltaTime seconds
         FindTarget(DetectiveRange);
 		this.Unit.CurrentTarget = this.CurrentTarget;
-	//		if(PrintDebugMessage)
-	//		{
-	//			Debug.Log("Current target unit is:" + this.CurrentTarget.name);
-	//		}
     }
 	
-	void OnEnable()
-	{
-		Unit.CurrentAI = this;
-	}
-	
-	void OnDisable()
-	{
-		StopAI();
-	}
+//	void OnEnable()
+//	{
+//		Unit.CurrentAI = this;
+//		StartAI();
+//	}
+//	
+//	void OnDisable()
+//	{
+//		StopAI();
+//	}
 	
 #region initialization
     /// <summary>
@@ -171,27 +164,20 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 		foreach(AIBehavior behavior in Behaviors)
 		{
 			behavior.InitBehavior();
+			behaviorDict.Add(behavior.Name, behavior);
 		}
-		
-		
-        //Put the behavior into a sort list first, which sort the beheavior priority from lower to higher 
-        foreach (AIBehavior beheavior in Behaviors)
-        {
-			beheavior.EndConditionWrapper.InitDictionary();
-			behaviorDict.Add(beheavior.Name, beheavior);
-        }    
     }
 	
 	/// <summary>
 	/// 1. Start A* pathfind daemon routines.
 	/// 2. Start AlterBehavior daemon routine.
 	/// </summary>
-    public virtual IEnumerator StartAI()
+    public virtual void StartAI()
     {
-//        StartCoroutine("AlterBehavior", AlterBehaviorInterval);
+		Unit.CurrentAI = this;
 		AIBehavior firstBehavior = this.behaviorDict[FirstBehavior];
 		this.StartBehavior(firstBehavior);
-        yield break;
+		this.enabled = true;
     }
 
 #endregion
@@ -282,7 +268,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
             case SelectTargetRule.Default:
             case SelectTargetRule.Closest:
             default:
-                _target = Util.findClosest(transform.position, Colliders).gameObject;
+                _target = Util.FindClosest(transform.position, Colliders).gameObject;
                 break;
         }
         return _target;
@@ -299,7 +285,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         Collider[] colliders = Physics.OverlapSphere(transform.position, range, Unit.EnemyLayer);
         if (colliders != null && colliders.Length > 0)
         {
-            enemy = Util.findClosest(transform.position, colliders).transform;
+            enemy = Util.FindClosest(transform.position, colliders).transform;
             return true;
         }
         else
@@ -474,93 +460,6 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 #endregion
 
 #region AI Behavior determination
-
-    /// <summary>
-    /// Deprecated!!
-    /// 
-    /// ALter current behavior at every %ScanBehaviorInterval% seconds
-    /// </summary>
-    public virtual IEnumerator AlterBehavior(float Interval)
-    {
-//		float lastScanEndConditionTime = Time.time;
-//        while (true)
-//        {
-//			if(this.Halt)
-//			{
-//				yield return null;
-//				continue;
-//			}
-//			if(((Time.time - lastScanEndConditionTime) < Interval) && AlternateBehaviorFlag == false)
-//			{
-//				yield return null;
-//				continue;
-//			}
-//			
-//			if(AlternateBehaviorFlag)
-//			{
-//				AlternateBehaviorFlag = false;
-//			}
-//            //if the current behavior is still running, check if it meets end condition.
-//			// if the current behavior status is not running, it means it can stop at anytime
-//            if (CurrentBehavior != null && CurrentBehavior.Phase == AIBehaviorPhase.Running)
-//            {
-//				lastScanEndConditionTime = Time.time;
-//                //If CurrentBehavior's end condition = false, do nothing
-//				if(CheckConditionWrapper(CurrentBehavior.EndConditionWrapper, CurrentBehavior) == false)
-//                {
-//					if(PrintDebugMessage)
-//					{
-//                       Debug.Log("Behavior:" + CurrentBehavior.Name + " do not meet end condition, not ended yet.");
-//					}
-//                    yield return null;
-//                    continue;
-//                }
-//            }
-//            AIBehavior behaviorToGo = null;
-//            //Choose next behavior whose StartCondition = True
-//            foreach (AIBehavior behavior in BehaviorList_SortedPriority)
-//            {
-//                if(behavior.Name=="SwitchToAttack") 
-//					Debug.DebugBreak();
-//				if(CheckConditionWrapper(behavior.StartConditionWrapper, behavior))
-//                {
-//                    behaviorToGo = behavior;
-//                    break;
-//                }
-//            }
-//            //if no behavior meets start condition, let it be, print a message and wait for next loop
-//            if (behaviorToGo == null)
-//            {
-//                Debug.LogWarning("No behavior can start - " + gameObject.name);
-//				yield return null;
-//                continue;
-//            }
-//            //Good, there is a behavior can be started - behaviorToGo
-//            else
-//            {
-//                //Do nothing if the new behavior is already running
-//                if (CurrentBehavior == behaviorToGo || behaviorToGo.Phase == AIBehaviorPhase.Running)
-//                {
-//					if(PrintDebugMessage)
-//                       Debug.Log("Behavior : " + behaviorToGo.Name + " is already running! No need to start again.");
-//                }
-//                else
-//                {
-//                    if (CurrentBehavior != null)
-//                    {
-//                        this.StopBehavior(CurrentBehavior);
-//						Debug.Log("Stop behavior:" + CurrentBehavior.Name + " and start behavior:" + behaviorToGo.Name);
-//                        //Wait one frame to let StopBehavior complete.
-//                        yield return null;
-//                    }
-//                    StartBehavior(behaviorToGo);
-//                    CurrentBehavior = behaviorToGo;
-//                }
-//                //yield return new WaitForSeconds(Interval);
-				yield return null;
-//            }
-//        }
-    }
 	
 	/// <summary>
 	/// Scans the alternate behavior condition of the given behavior.
@@ -873,7 +772,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 animation.CrossFade(IdleAnimationName);
 				
                 //if this behavior's end condition matches, end this behavior
-                if((Time.time - lastScanEndConditionTime) >= behavior.ScanEndConditionInterval)
+                if((Time.time - lastScanEndConditionTime) >= behavior.AlterBehaviorInterval)
                 {
 			       lastScanEndConditionTime = Time.time;
 					if(CheckAlternateBehaviorCondition(behavior))
@@ -908,7 +807,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 yield return null;
             }
         }
-		
+		animation.Stop(this.Unit.IdleDataDict[behavior.IdleDataName].AnimationName);
 		StopBehavior(behavior);
     }
 
@@ -944,7 +843,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
             }
 			
 			//if this behavior's end condition matches, end this behavior
-			if((Time.time - lastScanEndConditionTime) >= behavior.ScanEndConditionInterval)
+			if((Time.time - lastScanEndConditionTime) >= behavior.AlterBehaviorInterval)
 			{
 			  lastScanEndConditionTime = Time.time;
 			  if(CheckAlternateBehaviorCondition(behavior))
@@ -993,7 +892,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 continue;
             }
 			//if this behavior's end condition matches, end this behavior
-			if( (Time.time - LastCheckEndConditionTime) >= behavior.ScanEndConditionInterval)
+			if( (Time.time - LastCheckEndConditionTime) >= behavior.AlterBehaviorInterval)
 			{
 				LastCheckEndConditionTime = Time.time;
 				if(CheckAlternateBehaviorCondition(behavior))
@@ -1029,7 +928,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 continue;
             }
 			//if this behavior's end condition matches, end this behavior
-			if((Time.time - lastScanEndConditionTime) >= behavior.ScanEndConditionInterval)
+			if((Time.time - lastScanEndConditionTime) >= behavior.AlterBehaviorInterval)
 			{
 			  lastScanEndConditionTime = Time.time;
 			  if(CheckAlternateBehaviorCondition(behavior))
@@ -1104,7 +1003,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 			}
 			
 			//if this behavior's end condition matches, end this behavior
-			if((Time.time - lastScanEndConditionTime) >= behavior.ScanEndConditionInterval)
+			if((Time.time - lastScanEndConditionTime) >= behavior.AlterBehaviorInterval)
 			{
 			    lastScanEndConditionTime = Time.time;
 			    if(CheckAlternateBehaviorCondition(behavior))
@@ -1132,13 +1031,14 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 				}
 				animation.CrossFade(attackData.AnimationName);
 				yield return new WaitForSeconds(animation[attackData.AnimationName].length);
-				
+				//If AttackInterrupt = true, means wait for a while 
 				if(behavior.AttackInterrupt)
 				{
 					IdleData idleData = this.Unit.IdleDataDict[behavior.IdleDataName];
 					float interval = Random.Range(behavior.AttackIntervalMin, behavior.AttackIntervalMax);
-					animation.CrossFade(idleData.AnimationName,0.5f);
+					animation.CrossFade(idleData.AnimationName);
 					yield return new WaitForSeconds(interval);
+					animation.Stop(idleData.AnimationName);
 				}
 				else 
 				{
@@ -1162,13 +1062,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 
     public virtual IEnumerator Stop_Attack(AIBehavior behavior)
     {
-//        AttackData attackData = Unit.AttackDataDict[behavior.AttackDataName];
-//        MoveData moveData = Unit.MoveDataDict[behavior.MoveDataName];
-//        animation.Stop(moveData.AnimationName);
-//        animation.Stop(attackData.AnimationName);
-		
         StopNavigation();
-        StopCoroutine("Start_Attack");
         yield return null;
     }
 

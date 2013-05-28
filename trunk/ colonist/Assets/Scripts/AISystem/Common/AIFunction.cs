@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections;
 
+
+
 /// <summary>
 /// Defines basic AI functions. eg : 
 /// 1. Move forward/backward for a short while
@@ -8,10 +10,23 @@ using System.Collections;
 /// </summary>
 public class AIFunction : MonoBehaviour
 {
+	/// <summary>
+	/// Define 3 curves for speed.
+	/// The time = moving time
+	/// The value = moving speed
+	/// </summary>
+	public AnimationCurve SpeedCurve_1 = null;
+	public AnimationCurve SpeedCurve_2 = null;
+	public AnimationCurve SpeedCurve_3 = null;
+	
 	public float movebackspeed = 1, moveForwardSpeed = 1;
 	CharacterController controller = null;
-	bool backward = false, forward = false;
-	float stopBackward = 0, stopForward = 0;
+	bool backward = false;
+	bool forward = false;
+	float startBackwardTime = 0;
+	float startForwardTime = 0;
+	float stopBackwardTime = 0;
+	float stopForwardTime = 0;
 	Unit unit;
 	public float MoveDistanceLimitation = 8;
 	public float MoveOffset = -1;
@@ -23,11 +38,22 @@ public class AIFunction : MonoBehaviour
 	bool RotateToCurrentTarget = false;
 	float StopRotationTime = 0;
 	
+	/// <summary>
+	/// When current Time > RevertReceiveDamageStatusTime, should revert the 
+	/// unit's ReceiveDamageStatus to original : vulnerable
+	/// </summary>
+	float RevertReceiveDamageStatusTime = 0;
+	
 	Transform CurrentTarget {
 		get {
 			return this.unit.CurrentTarget;
 		}
 	}
+	
+	/// <summary>
+	/// The current used speed curve.
+	/// </summary>
+	AnimationCurve CurrentSpeedCurve = null;
 	
 	void Awake ()
 	{
@@ -37,17 +63,37 @@ public class AIFunction : MonoBehaviour
 	
 	void Update ()
 	{
-		if (backward && Time.time >= stopBackward) {
+		if (backward && Time.time >= stopBackwardTime) {
 			backward = false;
+			CurrentSpeedCurve = null;
 		}
 		if (backward) {
-			controller.SimpleMove (transform.TransformDirection (Vector3.back) * movebackspeed);
+			
+			if(CurrentSpeedCurve != null)
+			{
+			   float CurrentTime = Time.time - this.startBackwardTime;
+			   float CurrentMovebackSpeed = CurrentSpeedCurve.Evaluate(CurrentTime);
+			   controller.SimpleMove (transform.TransformDirection (Vector3.back) * CurrentMovebackSpeed);
+			}
+			else {
+			   controller.SimpleMove (transform.TransformDirection (Vector3.back) * movebackspeed);
+			}
 		}
-		if (forward && Time.time >= stopForward) {
+		if (forward && Time.time >= stopForwardTime) {
 			forward = false;
+			CurrentSpeedCurve = null;
 		}
 		if (forward) {
-			controller.SimpleMove (transform.forward * moveForwardSpeed);
+			if(CurrentSpeedCurve != null)
+			{
+			   float CurrentTime = Time.time - this.startForwardTime;
+			   float CurrentMoveforwardSpeed = CurrentSpeedCurve.Evaluate(CurrentTime);
+			   controller.SimpleMove (transform.forward * CurrentMoveforwardSpeed);
+			}
+			else {
+				controller.SimpleMove (transform.forward * moveForwardSpeed);
+			}
+			
 		}
 		
 		if(RotateToCurrentTarget && CurrentTarget != null)
@@ -58,18 +104,25 @@ public class AIFunction : MonoBehaviour
 		{
 			RotateToCurrentTarget = false;
 		}
+		
+		if(this.unit != null && 
+		   this.unit.receiveDamageStatus != UnitReceiveDamageStatus.vulnerable && 
+		   Time.time > RevertReceiveDamageStatusTime)
+		{
+			this.unit.receiveDamageStatus = UnitReceiveDamageStatus.vulnerable;
+		}
 	}
 	
 	public void _Moveforward (float duration)
 	{
 		forward = true;
-		stopForward = Time.time + duration;
+		stopForwardTime = Time.time + duration;
 	}
 	
 	public void _Moveback (float duration)
 	{
 		backward = true;
-		stopBackward = Time.time + duration;
+		stopBackwardTime = Time.time + duration;
 	}
 	
 	/// <summary>
@@ -82,7 +135,8 @@ public class AIFunction : MonoBehaviour
 		switch (attackData.hitTriggerType) {
 		//if hitTriggerType = ByTime, wait for specified time then start hit testing
 		case HitTriggerType.ByTime:
-			yield return new WaitForSeconds(attackData.HitTime);
+			if(attackData.HitTime > 0)
+			   yield return new WaitForSeconds(attackData.HitTime);
 			break;
 		case HitTriggerType.ByAnimationEvent:
 			break;
@@ -187,7 +241,7 @@ public class AIFunction : MonoBehaviour
 	IEnumerator _MoveToCurrentTarget (float _duration)
 	{
 		CharacterController controller = this.GetComponent<CharacterController> ();
-		float distance = Util.DistanceOfCharactersXZ (controller, this.unit.CurrentTarget.GetComponent<CharacterController> ()) + MoveOffset;
+		float distance = Util.DistanceOfCharacters (this.gameObject, this.unit.CurrentTarget.gameObject) + MoveOffset;
 		distance = Mathf.Clamp (distance, 0, MoveDistanceLimitation);
 		Vector3 direction = (this.unit.CurrentTarget.position - transform.position).normalized;
 		Vector3 velocity = direction * distance / _duration;
@@ -207,6 +261,15 @@ public class AIFunction : MonoBehaviour
 	}
 	
 	/// <summary>
+	/// with the back to current target.
+	/// </summary>
+	void _BackToCurrentTarget()
+	{
+		_FaceToCurrentTarget();
+		transform.RotateAroundLocal(Vector3.up, 180);
+	}
+	
+	/// <summary>
 	/// rotate smoothly to face to current target.
 	/// </summary>
 	void _RotateToCurrentTarget(float rotateTimeLength)
@@ -223,7 +286,64 @@ public class AIFunction : MonoBehaviour
 	public void _CreateEffect (string name)
 	{
 		EffectData effectdata = this.unit.EffectDataDict [name];
-		GlobalBloodEffectDecalSystem.CreateEffect(this.controller.center + transform.position, effectdata);
+		GlobalBloodEffectDecalSystem.CreateEffect(effectdata);
 	}
 	
+	public void _MoveBackAtCurve(int curveIndex)
+	{
+		switch(curveIndex)
+		{
+		case 0:
+			CurrentSpeedCurve = this.SpeedCurve_1;
+			break;
+		case 1:
+			CurrentSpeedCurve = this.SpeedCurve_2;
+			break;
+		case 2:
+		default:
+			CurrentSpeedCurve = this.SpeedCurve_3;
+			break;
+		}
+		backward = true;
+		startBackwardTime = Time.time;
+		stopBackwardTime = Time.time + CurrentSpeedCurve.length;
+	}
+	
+	public void _MoveForwardAtCurve(int curveIndex)
+	{
+		switch(curveIndex)
+		{
+		case 0:
+			CurrentSpeedCurve = this.SpeedCurve_1;
+			break;
+		case 1:
+			CurrentSpeedCurve = this.SpeedCurve_2;
+			break;
+		case 2:
+		default:
+			CurrentSpeedCurve = this.SpeedCurve_3;
+			break;
+		}
+		forward = true;
+		startForwardTime = Time.time;
+		stopForwardTime = Time.time + CurrentSpeedCurve.length;
+	}
+	
+	/// <summary>
+	/// Change Unit.UnitReceiveDamageStatus to vulnerableButNotReactToDamage in furture N seconds.
+	/// </summary>
+	public void _UnitNotReactToDamageInSeconds(float seconds)
+	{
+		this.unit.receiveDamageStatus = UnitReceiveDamageStatus.vulnerableButNotReactToDamage;
+		RevertReceiveDamageStatusTime = Time.time + seconds;
+	}
+	
+	/// <summary>
+	/// Change Unit.UnitReceiveDamageStatus to vulnerableButNotReactToDamage in furture N seconds.
+	/// </summary>
+	public void _UnitInvincibleInSeconds(float seconds)
+	{
+		this.unit.receiveDamageStatus = UnitReceiveDamageStatus.invincible;
+		RevertReceiveDamageStatusTime = Time.time + seconds;
+	}
 }

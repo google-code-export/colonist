@@ -175,11 +175,15 @@ public class DeathData : UnitAnimationData
 	
     public bool UseDieReplacement = false;
     /// <summary>
-    /// If UseDieReplacement = true, will create the DieReplacement GameObject after animation finished.
-    /// Else if UseDieReplacement = false, will create DieReplacement immediately following death, without any animation.
+    /// If UseDieReplacement = true, and:
+    /// If ReplaceAfterAnimationFinish = true, will create the DieReplacement GameObject after animation finished.
+    /// Else if ReplaceAfterAnimationFinish = false, will create DieReplacement immediately following death, without any animation.
     /// </summary>
     public bool ReplaceAfterAnimationFinish = true;
-
+	/// <summary>
+	/// If UseDieReplacement = true, and ReplaceAfterAnimationFinish = false, will create the DieReplacement in %ReplaceAfterSeconds% seconds.
+	/// </summary>
+	public float ReplaceAfterSeconds = 0;
     /// <summary>
     /// If UseDieRagdoll = true, will destory this gameObject and create the DieReplacement.
     /// </summary>
@@ -249,9 +253,28 @@ public class InstantiationData
 	public Vector3 WorldOffset = Vector3.zero;
 	
 	/// <summary>
-	/// if RandomQuaternion = true, RandomQuaternion
+	/// The rotation mode of instance:
+	/// 1. random rotation
+	/// 2. identity
+	/// 3. align to anchor
+	/// 4. specified value
 	/// </summary>
-	public bool RandomQuaternion = false;
+	public InstantiationRotationMode rotationOfInstance = InstantiationRotationMode.IdentityQuaternion;
+	
+	/// <summary>
+	/// The specified quaterion.Only used when rotationOfInstance = InstantiationRotationMode.SpecifiedQuaternion
+	/// </summary>
+	public Quaternion specifiedQuaterion = Quaternion.identity;
+	
+//	/// <summary>
+//	/// if RandomQuaternion = true, RandomQuaternion
+//	/// </summary>
+//	public bool RandomQuaternion = false;
+//	/// <summary>
+//	/// If Random Quaternion = false and IdentityQuaternion = true, effect object is created at Quaternion.identity.
+//	/// </summary>
+//	public bool IdentityQuaternion = false;
+
 }
 
 /// <summary>
@@ -267,7 +290,7 @@ public class EffectData
 	public int Count = 1;
     #region use global effect object
     public bool UseGlobalEffect = true;
-    public GlobalEffectType GlobalType = GlobalEffectType.HumanBlood_Splatter;
+    public GlobalEffectType GlobalType = GlobalEffectType.HumanBlood_Splatter_Small;
     #endregion
 
     #region use custom effect object
@@ -279,10 +302,7 @@ public class EffectData
 //	public float RandomSphereRadius = 0;
 	
     public GameObject EffectObject = null;
-    /// <summary>
-    /// if DestoryInTimeOut = true, the EffectObject will be destory in %DestoryTimeOut% seconds.
-    /// </summary>
-    public bool DestoryInTimeOut = true;
+	
     public float DestoryTimeOut = 1;
     #endregion
 	
@@ -295,7 +315,7 @@ public class EffectData
 	/// <summary>
 	/// The type of the instantion. create new instance, or play existing gameobject particle system.
 	/// </summary>
-	public EffectObjectInstantiation InstantionType = EffectObjectInstantiation.creat;
+	public EffectObjectInstantiation InstantionType = EffectObjectInstantiation.create;
 	public EffectData GetClone()
 	{
 		EffectData clone = new EffectData();
@@ -305,7 +325,6 @@ public class EffectData
 		clone.GlobalType = this.GlobalType;
 		clone.EffectObject = this.EffectObject;
 		clone.DestoryTimeOut = this.DestoryTimeOut;
-		clone.DestoryInTimeOut = this.DestoryInTimeOut;
 		clone.CreateDelay = this.CreateDelay;
 		clone.CreateDelayTime = this.CreateDelayTime;
 		return clone;
@@ -323,7 +342,7 @@ public class DecalData
 	 
 #region use global decal object
     public bool UseGlobalDecal = true;
-    public GlobalDecalType GlobalType = GlobalDecalType.HumanBlood_Splatter01_Static;
+    public GlobalDecalType GlobalType = GlobalDecalType.HumanBlood_Splatter_Static;
 #endregion
 
 #region use custom decal object
@@ -422,7 +441,7 @@ public class AttackData : UnitAnimationData
     public float AttackableRange = 3;
 
     /// <summary>
-    /// If attack type = combat - The time to send hit message.
+    /// If attack type = Instant - The time to send hit message.
     /// If attack type = arrow - The time to create the arrow object
     /// </summary>
     public float HitTime;
@@ -464,7 +483,7 @@ public class AttackData : UnitAnimationData
         return new DamageParameter(DamageSource, this.DamageForm, DamagePointBase + Random.Range(MinDamageBonus, MaxDamageBonus));
     }
 	
-    public AttackData GetClone()
+    public virtual AttackData GetClone()
 	{
 		AttackData clone = new AttackData();
 		base.CloneBasic(clone as UnitAnimationData);
@@ -489,6 +508,12 @@ public class AttackData : UnitAnimationData
 	}
 }
 
+public enum PlayAudioMode
+{
+	PlayAudiosource = 0,
+	PlayAudioClipAtPosition = 1,
+}
+
 /// <summary>
 /// One audio data can contains more than one audio clip, randomly select one when playing. 
 /// </summary>
@@ -496,12 +521,36 @@ public class AttackData : UnitAnimationData
 public class AudioData
 {
     public string Name = "";
-    public AudioClip[] audioClip = new AudioClip[]{};
+	public PlayAudioMode mode = PlayAudioMode.PlayAudiosource;
+	
+	/// <summary>
+	/// The audio clips to be played.
+	/// </summary>
+	public AudioClip[] PlayedAudioClips = new AudioClip[]{};
+	
+	/// <summary>
+	/// The audio sources to be played.
+	/// </summary>
+	public AudioSource[] PlayerAudioSources = new AudioSource[]{};
+	
+	/// <summary>
+	/// The randomly placyed audio clips.
+	/// </summary>
+    public AudioClip[] randomAudioClips = new AudioClip[]{};
+	/// <summary>
+	/// The randomly picked audio sources.
+	/// </summary>
+	public AudioSource[] randomAudioSources = new AudioSource[]{};
+	/// <summary>
+	/// When mode = PlayAudioClipAtPosition, the transform position to be played in 3D world.
+	/// </summary>
+	public Transform Play3DClipAnchor = null;
+	
 	public AudioData GetClone()
 	{
 		AudioData clone = new AudioData();
 		clone.Name = this.Name;
-		clone.audioClip = Util.CloneArray<AudioClip>(audioClip);
+		clone.randomAudioClips = randomAudioClips;
 		return clone;
 	}
 }

@@ -1,7 +1,30 @@
 public enum EffectObjectInstantiation
 {
-	creat = 0,
+	create = 0,
     play = 1,
+}
+
+/// <summary>
+/// Defines quaternion(rotation) value on instantiation
+/// </summary>
+public enum InstantiationRotationMode
+{
+	/// <summary>
+	/// random rotation.
+	/// </summary>
+	RandomQuaternion = 0,
+	/// <summary>
+	/// Quaternion.identity
+	/// </summary>
+	IdentityQuaternion = 1,
+	/// <summary>
+	/// Align to quaternion of anchor
+	/// </summary>
+	AlignToAnchor = 2,
+	/// <summary>
+	/// Specified a quaternion value.
+	/// </summary>
+	SpecifiedQuaternion = 3,
 }
 
 public enum AIBehaviorType
@@ -344,4 +367,24 @@ public enum WeaponType
 	Predator_Spine = 1000,
 	GiantAnt_Flame = 1001,
 	#endregion
+}
+
+
+/// <summary>
+/// Unit receive damage status.
+/// </summary>
+public enum UnitReceiveDamageStatus
+{
+	/// <summary>
+	/// Default status, the unit is vulnerable, and can react to damage.
+	/// </summary>
+	vulnerable = 0,
+	/// <summary>
+	/// the unit is vulnerable,but will not react to damage.
+	/// </summary>
+	vulnerableButNotReactToDamage = 1,
+	/// <summary>
+	/// unit is invincible,and will not react to damage.
+	/// </summary>
+	invincible = 2,
 }

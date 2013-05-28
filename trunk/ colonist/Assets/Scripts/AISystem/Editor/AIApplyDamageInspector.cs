@@ -30,8 +30,8 @@ public class AIApplyDamageInspector : Editor {
 		advancedInspector = EditorGUILayout.BeginToggleGroup("Advanced inspector", advancedInspector);
 		if( advancedInspector )
 		{
-			AI[] ai = targetAIApplyDamage.GetComponents<AI>();
-			targetAIApplyDamage.SwitchToAIName = EditorCommon.EditPopup("Switch to AI:" , targetAIApplyDamage.SwitchToAIName, ai.Select(x=>x.Name).ToArray());
+//			AI[] ai = targetAIApplyDamage.GetComponents<AI>();
+			
 		}
 	    EditorGUILayout.EndToggleGroup();
 	}

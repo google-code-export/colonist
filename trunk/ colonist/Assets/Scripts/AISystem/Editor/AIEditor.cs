@@ -178,9 +178,9 @@ public class AIEditor
 			behavior.Type = (AIBehaviorType)EditorGUILayout.EnumPopup (new GUIContent ("Behavior type:", ""), behavior.Type);
 			
             AIBehavior[] AIBehaviors = this.AI.Behaviors; 
-			behavior.NextBehaviorName = EditorCommon.EditPopup ("Next Behavior:", behavior.NextBehaviorName, AIBehaviors.Select (x => x.Name).ToArray ());
+//			behavior.NextBehaviorName = EditorCommon.EditPopup ("Next Behavior:", behavior.NextBehaviorName, AIBehaviors.Select (x => x.Name).ToArray ());
 			
-			behavior.ScanEndConditionInterval = EditorGUILayout.FloatField("Scan end condition interval:" , behavior.ScanEndConditionInterval);
+			behavior.AlterBehaviorInterval = EditorGUILayout.FloatField("Alter behavior interval:" , behavior.AlterBehaviorInterval);
 			
 			behavior.SelectTargetRule = (SelectTargetRule)EditorGUILayout.EnumPopup (new GUIContent ("Select enemy rule:", "当这个行为生效的时候,选择敌人的规则, 默认是Closest,也就是选择最近的敌人做为当前目标."), behavior.SelectTargetRule);
 			//Edit behavior data

@@ -65,7 +65,7 @@ public class Localization {
 
     const string DialogAssetRootFolder = "Language/Dialog";
 	const string CharacterAssetRootFolder = "Language/Character/Character";
-	const string SupportLanguage = "English;Chinese;";
+	public const string SupportLanguage = "English;Chinese;";
 	
 	static IDictionary<string, LocalizeCharacter> CharacterDict = new Dictionary<string, LocalizeCharacter>();
 	static IDictionary<string, LocalizedDialogue> DialogueDict = new Dictionary<string, LocalizedDialogue>();
