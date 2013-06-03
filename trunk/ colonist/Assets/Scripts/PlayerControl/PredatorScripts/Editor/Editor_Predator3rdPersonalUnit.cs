@@ -286,7 +286,7 @@ public class Editor_Predator3rdPersonalUnit : Editor
 			AudioData audio = AudioDataArray [i];
 			EditorGUILayout.LabelField ("------------------------ " + audio.Name);
 			audio.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), audio.Name);
-			audio.randomAudioClips = EditorCommon.EditAudioClipArray("Audio clips:", audio.randomAudioClips);
+			audio.randomAudioClips = EditorCommon.EditObjectArray<AudioClip>("Edit Audio clips:", audio.randomAudioClips);
 			//Delete this audio data
 			if (GUILayout.Button ("Delete AduioData:" + audio.Name)) {
     			AudioDataArray = Util.CloneExcept<AudioData> (AudioDataArray, audio);
