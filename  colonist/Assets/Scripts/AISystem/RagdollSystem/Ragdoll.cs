@@ -8,6 +8,7 @@ using System.Collections;
 public class RagdollJointData
 {
     public string Name = "Default Joint";
+	public ForceMode forceMode = ForceMode.Impulse;
     public Rigidbody Joint = null;
     public bool CreateForce = false;
     /// <summary>
@@ -98,10 +99,13 @@ public class Ragdoll : MonoBehaviour {
     /// clip material function name in %DelgateFunction% .
     /// </summary>
     public string DelgateDestoryFunction = string.Empty;
-   
+    /// <summary>
+    /// Assign the center for this ragdoll (because ragdoll has NO character controller.)
+    /// </summary>
+    public Transform RagdollCenter = null;
     public EffectData[] EffectData = new EffectData[] { };
     public DecalData[] DecalData = new DecalData[] { };
-    public RagdollJointData[] RagdollJointData = new RagdollJointData[] { };
+    public RagdollJointData[] RagdollJointDataArray = new RagdollJointData[] { };
 
     void Awake()
     {
@@ -115,6 +119,11 @@ public class Ragdoll : MonoBehaviour {
             Invoke("DestoryRagdoll", LifeTime);
         }
     }
+	
+	void Update()
+	{
+
+	}
 
     public virtual void StartRagdoll()
     {
@@ -124,9 +133,9 @@ public class Ragdoll : MonoBehaviour {
         }
         foreach (DecalData decalData in DecalData)
         {
-            GlobalBloodEffectDecalSystem.CreateBloodDecal(transform.position, decalData);
+            GlobalBloodEffectDecalSystem.CreateBloodDecal(RagdollCenter.position, decalData);
         }
-        foreach (RagdollJointData JointData in RagdollJointData)
+        foreach (RagdollJointData JointData in RagdollJointDataArray)
         {
             if (JointData.Detach)
             {
@@ -169,20 +178,20 @@ public class Ragdoll : MonoBehaviour {
             ForceDirection = transform.TransformDirection(ForceDirection);
         }
         Vector3 Force = ForceDirection.normalized * Random.Range(JointData.MinForceMagnitude, JointData.MaxForceMagnitude);
-        JointData.Joint.AddForce(Force, ForceMode.Impulse);
+        JointData.Joint.AddForce(Force, JointData.forceMode);
     }
 
     public virtual void DestoryRagdoll()
     {
         
-		for(int i=0; i<RagdollJointData.Length; i++)
+		for(int i=0; i<RagdollJointDataArray.Length; i++)
 		{
-		    GameObject jointObject = RagdollJointData[i].Joint.gameObject;
-			if(RagdollJointData[i].SelfcontrolDestruction)
+		    GameObject jointObject = RagdollJointDataArray[i].Joint.gameObject;
+			if(RagdollJointDataArray[i].SelfcontrolDestruction)
 			{
-				RagdollJointData[i].Joint.gameObject.AddComponent<AutoDestroy>().destroyInTime = RagdollJointData[i].SelfDestructionTime;
+				RagdollJointDataArray[i].Joint.gameObject.AddComponent<AutoDestroy>().destroyInTime = RagdollJointDataArray[i].SelfDestructionTime;
 				//for self-control destruction joint object, automatically detach it from parent, to avoid being destroyed with parent.
-				RagdollJointData[i].Joint.gameObject.transform.parent = null;
+				RagdollJointDataArray[i].Joint.gameObject.transform.parent = null;
 			}
 			else {
 		       Destroy(jointObject);
