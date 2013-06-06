@@ -7,7 +7,7 @@ using System.Collections.Generic;
 /// </summary>
 [ExecuteInEditMode]
 public class LevelManager : MonoBehaviour {
-	
+	public string LevelName = "Level00";
     public static LevelManager Instance;
 	public LayerMask GroundLayer;
 
@@ -28,21 +28,23 @@ public class LevelManager : MonoBehaviour {
 	/// </summary>
 	ScenarioControl scenarioControlObject = null;
 	
+	BackgroundMusicPlayer backGroundMusicPlayer = null;
+	
+	CheckPoint checkPointManager = null;
+	
     void Awake()
     {
         Instance = this;
 		player = GameObject.FindGameObjectWithTag(PlayerTag);
 		gameDialogueObject = FindObjectOfType(typeof (GameDialogue)) as GameDialogue;
 		scenarioControlObject = FindObjectOfType(typeof (ScenarioControl)) as ScenarioControl;
-		
+		backGroundMusicPlayer = FindObjectOfType(typeof(BackgroundMusicPlayer)) as BackgroundMusicPlayer;
+		checkPointManager = FindObjectOfType(typeof(CheckPoint)) as CheckPoint;
     }
 
 	// Use this for initialization
 	void Start () {
-		GameEvent _e = new GameEvent();
-		_e.type = GameEventType.LevelStart;
-		_e.receiver = this.gameObject;
-        OnGameEvent(_e);
+
 	}
 	
 	// Update is called once per frame
@@ -109,8 +111,8 @@ public class LevelManager : MonoBehaviour {
 			  break;
 		    case GameEventType.PlayerControlOn:
 			case GameEventType.PlayerControlOff:
-		    case GameEventType.PlayerCameraWhiteIn:
-			case GameEventType.PlayerCameraWhiteOut:
+		    case GameEventType.WhiteInPlayerCamera:
+			case GameEventType.WhiteOutPlayerCamera:
 			  player.transform.root.BroadcastMessage("OnGameEvent", gameEvent, SendMessageOptions.DontRequireReceiver);
 			  break;
 		    case GameEventType.NPCPlayAnimation:
@@ -172,6 +174,13 @@ public class LevelManager : MonoBehaviour {
 			     break;
 		     case GameEventType.UnMute:
 			     Persistence.Unmute();
+			     break;
+		     case GameEventType.ForceToPhysicsCharacter:
+			     gameEvent.receiver.SendMessage("OnGameEvent", gameEvent);
+			     break;
+		     case GameEventType.PlayBackgroundMusic:
+			 case GameEventType.StopBackgroundMusic:
+			     backGroundMusicPlayer.OnGameEvent(gameEvent);
 			     break;
 		}
 	}
