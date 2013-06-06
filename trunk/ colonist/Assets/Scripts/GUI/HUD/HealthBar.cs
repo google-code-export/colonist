@@ -1,15 +1,17 @@
 using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// A fixed position HealthBar, which is displayed at screen, as a HUD.
+/// </summary>
 [ExecuteInEditMode]
 public class HealthBar : HUD {
 	
 	public Texture foregoundTexture;
 	public Texture backgoundTexture;
-	public Rect LocationRect;
+	public AdaptiveRect HealthBarLocation = new AdaptiveRect();
+//	public Rect LocationRect;
 	public Rect TextCoord;
-	public ScaleMode scaleMode;
-	public bool AplhaBlend;
 
     UnitBase unit;
 	
@@ -30,8 +32,9 @@ public class HealthBar : HUD {
 	float thevalue;
 	float theMaxValue;
 	Color theColor = Color.gray;
-	Rect theRect;
+	Rect RectOfHealthRealtime;
 	Rect theTextCoord;
+	
 	void Awake()
 	{
 		unit = transform.root.GetComponentInChildren<UnitBase>();
@@ -47,8 +50,9 @@ public class HealthBar : HUD {
 	void Update () {
 	    thevalue = unit.GetCurrentHP();
 		float percentage = Mathf.Clamp01(thevalue / theMaxValue);
-		theRect = new Rect(LocationRect);
-		theRect.width *= percentage;
+		Rect LocationRect = HealthBarLocation.GetBound();
+		RectOfHealthRealtime = new Rect(LocationRect);
+		RectOfHealthRealtime.width *= percentage;
 		theTextCoord = new Rect(TextCoord);
 		theTextCoord.width *= percentage;	
 		theColor = Color.Lerp(endColor ,startColor, percentage);
@@ -77,7 +81,7 @@ public class HealthBar : HUD {
 		yield return new WaitForEndOfFrame();
 		GameEvent _e = new GameEvent(GameEventType.DisplayDamageParameterOnPlayer);
 		_e.ObjectParameter = param;
-		_e.Vector2Parameter = new Vector2(theRect.x + theRect.width, theRect.y + theRect.height);
+		_e.Vector2Parameter = new Vector2(RectOfHealthRealtime.x + RectOfHealthRealtime.width, RectOfHealthRealtime.y + RectOfHealthRealtime.height);
 		//send gameEvent to display player damage number
  		SendMessage("OnGameEvent", _e);
 	}
@@ -85,12 +89,12 @@ public class HealthBar : HUD {
 	float lastHideTime = 0;
 	void OnGUI()
 	{
-		GUI.DrawTexture( LocationRect, backgoundTexture,scaleMode, AplhaBlend);
+		Rect LocationRect = HealthBarLocation.GetBound();
+		GUI.DrawTexture(LocationRect, backgoundTexture);
 		if(show)
 		{
-		  GUI.color = theColor;
-		  GUI.DrawTextureWithTexCoords(  theRect, foregoundTexture, theTextCoord, AplhaBlend);
-//			GUI.DrawTexture (LocationRect, foregoundTexture, scaleMode, AplhaBlend, imageAspect);
+		   GUI.color = theColor;
+		   GUI.DrawTextureWithTexCoords(RectOfHealthRealtime, foregoundTexture, theTextCoord);
 		}	
 		
 	}
