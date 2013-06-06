@@ -116,85 +116,86 @@ public class RagdollEditor : EditorWindow {
 		if (EnableEditRagdollData) {
 			if (GUILayout.Button ("Add RagdollJointData")) {
 				RagdollJointData RagdollJointData = new RagdollJointData ();
-				IList<RagdollJointData> l = selectedRagdoll.RagdollJointData.ToList<RagdollJointData> ();
+				IList<RagdollJointData> l = selectedRagdoll.RagdollJointDataArray.ToList<RagdollJointData> ();
 				l.Add (RagdollJointData);
-				selectedRagdoll.RagdollJointData = l.ToArray<RagdollJointData> ();
+				selectedRagdoll.RagdollJointDataArray = l.ToArray<RagdollJointData> ();
 			}
-			for (int i = 0; i < selectedRagdoll.RagdollJointData.Length; i++) {
-				RagdollJointData RagdollJointData = selectedRagdoll.RagdollJointData[i];
-				EditorGUILayout.LabelField("---------------- Edit RagdollJointData:" + RagdollJointData.Name + "--------");
-				RagdollJointData.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), RagdollJointData.Name);
+			for (int i = 0; i < selectedRagdoll.RagdollJointDataArray.Length; i++) {
+				RagdollJointData _RagdollJointData = selectedRagdoll.RagdollJointDataArray[i];
+				EditorGUILayout.LabelField("---------------- Edit RagdollJointData:" + _RagdollJointData.Name + "--------");
+				_RagdollJointData.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), _RagdollJointData.Name);
 				
-				RagdollJointData.Joint = (Rigidbody)EditorGUILayout.ObjectField(new GUIContent("Joint","关节对象"),
-					                                         RagdollJointData.Joint, typeof(Rigidbody));
-				RagdollJointData.JointGameObjectInitialActive = EditorGUILayout.Toggle(new GUIContent("Initial active:","If false, the gameobject will be deactivate when ragdoll created"),
-					                                                                   RagdollJointData.JointGameObjectInitialActive);
-				RagdollJointData.Detach = EditorGUILayout.Toggle(new GUIContent ("Detach joint?", "Detach this joint object from parent?"),
-					RagdollJointData.Detach);
+				_RagdollJointData.Joint = (Rigidbody)EditorGUILayout.ObjectField(new GUIContent("Joint","关节对象"),
+					                                         _RagdollJointData.Joint, typeof(Rigidbody));
+				_RagdollJointData.JointGameObjectInitialActive = EditorGUILayout.Toggle(new GUIContent("Initial active:","If false, the gameobject will be deactivate when ragdoll created"),
+					                                                                   _RagdollJointData.JointGameObjectInitialActive);
+				_RagdollJointData.Detach = EditorGUILayout.Toggle(new GUIContent ("Detach joint?", "Detach this joint object from parent?"),
+					_RagdollJointData.Detach);
 
-				RagdollJointData.SelfcontrolDestruction = EditorGUILayout.Toggle(new GUIContent ("Self control destruction?", "The joint control its destruction itself?"),
-						RagdollJointData.SelfcontrolDestruction);
-				if(RagdollJointData.SelfcontrolDestruction)
+				_RagdollJointData.SelfcontrolDestruction = EditorGUILayout.Toggle(new GUIContent ("Self control destruction?", "The joint control its destruction itself?"),
+						_RagdollJointData.SelfcontrolDestruction);
+				if(_RagdollJointData.SelfcontrolDestruction)
 				{
-				   RagdollJointData.SelfDestructionTime = EditorGUILayout.FloatField("Self destuction time:", RagdollJointData.SelfDestructionTime);
+				   _RagdollJointData.SelfDestructionTime = EditorGUILayout.FloatField("Self destuction time:", _RagdollJointData.SelfDestructionTime);
 				}
 				
-				RagdollJointData.DestoryJoint = EditorGUILayout.Toggle(new GUIContent ("Destory joint?", "销毁ChracterJoint组件?"),
-					RagdollJointData.DestoryJoint);
+				_RagdollJointData.DestoryJoint = EditorGUILayout.Toggle(new GUIContent ("Destory joint?", "销毁ChracterJoint组件?"),
+					_RagdollJointData.DestoryJoint);
 				
-				RagdollJointData.CreateForce = EditorGUILayout.Toggle(new GUIContent ("Create force?", "Use force?"),
-					RagdollJointData.CreateForce);
-				if(RagdollJointData.CreateForce)
+				_RagdollJointData.CreateForce = EditorGUILayout.Toggle(new GUIContent ("Create force?", "Use force?"),
+					_RagdollJointData.CreateForce);
+				if(_RagdollJointData.CreateForce)
 				{
-					RagdollJointData.CreateForceDelay = EditorGUILayout.FloatField(new GUIContent("Create force delay",""),
-						RagdollJointData.CreateForceDelay);
-					RagdollJointData.MinForceMagnitude = EditorGUILayout.FloatField(new GUIContent("Min force:",""),
-						RagdollJointData.MinForceMagnitude);
-					RagdollJointData.MaxForceMagnitude = EditorGUILayout.FloatField(new GUIContent("Max force:",""),
-						RagdollJointData.MaxForceMagnitude);
-					RagdollJointData.IsGlobalDirection = EditorGUILayout.Toggle(new GUIContent ("Global direction?", ""),
-						RagdollJointData.IsGlobalDirection);
-					RagdollJointData.ForceRandomDirection = EditorGUILayout.Toggle(new GUIContent ("Create force at random direction?", ""),
-						RagdollJointData.ForceRandomDirection);
-					if(RagdollJointData.ForceRandomDirection)
+					_RagdollJointData.forceMode = (ForceMode)EditorGUILayout.EnumPopup("Force mode:" , _RagdollJointData.forceMode);
+					_RagdollJointData.CreateForceDelay = EditorGUILayout.FloatField(new GUIContent("Create force delay",""),
+						_RagdollJointData.CreateForceDelay);
+					_RagdollJointData.MinForceMagnitude = EditorGUILayout.FloatField(new GUIContent("Min force:",""),
+						_RagdollJointData.MinForceMagnitude);
+					_RagdollJointData.MaxForceMagnitude = EditorGUILayout.FloatField(new GUIContent("Max force:",""),
+						_RagdollJointData.MaxForceMagnitude);
+					_RagdollJointData.IsGlobalDirection = EditorGUILayout.Toggle(new GUIContent ("Global direction?", ""),
+						_RagdollJointData.IsGlobalDirection);
+					_RagdollJointData.ForceRandomDirection = EditorGUILayout.Toggle(new GUIContent ("Create force at random direction?", ""),
+						_RagdollJointData.ForceRandomDirection);
+					if(_RagdollJointData.ForceRandomDirection)
 					{
-						RagdollJointData.ForceRandomDirectionFrom = EditorGUILayout.Vector3Field("Force random direction from:",RagdollJointData.ForceRandomDirectionFrom);
-						RagdollJointData.ForceRandomDirectionTo = EditorGUILayout.Vector3Field("Force random direction to:",RagdollJointData.ForceRandomDirectionTo);
+						_RagdollJointData.ForceRandomDirectionFrom = EditorGUILayout.Vector3Field("Force random direction from:",_RagdollJointData.ForceRandomDirectionFrom);
+						_RagdollJointData.ForceRandomDirectionTo = EditorGUILayout.Vector3Field("Force random direction to:",_RagdollJointData.ForceRandomDirectionTo);
 					}
 					else 
 					{
-						RagdollJointData.ForceDirection = EditorGUILayout.Vector3Field("Force direction:",RagdollJointData.ForceDirection);
+						_RagdollJointData.ForceDirection = EditorGUILayout.Vector3Field("Force direction:",_RagdollJointData.ForceDirection);
 					}
 				}
 				
-				if (GUILayout.Button ("Delete RagdollJointData:" + RagdollJointData.Name)) {
-  					  IList<RagdollJointData> l = selectedRagdoll.RagdollJointData.ToList<RagdollJointData> ();  
-					  l.Remove (RagdollJointData);
-				  	  selectedRagdoll.RagdollJointData = l.ToArray<RagdollJointData> ();
+				if (GUILayout.Button ("Delete RagdollJointData:" + _RagdollJointData.Name)) {
+  					  IList<RagdollJointData> l = selectedRagdoll.RagdollJointDataArray.ToList<RagdollJointData> ();  
+					  l.Remove (_RagdollJointData);
+				  	  selectedRagdoll.RagdollJointDataArray = l.ToArray<RagdollJointData> ();
 				  }
 			}
 		}
 	}
 	
-	
-	public static void CopyRagdollData(Ragdoll _from, Ragdoll to, bool Override)
+	/// <summary>
+	/// Copies the RagdollJoint data, EffectData from to.
+	/// </summary>
+	public static void CopyRagdollData(Ragdoll _from, Ragdoll to)
 	{
 		IList<RagdollJointData> jointDataList = new List<RagdollJointData> ();
-		foreach(RagdollJointData jointData in _from.RagdollJointData)
+		foreach(RagdollJointData jointData in _from.RagdollJointDataArray)
 		{
-			 RagdollJointData cloned = jointData.GetClone();
-			 if(Override==false)
-			 { 
-				Util.AddToArray<RagdollJointData>(cloned, to.RagdollJointData);
-			 }
-			else 
-			{
-				jointDataList.Add(cloned);
-			}
+		   RagdollJointData cloned = jointData.GetClone();
+		   jointDataList.Add(cloned);
 		}
-		if(Override==true)
+		to.RagdollJointDataArray = jointDataList.ToArray();
+		
+		IList<EffectData> effectDataList = new List<EffectData> ();
+		foreach(EffectData effectData in _from.EffectData)
 		{
-			to.RagdollJointData = jointDataList.ToArray();
+		   EffectData cloned = effectData.GetClone();
+		   effectDataList.Add(cloned);
 		}
+		to.EffectData = effectDataList.ToArray();
 	}
 }

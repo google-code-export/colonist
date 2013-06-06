@@ -12,7 +12,7 @@ public class AIEditor
          EnableEditMoveData = false, EnableEditEffectData = false, 
 	     EnableEditReceiveDamageData = false, EnableEditRotateData = false,
          EnableEditDecalData = false, EnableEditDeathData = false, EnableEditAIBehavior = false,
-	     EnableEditStartCondition = false, EnableEditEndCondition = false;
+	     EnableEditStartCondition = false, EnableEditEndCondition = false, EnableEditAudioData = false;
 	IDictionary<string, bool> AIBehaviorEnableEditFlags = new Dictionary<string,bool> ();
 	
 	public AIEditor (AI AI)
@@ -104,6 +104,13 @@ public class AIEditor
 			//Edit death data
 			if (EnableEditDeathData = EditorGUILayout.BeginToggleGroup ("---Edit Death Data---", EnableEditDeathData)) {
 				AI.Unit.DeathData = EditorCommon.EditDeathData (AI.Unit, AI.Unit.DeathData);
+			}
+			EditorGUILayout.EndToggleGroup ();
+			
+			//Edit audio data
+			if(EnableEditAudioData = EditorGUILayout.BeginToggleGroup ("---Edit Audio Data---", EnableEditAudioData)) 
+			{
+				AI.Unit.AudioData = EditorCommon.EditAudioData (AI.Unit, AI.Unit.AudioData);
 			}
 			EditorGUILayout.EndToggleGroup ();
 		}
@@ -498,6 +505,7 @@ public class AIEditor
 		case AIValueComparisionCondition.CurrentTagetDistance:
 		case AIValueComparisionCondition.FarestEnemyDistance:
 		case AIValueComparisionCondition.NearestEnemyDistance:
+		case AIValueComparisionCondition.LastConditionMatchTimeInterval:
 			ConditionData.RightValueForComparision = EditorGUILayout.FloatField (ConditionData.RightValueForComparision);
 			break;
 		case AIValueComparisionCondition.RandomValue:
