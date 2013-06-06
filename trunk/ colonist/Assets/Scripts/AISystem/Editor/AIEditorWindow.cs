@@ -29,7 +29,7 @@ public class AIEditorWindow : EditorWindow
 	{
 		MainWindowWidth = position.width;
 		MainWindowHeight = position.height;
-		if(Selection.activeObject != null &&
+		if(Selection.activeGameObject != null &&
 			Selection.activeGameObject.GetComponent<Unit>() != null && GUILayout.Button("Use selected gameobject"))
 		{
 			UnitToEdited = Selection.activeGameObject.GetComponent<Unit>();
@@ -70,7 +70,9 @@ public class AIEditorWindow : EditorWindow
 		}
 		
 		ScrollPosition = EditorGUILayout.BeginScrollView (ScrollPosition, false, true, null);
+		
 		AIEditor_List[0].EditUnit();
+		
 		foreach(AIEditor aiEditor in AIEditor_List)
 		{
 		   if(EnableEditAIFlag.Keys.Contains(aiEditor.AI.Name) == false)
