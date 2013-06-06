@@ -2,12 +2,13 @@ using UnityEngine;
 using System.Collections;
 
 /// <summary>
-/// NPC health bar. Which is displayed at the top place of the character's world position.
+/// NPC health bar. Which is a slight rectangle box, displayed above the character's world position.
 /// </summary>
 public class NPCHealthBar : MonoBehaviour
 {
 	public Texture foregoundTexture;
 	public Texture backgoundTexture;
+	public AdaptiveRect ScreenSize = new AdaptiveRect();
 	/// <summary>
 	/// The size of the health bar, x = width, y = height.
 	/// </summary>
@@ -18,8 +19,7 @@ public class NPCHealthBar : MonoBehaviour
 	public Vector2 offset = new Vector2(-24,-20);
 	public Color StartColor = Color.green;
 	public Color EndColor = Color.red;
-	public ScaleMode scaleMode;
-	public bool AplhaBlend;
+	
 	/// <summary>
 	/// The length of the show time.
 	/// When the unit receive damage, the NPC health bar will be displayed for %ShowTimeLength% seconds.
@@ -83,11 +83,11 @@ public class NPCHealthBar : MonoBehaviour
 	{
 		if (show) {
 			Rect r = new Rect (HealthBarGUIPos.x + offset.x, HealthBarGUIPos.y + offset.y, size.x, size.y);
-			GUI.DrawTexture (r, backgoundTexture, scaleMode, AplhaBlend);
+			GUI.DrawTexture (r, backgoundTexture);
 			Rect runtimeRect = new Rect (r);
 			runtimeRect.width *= percentage;
 			GUI.color = Color.Lerp (EndColor, StartColor, percentage);
-			GUI.DrawTextureWithTexCoords (runtimeRect, foregoundTexture, runtimeRect, AplhaBlend);
+			GUI.DrawTextureWithTexCoords (runtimeRect, foregoundTexture, runtimeRect);
 		}
 	}
 }
