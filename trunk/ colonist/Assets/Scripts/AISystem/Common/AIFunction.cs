@@ -261,12 +261,16 @@ public class AIFunction : MonoBehaviour
 	}
 	
 	/// <summary>
-	/// with the back to current target.
+	/// with the back face to current target.
 	/// </summary>
 	void _BackToCurrentTarget()
-	{
-		_FaceToCurrentTarget();
-		transform.RotateAroundLocal(Vector3.up, 180);
+	{ 
+		Debug.Break();
+//		_FaceToCurrentTarget();
+		Vector3 targetPos_XZ = new Vector3 (this.unit.CurrentTarget.position.x, transform.position.y, this.unit.CurrentTarget.position.z);
+		Vector3 direction = transform.position - targetPos_XZ;
+		transform.LookAt( transform.position + direction * 5);
+//		transform.RotateAroundLocal(Vector3.up, 180);
 	}
 	
 	/// <summary>
@@ -285,8 +289,13 @@ public class AIFunction : MonoBehaviour
 	/// <param name="name"></param>
 	public void _CreateEffect (string name)
 	{
+		try{
 		EffectData effectdata = this.unit.EffectDataDict [name];
 		GlobalBloodEffectDecalSystem.CreateEffect(effectdata);
+		}catch(System.Exception  exc)
+		{
+			Debug.LogError("Can create animation:" + name);
+		}
 	}
 	
 	public void _MoveBackAtCurve(int curveIndex)
@@ -306,7 +315,7 @@ public class AIFunction : MonoBehaviour
 		}
 		backward = true;
 		startBackwardTime = Time.time;
-		stopBackwardTime = Time.time + CurrentSpeedCurve.length;
+		stopBackwardTime = Time.time + Util.GetCurveMaxTime(CurrentSpeedCurve);
 	}
 	
 	public void _MoveForwardAtCurve(int curveIndex)
@@ -326,7 +335,7 @@ public class AIFunction : MonoBehaviour
 		}
 		forward = true;
 		startForwardTime = Time.time;
-		stopForwardTime = Time.time + CurrentSpeedCurve.length;
+		stopForwardTime = Time.time + Util.GetCurveMaxTime(CurrentSpeedCurve);
 	}
 	
 	/// <summary>
@@ -339,11 +348,12 @@ public class AIFunction : MonoBehaviour
 	}
 	
 	/// <summary>
-	/// Change Unit.UnitReceiveDamageStatus to vulnerableButNotReactToDamage in furture N seconds.
+	/// Change Unit.UnitReceiveDamageStatus to invincible in furture N seconds.
 	/// </summary>
 	public void _UnitInvincibleInSeconds(float seconds)
 	{
 		this.unit.receiveDamageStatus = UnitReceiveDamageStatus.invincible;
 		RevertReceiveDamageStatusTime = Time.time + seconds;
 	}
+	
 }
