@@ -507,7 +507,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 				ret = IsConditionEntityMatched(compositeCondition.Entity2,compositeConditionWrapper,behavior);
 			break;
 		case LogicConjunction.Or:
-			ret = IsConditionEntityMatched(compositeCondition.Entity2,compositeConditionWrapper,behavior); 
+			ret = IsConditionEntityMatched(compositeCondition.Entity1,compositeConditionWrapper,behavior); 
 			if(ret == false)
 				ret = IsConditionEntityMatched(compositeCondition.Entity2,compositeConditionWrapper,behavior);
 			break;
@@ -676,9 +676,13 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 			    ShouldCompare = true;
 			    LeftValue = this.Unit.AttackCounter;
 			    break;
-		case AIValueComparisionCondition.DoDamageCount:
+		    case AIValueComparisionCondition.DoDamageCount:
 			    ShouldCompare = true;
 			    LeftValue = this.Unit.DoDamageCounter;
+			    break;
+		    case AIValueComparisionCondition.LastConditionMatchTimeInterval:
+			    ShouldCompare = true;
+			    LeftValue = Time.time - AIBehaviorCondition.PreviousConditionTrueTime;
 			    break;
             default:
                 Debug.LogError("GameObject:" + this.gameObject.name + " - unsupported value comparision condition:" + AIBehaviorCondition.ValueComparisionCondition.ToString());
@@ -688,6 +692,11 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         {
             ret = Util.CompareValue(LeftValue, AIBehaviorCondition.ValueOperator, RightValue);
         }
+		//if the atom condition is true, set the current time in  PreviousConditionTrueTime variable.
+		if(ret)
+		{
+			AIBehaviorCondition.PreviousConditionTrueTime = Time.time;
+		}
         return ret;
     }
 
@@ -703,6 +712,10 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// <returns></returns>
     public virtual void StartBehavior(AIBehavior behavior)
     {
+		if(PrintDebugMessage)
+		{
+			Debug.Log("Now start behavior:" + behavior.Name);
+		}
         //Rule: behavior start coroutine = "Start_" + BehaviorType
         string Coroutine = "Start_" + behavior.Type.ToString();
         behavior.ExecutionCounter++;
@@ -716,6 +729,10 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         {
             SendMessage(startMessage);
         }
+		foreach( GameEvent _event in behavior.GameEventAtStart)
+		{
+			LevelManager.OnGameEvent(_event, this);
+		}
         StartCoroutine(Coroutine, behavior);
     }
     /// <summary>
@@ -736,8 +753,11 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         foreach (string endMessage in behavior.MessageAtEnd)
         {
             SendMessage(endMessage);
-//			Debug.Log("Send message:" + endMessage);
         }
+		foreach( GameEvent _event in behavior.GameEventAtEnd)
+		{
+			LevelManager.OnGameEvent(_event, this);
+		}
         StartCoroutine(Coroutine, behavior);
 		
 		//Start next behavior
@@ -880,7 +900,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// <returns></returns>
     public virtual IEnumerator Start_MoveAtDirection(AIBehavior behavior)
     {
-        Vector3 direction = behavior.IsWorldDirection ? behavior.MoveDirection : transform.InverseTransformDirection(behavior.MoveDirection);
+        Vector3 direction = behavior.IsWorldDirection ? behavior.MoveDirection : transform.TransformDirection(behavior.MoveDirection);
         MoveData MoveData = Unit.MoveDataDict[behavior.MoveDataName];
         Vector3 velocity = direction.normalized * MoveData.MoveSpeed;
 		float LastCheckEndConditionTime = 0;
