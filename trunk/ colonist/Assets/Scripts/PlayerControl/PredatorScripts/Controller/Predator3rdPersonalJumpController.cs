@@ -19,12 +19,15 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
     private string JumpingAnimation = "jumping";
     private string GroundingAnimation = "jumpToGround";
     private string PrejumpAnimation = "prejump";
+	private float LastJumpTime = 9999;
 
     private CharacterController controller;
     private LayerMask GroundLayer;
     private LayerMask JumpOverObstacleLayer;
 //    private Predator3rdPersonVisualEffectController ClawEffectController;
     private Predator3rdPersonalUnit PredatorPlayerUnit = null;
+	
+	private float ResetJumpInterval;
 	
 	public float JumpForwardMaxHeight = 5;
 	
@@ -47,7 +50,19 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
 
         ForwardJumpTime = PredatorPlayerUnit.JumpData.JumpForwardTime;
         ForwardJumpSpeed = PredatorPlayerUnit.JumpData.JumpForwardSpeed;
+		
+		ResetJumpInterval = PredatorPlayerUnit.JumpData.ResetJumpInterval;
     }
+	
+	void Update()
+	{
+		//in case the IsJumping not being set back, we need a per frame check !
+		if(IsJumping == true && ((Time.time - LastJumpTime) > ResetJumpInterval))
+		{
+			IsJumping = false;
+			Debug.Log(Time.time  + " reset is jumping to false, LastJumpTime:" + LastJumpTime + " forwardJumpTime:" + ForwardJumpTime);
+		}
+	}
 
     /// <summary>
     /// Trigger a Jump beheavior.
@@ -57,11 +72,13 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
     /// <returns></returns>
     public IEnumerator Jump()
     {
+		if(IsJumping)
+		{
+			yield break;
+		}
+		Debug.Log("Jump at frame:" + Time.frameCount + " isJumping:" + IsJumping + " at time:" + Time.time);
         JumpOverObstacle obstacle = null;
         bool HasObstacle = CheckJumpOverObstacle(out obstacle);
-
-//        ClawEffectController.ShowBothClawVisualEffects();
-
         //If there is obstacle, jump over it
         if (HasObstacle)
         {
@@ -73,9 +90,7 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
         else
         {
             yield return StartCoroutine(JumpStraightForward());
-			
         }
-//        ClawEffectController.HideBothClawTrailRenderEffect();
     }
 
     /// <summary>
@@ -89,7 +104,7 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
         //animation.CrossFade(PrejumpAnimation);
         animation.Play(PrejumpAnimation);
         yield return new WaitForSeconds(animation[PrejumpAnimation].length);
-        float _time = Time.time;
+        LastJumpTime = Time.time;
 		
 		//rising time = 1/2 of ForwardJumpTime
 		float RisingTime = ForwardJumpTime * 0.5f;
@@ -99,17 +114,15 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
 		Vector3 jumpForwardVelocity = jumpDirection * ForwardJumpSpeed;
 		jumpForwardVelocity.y = 0;
 		Vector3 upwardVelocity = new Vector3(0, upwardInitalSpeed, 0);
-        while ((Time.time - _time) <= ForwardJumpTime)
+        while ((Time.time - LastJumpTime) <= ForwardJumpTime)
         {
             animation.Play(JumpingAnimation);
 //            Vector3 jumpVelocity = jumpDirection * ForwardJumpSpeed * Time.deltaTime;
             upwardVelocity.y -= gravity * Time.deltaTime; 
 			Vector3 forwardVelocity = jumpForwardVelocity * Time.deltaTime + upwardVelocity;
 			
-//            controller.Move(jumpVelocity);
 			controller.Move(forwardVelocity);
-			
-//			transform.position -= new Vector3(0, gravity * Time.deltaTime, 0);
+
             //Util.MoveTowards(transform, transform.forward, controller, ForwardJumpSpeed);
             yield return null;
         }

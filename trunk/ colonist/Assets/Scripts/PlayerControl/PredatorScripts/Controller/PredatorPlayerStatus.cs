@@ -43,6 +43,7 @@ public class PredatorPlayerStatus : MonoBehaviour{
     private static bool isAttacking = false;
     private static bool isMoving = false;
     private static bool isJumping = false;
+	
     public static bool IsFetching
     {
         get
@@ -66,8 +67,8 @@ public class PredatorPlayerStatus : MonoBehaviour{
             return isMoving;
         }
     }
-
-    public static bool IsJumping
+	
+	public static bool IsJumping
     {
         get
         {
@@ -90,13 +91,11 @@ public class PredatorPlayerStatus : MonoBehaviour{
     private void UpdateStatus()
     {
         isAttacking = attackController.IsPlayingAttack() ;//|| fetchController.isPlayingFetchAnimation();
-        isMoving = !Mathf.Approximately(movementController.MoveDirection.magnitude, 0);
-                  
-       // isFetching = fetchController.HasFetchSomething;
-        isJumping = JumpController.IsJumping;
+        isMoving = !Mathf.Approximately(movementController.MoveDirection.magnitude, 0); 
+		isJumping = JumpController.IsJumping;
     }
 
-    void FixedUpdate()
+    void Update()
     {
         UpdateStatus();
     }

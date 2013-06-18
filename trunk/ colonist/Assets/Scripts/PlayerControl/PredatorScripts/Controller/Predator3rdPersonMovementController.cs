@@ -41,14 +41,14 @@ public class Predator3rdPersonMovementController : MonoBehaviour {
 	void Update () {
         //If predator is attacking, stop moving
         //and DisableUserMovement must be false  to allow user commanding the movement
-        if (PredatorPlayerStatus.IsJumping==false && 
+        if (PredatorPlayerStatus.IsJumping == false && 
             PredatorPlayerStatus.IsAttacking == false && 
             playerStatus.DisableUserMovement == false)
         {
             CharacterRelativeMoving();
             AnimateWalking_CharacterRelative();
         }
-
+//		Debug.Log("Is Jumping:" + PredatorPlayerStatus.IsJumping + " IsAttacking:" + PredatorPlayerStatus.IsAttacking + " playerStatus:" + playerStatus.DisableUserMovement + " IsJumping:" + GetComponent<Predator3rdPersonalJumpController>().IsJumping);
 		//if DecelerationFactor > 0, gradually decrease it
 		if(DecelerationFactor > 0)
 		{
