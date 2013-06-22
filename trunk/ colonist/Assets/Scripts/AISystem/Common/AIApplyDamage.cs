@@ -17,10 +17,6 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
 		controller = GetComponent<CharacterController>();
 	}
 	
-	void Update()
-	{
-	}
-	
 #region Receive Damage and Die
     public virtual IEnumerator ApplyDamage(DamageParameter damageParam)
     {
@@ -36,11 +32,13 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
 		
         //Minus HP:
         unit.HP -= damageParam.damagePoint;
+		//if HP < 0, goto Die routine
         if (unit.HP <= 0)
         {
 			SendMessage("Die", damageParam);
             yield break;
         }
+		//Else, goto DoDamage routine.
         else
         {
             StartCoroutine("DoDamage", damageParam);
@@ -113,6 +111,15 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
             }
         }
 		
+		//Play audio:
+		if(receiveDamageData.AudioDataName != null && receiveDamageData.AudioDataName.Length > 0)
+		{
+            foreach (string audioName in receiveDamageData.AudioDataName)
+            {
+                GetComponent<AudioController>()._PlayAudio(audioName);
+            }
+		}
+		
         //Halt AI if set true, stop all animation, and play the receive damage animation
         if (receiveDamageData.HaltAI)
         {
@@ -176,7 +183,14 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
                 GlobalBloodEffectDecalSystem.CreateBloodDecal(transform.position + controller.center, DecalData);
             }
         }
-
+		//Play audio:
+		if(deathData.AudioDataName != null && deathData.AudioDataName.Length > 0)
+		{
+			foreach (string audioDataName in deathData.AudioDataName)
+            {
+                GetComponent<AudioController>()._PlayAudio(audioDataName);
+            }
+		}
 
         if(deathData.UseDieReplacement)
         {
@@ -195,6 +209,19 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
             {
                 Util.CopyTransform(transform, DieReplacement.transform);
             }
+			//if deathData.ReplaceOldObjectInSpawnedList is true, means this object has a replacement in SpawnedList.
+			if(deathData.ReplaceOldObjectInSpawnedList)
+			{
+				// the Spawner must not be null, when ReplaceOldObjectInSpawnedList is true
+				if(unit.Spawner != null)
+				{
+				   unit.Spawner.ReplaceSpawnedWithNewObject(this.gameObject, DieReplacement);
+				}
+				else 
+				{
+					Debug.LogError(string.Format("Unit:{0} hsa no Spawner", unit.gameObject.name));
+				}
+			}
             Destroy(gameObject);
         }
         else 

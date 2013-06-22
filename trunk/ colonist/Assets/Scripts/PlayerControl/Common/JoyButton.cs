@@ -142,56 +142,6 @@ public class AdaptiveAnchor
 	}
 }
 
-[System.Serializable]
-public class AdaptiveRect
-{
-	/// <summary>
-	/// The bound anchor to screen left.
-	/// </summary>
-	public AdaptiveAnchor AdaptiveAnchor_Left;
-	/// <summary>
-	/// The bound anchor to screen top.
-	/// </summary>
-	public AdaptiveAnchor AdaptiveAnchor_Top;
-	/// <summary>
-	/// The bound width.
-	/// </summary>
-	public AdaptiveLength AdaptiveWidth;
-	/// <summary>
-	/// The bound height.
-	/// </summary>
-	public AdaptiveLength AdaptiveHeight;
-	
-	/// <summary>
-	/// If the JoyButton need to refer to other joyButton, assign true and ReferrenceJoyButtonName.
-	/// </summary>
-	public bool HasReference = false;
-	public string ReferrenceJoyButtonNanme = "";
-	[HideInInspector]
-	public JoyButton ReferrenceJoyButton = null;
-	
-	public Vector2 GetAnchor()
-	{
-		Vector2 anchor = HasReference ? new Vector2(AdaptiveAnchor_Left.GetValue(ReferrenceJoyButton.adaptiveBound.GetAnchor()),
-			                                     AdaptiveAnchor_Top.GetValue(ReferrenceJoyButton.adaptiveBound.GetAnchor()))
-			                       : new Vector2(AdaptiveAnchor_Left.GetValue(), AdaptiveAnchor_Top.GetValue());
-		return anchor;
-	}
-	
-	public Vector2 GetSize()
-	{
-		Vector2 size = new Vector2(AdaptiveWidth.GetValue(), AdaptiveHeight.GetValue());
-		return size;
-	}
-	
-	public Rect GetBound()
-	{
-		Vector2 anchor = GetAnchor();
-		Vector2 size = GetSize();
-		return new Rect(anchor.x, anchor.y, size.x, size.y);
-	}
-}
-
 /// <summary>
 /// An abstract class of JoyButton
 /// Offspring should implement methods:

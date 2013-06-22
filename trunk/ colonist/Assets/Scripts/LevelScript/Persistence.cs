@@ -104,19 +104,31 @@ public class Persistence : MonoBehaviour {
 	    PlayerPrefs.SetString(Persistence.CheckPointName, CheckPointName);
 	}
 	
+	public static void ClearCheckPoint()
+	{
+		if(PlayerPrefs.HasKey(CheckPointLevel))
+		{
+			PlayerPrefs.DeleteKey(CheckPointLevel);
+		}
+		if(PlayerPrefs.HasKey(CheckPointName))
+		{
+			PlayerPrefs.DeleteKey(CheckPointName);
+		}
+	}
+	
 	public static bool GetLastCheckPoint(out string LevelName, out string CheckPointName)
 	{
 		if( !PlayerPrefs.HasKey(Persistence.CheckPointLevel) || !PlayerPrefs.HasKey(Persistence.CheckPointName))
 		{
-			LevelName =	PlayerPrefs.GetString(Persistence.CheckPointLevel);
-	        CheckPointName = PlayerPrefs.GetString(Persistence.CheckPointName);
-			return true;
-		}
-		else 
-		{
 	        LevelName =	"";
 	        CheckPointName = "";
 			return false;
+		}
+		else 
+		{
+			LevelName =	PlayerPrefs.GetString(Persistence.CheckPointLevel);
+	        CheckPointName = PlayerPrefs.GetString(Persistence.CheckPointName);
+			return true;
 		}
 	}
 }

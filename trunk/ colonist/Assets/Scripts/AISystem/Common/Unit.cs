@@ -5,8 +5,8 @@ using System.Collections.Generic;
 /// <summary>
 /// The class represents a basic Unit in the game.
 /// Unit responsibility:
-/// 1. Contains data definition.
-/// 2. In the case of more than one AI component, switch AI in real time, according to condition data.
+/// 1. Unit data (MoveData,IdleData,attackdata..etc) definition.
+/// 2. Some addhot functionalities, like HaltUnit,PlayAnimation.
 /// </summary>
 [System.Serializable]
 public class Unit : UnitBase , I_GameEventReceiver
@@ -65,9 +65,13 @@ public class Unit : UnitBase , I_GameEventReceiver
 	/// </summary>
 	public System.Collections.Generic.IDictionary<DamageForm, System.Collections.Generic.IList<DeathData>>
         DeathDataDict = new System.Collections.Generic.Dictionary<DamageForm, System.Collections.Generic.IList<DeathData>> ();
+	
 	public DecalData[] DecalData = new DecalData[] { };
 	public System.Collections.Generic.IDictionary<string, DecalData> DecalDataDict = new System.Collections.Generic.Dictionary<string, DecalData> ();
+	
 	public AudioData[] AudioData = new AudioData[] { };
+	public IDictionary<string,AudioData> AudioDataDict = new Dictionary<string,AudioData>();
+	
 	public IDictionary<string,AI> AIDict = new Dictionary<string,AI> ();
 	
 	/// <summary>
@@ -124,6 +128,13 @@ public class Unit : UnitBase , I_GameEventReceiver
 	[HideInInspector]
 	public UnitReceiveDamageStatus receiveDamageStatus = UnitReceiveDamageStatus.vulnerable;
 	
+	
+	/// <summary>
+	/// For runtime spawned object only.
+	/// This member should be assigned to the SpawnNPC game object who spawn this object.
+	/// </summary>
+	[HideInInspector]
+	public SpawnNPC Spawner = null;
 #endregion
 
 	CharacterController controller = null;
@@ -226,6 +237,13 @@ public class Unit : UnitBase , I_GameEventReceiver
 				DecalDataDict.Add (decal.Name, decal);
 			}
 		}
+		
+		if(AudioData != null)
+		{
+			foreach (AudioData audioData in AudioData) {
+                  this.AudioDataDict.Add(audioData.Name, audioData);
+			}
+		}
 	}
 	
 	public void InitAnimation ()
@@ -237,11 +255,20 @@ public class Unit : UnitBase , I_GameEventReceiver
 			animation [data.AnimationName].speed = data.AnimationSpeed;
 		}
 		foreach (UnitAnimationData data in MoveData) {
-			animation [data.AnimationName].layer = data.AnimationLayer;
-			animation [data.AnimationName].wrapMode = data.AnimationWrapMode;
-			animation [data.AnimationName].speed = data.AnimationSpeed;
+			try{
+			   animation [data.AnimationName].layer = data.AnimationLayer;
+			   animation [data.AnimationName].wrapMode = data.AnimationWrapMode;
+			   animation [data.AnimationName].speed = data.AnimationSpeed;
+			}
+			catch(System.Exception exc)
+			{
+			   Debug.LogError("data.AnimationName:" + data.AnimationName + " not exist!");
+			   Debug.LogError(exc);
+			}
 		}
 		foreach (UnitAnimationData data in AttackData) {
+			if( ((AttackData)data).HasAnimation == false)//don't setup animation for attackData that HasAnimation is false
+				continue;
 			animation [data.AnimationName].layer = data.AnimationLayer;
 			animation [data.AnimationName].wrapMode = data.AnimationWrapMode;
 			animation [data.AnimationName].speed = data.AnimationSpeed;
@@ -359,6 +386,16 @@ public class Unit : UnitBase , I_GameEventReceiver
 		ResetHaltTime = Time.time + duration;
 	}
 #endregion
+	
+	public bool IsPlayingAnimation(string[] ani)
+	{
+		foreach(string a in ani)
+		{
+			if(animation.IsPlaying(a))
+			   return true;
+		}
+		return false;
+	}
 	
 	public void CloneTo (Unit unit)
 	{

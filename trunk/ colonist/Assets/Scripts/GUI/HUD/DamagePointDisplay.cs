@@ -169,8 +169,8 @@ public class DynamicGUINumberTextureData
 		this.StartScreenPosition = screenPosition;
 		DisplayRect = new Rect (0, 0, 0, 0);
 		StartTime = Time.time;
-		this.screenPositionOffsetStart = fadeSetting.screenOffset.GetValueAtPercentage(0);
-		this.screenPositionOffsetEnd = fadeSetting.screenOffset.GetValueAtPercentage(1);
+		this.screenPositionOffsetStart = fadeSetting.screenOffset.NormalizedEvaluate(0);
+		this.screenPositionOffsetEnd = fadeSetting.screenOffset.NormalizedEvaluate(1);
 		this.FadeSetting = fadeSetting;
 	}
 	
@@ -192,13 +192,13 @@ public class DynamicGUINumberTextureData
 			this.DisplayRect.x = this.StartScreenPosition.x + screenOffset.x;
 			this.DisplayRect.y = this.StartScreenPosition.y + screenOffset.y;
 			//calculate the wide-height size
-			float imageSizeRate = FadeSetting.sizeExpandSetting.GetValueAtPercentage (percentage);
+			float imageSizeRate = FadeSetting.sizeExpandSetting.NormalizedEvaluate (percentage);
 			this.DisplayRect.width = this.texture.width * imageSizeRate;
 			this.DisplayRect.height = this.texture.height * imageSizeRate;
 			//centerize the texture screen position
 			this.DisplayRect.x -= this.DisplayRect.width / 2;
 			//calculate the color
-			this.DisplayColor = FadeSetting.colorCurve.GetValueAtPercentage (percentage);
+			this.DisplayColor = FadeSetting.colorCurve.NormalizedEvaluate (percentage);
 			return true;
 		}
 	}

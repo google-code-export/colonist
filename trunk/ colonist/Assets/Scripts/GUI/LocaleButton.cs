@@ -78,10 +78,10 @@ public class LocaleButton : JoyButton
 	{
 		base.onTouchEnd (touch);
 		foreach (GameEvent e in event_on_touch) {
-			LevelManager.OnGameEvent (e);
+			LevelManager.OnGameEvent (e , this);
 		}
 	}
-	
+	public ScaleMode _scaleMode;
 	void OnGUI ()
 	{
 		GUIBound = base.GetAdaptiveBound();
@@ -94,7 +94,7 @@ public class LocaleButton : JoyButton
 			}
 		}
 		if (ButtonTexture != null) {
-			GUI.DrawTexture (GUIBound, ButtonTexture);
+			GUI.DrawTexture (GUIBound, ButtonTexture,_scaleMode);
 		}
 	}
 }

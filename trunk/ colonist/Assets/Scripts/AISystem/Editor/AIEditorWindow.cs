@@ -84,6 +84,7 @@ public class AIEditorWindow : EditorWindow
            if (EnableEditAIFlag[aiEditor.AI.Name] ) {
 		      aiEditor.EditAI();
 		   }
+		   EditorGUILayout.EndToggleGroup();
 		}
 		EditorGUILayout.EndScrollView ();
 	}

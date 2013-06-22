@@ -53,14 +53,11 @@ public class EditorCommon
 			int index = 0;
 			string[] array = GetAnimationNames (gameObject, AnimationData.AnimationName, out index);
 			index = EditorGUILayout.Popup ("Animation:", index, array);
-			if(index != -1)
-			{
-			   AnimationData.AnimationName = array [index];
-			   EditorGUILayout.LabelField (new GUIContent ("Animation length: " + gameObject.animation [AnimationData.AnimationName].length + " seconds.", "动画时长"));
-			}
-			else 
-			{
-				EditorGUILayout.LabelField("Warning !!! Animation:" + AnimationData.AnimationName + " does not exist!");
+			if (index != -1) {
+				AnimationData.AnimationName = array [index];
+				EditorGUILayout.LabelField (new GUIContent ("Animation length: " + gameObject.animation [AnimationData.AnimationName].length + " seconds.", "动画时长"));
+			} else {
+				EditorGUILayout.LabelField ("Warning !!! Animation:" + AnimationData.AnimationName + " does not exist!");
 			}
 		}
 		AnimationData.AnimationLayer = EditorGUILayout.IntField (new GUIContent ("Animation Layer", ""), AnimationData.AnimationLayer);
@@ -86,20 +83,18 @@ public class EditorCommon
 			
 			int RotateLeftAnimationIndex = 0, RotateRightAnimationIndex = 0;
 			
-			string []array_left = GetAnimationNames(gameObject,RotateData.RotateLeftAnimationName, out RotateLeftAnimationIndex);
+			string [] array_left = GetAnimationNames (gameObject, RotateData.RotateLeftAnimationName, out RotateLeftAnimationIndex);
 			RotateLeftAnimationIndex = EditorGUILayout.Popup ("Rotate Left Animation:", RotateLeftAnimationIndex, array_left);
-			if(RotateLeftAnimationIndex >= 0)
-			{
-				RotateData.RotateLeftAnimationName = array_left[RotateLeftAnimationIndex];
-		        EditorGUILayout.LabelField (new GUIContent ("Animation length: " + gameObject.animation [RotateData.RotateLeftAnimationName].length + " seconds.", ""));
+			if (RotateLeftAnimationIndex >= 0) {
+				RotateData.RotateLeftAnimationName = array_left [RotateLeftAnimationIndex];
+				EditorGUILayout.LabelField (new GUIContent ("Animation length: " + gameObject.animation [RotateData.RotateLeftAnimationName].length + " seconds.", ""));
 			}
 			
-			string []array_right = GetAnimationNames(gameObject,RotateData.RotateRightAnimationName, out RotateRightAnimationIndex);
+			string [] array_right = GetAnimationNames (gameObject, RotateData.RotateRightAnimationName, out RotateRightAnimationIndex);
 			RotateRightAnimationIndex = EditorGUILayout.Popup ("Rotate Right Animation:", RotateRightAnimationIndex, array_right);
-			if(RotateRightAnimationIndex >= 0)
-			{
-				RotateData.RotateRightAnimationName = array_right[RotateRightAnimationIndex];
-		        EditorGUILayout.LabelField (new GUIContent ("Animation length: " + gameObject.animation [RotateData.RotateRightAnimationName].length + " seconds.", ""));
+			if (RotateRightAnimationIndex >= 0) {
+				RotateData.RotateRightAnimationName = array_right [RotateRightAnimationIndex];
+				EditorGUILayout.LabelField (new GUIContent ("Animation length: " + gameObject.animation [RotateData.RotateRightAnimationName].length + " seconds.", ""));
 			}
 			
 			RotateData.AnimationLayer = EditorGUILayout.IntField (new GUIContent ("Animation Layer", ""), RotateData.AnimationLayer);
@@ -200,6 +195,7 @@ public class EditorCommon
 				                string.Format (" ---------------------- {0}", MoveData.Name), 
 				                MoveData as UnitAnimationData);
 		MoveData.MoveSpeed = EditorGUILayout.FloatField (new GUIContent ("Speed:", "单位移动速度."), MoveData.MoveSpeed);
+		MoveData.UseGravityWhenMoving = EditorGUILayout.Toggle(new GUIContent("Use gravity:", "If use Gravity, move method = SimpleMove, else, Move()"), MoveData.UseGravityWhenMoving);
 		MoveData.CanRotate = EditorGUILayout.Toggle (new GUIContent ("CanRotate:", "单位移动的时候,是否朝向前进方向"), MoveData.CanRotate);
 		if (MoveData.CanRotate) {
 			MoveData.SmoothRotate = EditorGUILayout.Toggle (new GUIContent ("SmoothRotate:", "单位移动转向的时候,是否用角速度自动平滑转向动作."), MoveData.SmoothRotate);
@@ -223,7 +219,7 @@ public class EditorCommon
 		}
 		for (int i = 0; i < AttackDataArray.Length; i++) {
 			AttackData _AttackData = AttackDataArray [i];
-			EditAttackData(unit,_AttackData);
+			EditAttackData (unit, _AttackData);
 			AttackDataArray [i] = _AttackData;
 			//Delete this attack data
 			if (GUILayout.Button ("Delete " + _AttackData.Name)) {
@@ -233,108 +229,107 @@ public class EditorCommon
 		return AttackDataArray;
 	}
 	
-	public static AttackData EditAttackData(UnitBase unit, AttackData _AttackData)
+	public static AttackData EditAttackData (UnitBase unit, AttackData _AttackData)
 	{
-		    EditBasicAnimationData (unit.gameObject,
+		_AttackData.HasAnimation = EditorGUILayout.Toggle (string.Format ("{0} has animation?", _AttackData.Name), _AttackData.HasAnimation);
+		if (_AttackData.HasAnimation) {
+			EditBasicAnimationData (unit.gameObject,
 				                    string.Format (" ---------------------- {0}", _AttackData.Name), 
 				                    _AttackData as UnitAnimationData);
-			_AttackData.DamageForm = (DamageForm)EditorGUILayout.EnumPopup (new GUIContent ("Damage Form:", "伤害类型"), _AttackData.DamageForm);
-			_AttackData.AttackableRange = EditorGUILayout.FloatField (new GUIContent ("Attack range:", "攻击范围"), _AttackData.AttackableRange);
-			_AttackData.LookAtTarget = EditorGUILayout.Toggle (new GUIContent ("Look at target:", "Should the unit look at target before attacking ?"), _AttackData.LookAtTarget);
+		} else {
+			EditorGUILayout.LabelField (string.Format (" ---------------------- {0}", _AttackData.Name));
+		}
+		_AttackData.DamageForm = (DamageForm)EditorGUILayout.EnumPopup (new GUIContent ("Damage Form:", "伤害类型"), _AttackData.DamageForm);
+		_AttackData.AttackableRange = EditorGUILayout.FloatField (new GUIContent ("Attack range:", "攻击范围"), _AttackData.AttackableRange);
+		_AttackData.LookAtTarget = EditorGUILayout.Toggle (new GUIContent ("Look at target:", "Should the unit look at target before attacking ?"), _AttackData.LookAtTarget);
 //			AttackData.AttackInterval = EditorGUILayout.FloatField (new GUIContent ("Attack Interval", "攻击间隔"), AttackData.AttackInterval);
-						//Hit Test trigger type:
+		//Hit Test trigger type:
 			
-			EditorGUILayout.BeginHorizontal();
-			_AttackData.hitTriggerType = (HitTriggerType)EditorGUILayout.EnumPopup(new GUIContent("Hit test trigger type:", "How to trigger hit test?"), 
+		EditorGUILayout.BeginHorizontal ();
+		_AttackData.hitTriggerType = (HitTriggerType)EditorGUILayout.EnumPopup (new GUIContent ("Hit test trigger type:", "How to trigger hit test?"), 
 				_AttackData.hitTriggerType);
-			if(_AttackData.hitTriggerType == HitTriggerType.ByTime)
-			{
-			   _AttackData.HitTime = EditorGUILayout.FloatField (new GUIContent ("Hit time:",
+		if (_AttackData.hitTriggerType == HitTriggerType.ByTime) {
+			_AttackData.HitTime = EditorGUILayout.FloatField (new GUIContent ("Hit time:",
                             @"The time to trigger attack functionality."),
                             _AttackData.HitTime);
-			}
-			if(_AttackData.hitTriggerType == HitTriggerType.ByAnimationEvent)
-			{
-				string animationName = _AttackData.AnimationName;
-				bool HasAttackEvent = false;
-				if(unit.animation[animationName] != null)
-				{
-				    AnimationEvent[] events = AnimationUtility.GetAnimationEvents(unit.animation[animationName].clip);
-					if(events != null && events.Length > 0)
-					{
-						HasAttackEvent = events.Count(x=>x.functionName == "_Attack") > 0;
-					}
-					if(HasAttackEvent == false)
-					{
-						if(GUILayout.Button("Add attack event"))
-						{
-							AnimationEvent _e = new AnimationEvent();
-							_e.functionName = "_Attack";
-							_e.stringParameter = _AttackData.Name;
-							_e.time = 0;
-							unit.animation[animationName].clip.AddEvent(_e);
+		}
+		if (_AttackData.hitTriggerType == HitTriggerType.ByAnimationEvent) {
+			string animationName = _AttackData.AnimationName;
+			bool HasAttackEvent = false;
+			if (unit.animation [animationName] != null) {
+				AnimationEvent[] events = AnimationUtility.GetAnimationEvents (unit.animation [animationName].clip);
+				if (events != null && events.Length > 0) {
+					HasAttackEvent = events.Count (x => x.functionName == "_Attack") > 0;
+				}
+				if (HasAttackEvent == false) {
+					if (GUILayout.Button ("Add attack event")) {
+						AnimationEvent _e = new AnimationEvent ();
+						_e.functionName = "_Attack";
+						_e.stringParameter = _AttackData.Name;
+						_e.time = 0;
+						unit.animation [animationName].clip.AddEvent (_e);
 //							AnimationUtility.SetAnimationEvents(unit.animation[animationName].clip , new AnimationEvent[] { _e } );
-						}
 					}
 				}
 			}
+		}
 			
-			EditorGUILayout.EndHorizontal();
+		EditorGUILayout.EndHorizontal ();
 			
-			_AttackData.DamagePointBase = EditorGUILayout.FloatField (new GUIContent ("Base Damage Point:", "基础伤害点数"), _AttackData.DamagePointBase);
-			EditorGUILayout.BeginHorizontal ();
-			_AttackData.MinDamageBonus = EditorGUILayout.FloatField (new GUIContent ("Min Damage Point Bonus:", ""), _AttackData.MinDamageBonus);
-			_AttackData.MaxDamageBonus = _AttackData.MaxDamageBonus >= _AttackData.MinDamageBonus ?
+		_AttackData.DamagePointBase = EditorGUILayout.FloatField (new GUIContent ("Base Damage Point:", "基础伤害点数"), _AttackData.DamagePointBase);
+		EditorGUILayout.BeginHorizontal ();
+		_AttackData.MinDamageBonus = EditorGUILayout.FloatField (new GUIContent ("Min Damage Point Bonus:", ""), _AttackData.MinDamageBonus);
+		_AttackData.MaxDamageBonus = _AttackData.MaxDamageBonus >= _AttackData.MinDamageBonus ?
                     _AttackData.MaxDamageBonus : _AttackData.MinDamageBonus;
-			_AttackData.MaxDamageBonus = EditorGUILayout.FloatField (new GUIContent ("Max Damage Point Bonus:", ""), _AttackData.MaxDamageBonus);
-			EditorGUILayout.EndHorizontal ();
-			string DamageRange = (_AttackData.DamagePointBase + _AttackData.MinDamageBonus).ToString ()
+		_AttackData.MaxDamageBonus = EditorGUILayout.FloatField (new GUIContent ("Max Damage Point Bonus:", ""), _AttackData.MaxDamageBonus);
+		EditorGUILayout.EndHorizontal ();
+		string DamageRange = (_AttackData.DamagePointBase + _AttackData.MinDamageBonus).ToString ()
                     + " ~ " + (_AttackData.DamagePointBase + _AttackData.MaxDamageBonus).ToString ();
-			EditorGUILayout.LabelField (new GUIContent ("Damage range:" + DamageRange, "伤害点数范围"));
-			_AttackData.Type = (AIAttackType)EditorGUILayout.EnumPopup (new GUIContent ("AI Attack Type:", "攻击类型 - 立刻的/投射/区域"), _AttackData.Type);
-			switch (_AttackData.Type) {
-			case AIAttackType.Instant:
-				_AttackData.HitTestType = (HitTestType)EditorGUILayout.EnumPopup (new GUIContent ("*Hit Test Type:", "命中检测方式 - 一定命中/百分率/碰撞器校验/距离校验"), _AttackData.HitTestType);
-				switch (_AttackData.HitTestType) {
-				case HitTestType.AlwaysTrue:
-					break;
-				case HitTestType.HitRate:
-					_AttackData.HitRate = EditorGUILayout.FloatField (new GUIContent ("*Hit Rate:", "命中率: 0 - 1"), _AttackData.HitRate);
-					_AttackData.HitRate = Mathf.Clamp01 (_AttackData.HitRate);
-					break;
-				case HitTestType.CollisionTest:
-					_AttackData.HitTestCollider = (Collider)EditorGUILayout.ObjectField (new GUIContent ("*Hit Test Collider:", "Assign a collider to test if the target is hit."), _AttackData.HitTestCollider, typeof(Collider));
-					break;
-				case HitTestType.DistanceTest:
-					_AttackData.HitTestDistance = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Distance:", "命中校验距离: "), _AttackData.HitTestDistance);
-					break;
-				case HitTestType.AngleTest:
-					_AttackData.HitTestAngularDiscrepancy = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Angular Distance:", "命中校验角差值范围: "), _AttackData.HitTestAngularDiscrepancy);
-					break;
-				case HitTestType.DistanceAndAngleTest:
-					_AttackData.HitTestDistance = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Distance:", "命中校验距离: "), _AttackData.HitTestDistance);
-					_AttackData.HitTestAngularDiscrepancy = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Angular Distance:", "命中校验角差值范围: "), _AttackData.HitTestAngularDiscrepancy);
-					break;
-				default:
-					break;
-				}
+		EditorGUILayout.LabelField (new GUIContent ("Damage range:" + DamageRange, "伤害点数范围"));
+		_AttackData.Type = (AIAttackType)EditorGUILayout.EnumPopup (new GUIContent ("AI Attack Type:", "攻击类型 - 立刻的/投射/区域"), _AttackData.Type);
+		switch (_AttackData.Type) {
+		case AIAttackType.Instant:
+			_AttackData.HitTestType = (HitTestType)EditorGUILayout.EnumPopup (new GUIContent ("*Hit Test Type:", "命中检测方式 - 一定命中/百分率/碰撞器校验/距离校验"), _AttackData.HitTestType);
+			switch (_AttackData.HitTestType) {
+			case HitTestType.AlwaysTrue:
 				break;
-			case AIAttackType.Projectile:
-				_AttackData.Projectile = (Projectile)EditorGUILayout.ObjectField (new GUIContent ("*Projectile:", "射弹对象"), _AttackData.Projectile, typeof(Projectile));
-				_AttackData.ProjectileInstantiateAnchor = (Transform)EditorGUILayout.ObjectField (new GUIContent ("*Projectile Instantiate Anchor :", ""), _AttackData.ProjectileInstantiateAnchor, typeof(Transform));
+			case HitTestType.HitRate:
+				_AttackData.HitRate = EditorGUILayout.FloatField (new GUIContent ("*Hit Rate:", "命中率: 0 - 1"), _AttackData.HitRate);
+				_AttackData.HitRate = Mathf.Clamp01 (_AttackData.HitRate);
 				break;
-			case AIAttackType.Regional:
-				EditorGUILayout.BeginHorizontal ();
-				EditorGUILayout.LabelField (new GUIContent ("HitTestType:", "Regional 攻击方式的命中检测必须是CollisionTest:"));
-				_AttackData.HitTestType = (HitTestType)EditorGUILayout.EnumPopup (_AttackData.HitTestType);
-				_AttackData.HitTestType = HitTestType.CollisionTest;
-				EditorGUILayout.EndHorizontal ();
+			case HitTestType.CollisionTest:
 				_AttackData.HitTestCollider = (Collider)EditorGUILayout.ObjectField (new GUIContent ("*Hit Test Collider:", "Assign a collider to test if the target is hit."), _AttackData.HitTestCollider, typeof(Collider));
-				_AttackData.HitTestDistance = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Distance:", "Enemy in this range will be test by hit collider."), _AttackData.HitTestDistance);
+				break;
+			case HitTestType.DistanceTest:
+				_AttackData.HitTestDistance = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Distance:", "命中校验距离: "), _AttackData.HitTestDistance);
+				break;
+			case HitTestType.AngleTest:
+				_AttackData.HitTestAngularDiscrepancy = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Angular Distance:", "命中校验角差值范围: "), _AttackData.HitTestAngularDiscrepancy);
+				break;
+			case HitTestType.DistanceAndAngleTest:
+				_AttackData.HitTestDistance = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Distance:", "命中校验距离: "), _AttackData.HitTestDistance);
+				_AttackData.HitTestAngularDiscrepancy = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Angular Distance:", "命中校验角差值范围: "), _AttackData.HitTestAngularDiscrepancy);
+				break;
+			default:
 				break;
 			}
-			_AttackData.ScriptObjectAttachToTarget = (MonoBehaviour)EditorGUILayout.ObjectField (new GUIContent ("Script attach to target:", "造成伤害时,自动附加该脚本组件."), _AttackData.ScriptObjectAttachToTarget, typeof(MonoBehaviour));
-		    return _AttackData;
+			break;
+		case AIAttackType.Projectile:
+			_AttackData.Projectile = (Projectile)EditorGUILayout.ObjectField (new GUIContent ("*Projectile:", "射弹对象"), _AttackData.Projectile, typeof(Projectile));
+			_AttackData.ProjectileInstantiateAnchor = (Transform)EditorGUILayout.ObjectField (new GUIContent ("*Projectile Instantiate Anchor :", ""), _AttackData.ProjectileInstantiateAnchor, typeof(Transform));
+			break;
+		case AIAttackType.Regional:
+			EditorGUILayout.BeginHorizontal ();
+			EditorGUILayout.LabelField (new GUIContent ("HitTestType:", "Regional 攻击方式的命中检测必须是CollisionTest:"));
+			_AttackData.HitTestType = (HitTestType)EditorGUILayout.EnumPopup (_AttackData.HitTestType);
+			_AttackData.HitTestType = HitTestType.CollisionTest;
+			EditorGUILayout.EndHorizontal ();
+			_AttackData.HitTestCollider = (Collider)EditorGUILayout.ObjectField (new GUIContent ("*Hit Test Collider:", "Assign a collider to test if the target is hit."), _AttackData.HitTestCollider, typeof(Collider));
+			_AttackData.HitTestDistance = EditorGUILayout.FloatField (new GUIContent ("*Hit Test Distance:", "Enemy in this range will be test by hit collider."), _AttackData.HitTestDistance);
+			break;
+		}
+		_AttackData.ScriptObjectAttachToTarget = (MonoBehaviour)EditorGUILayout.ObjectField (new GUIContent ("Script attach to target:", "造成伤害时,自动附加该脚本组件."), _AttackData.ScriptObjectAttachToTarget, typeof(MonoBehaviour));
+		return _AttackData;
 	}
 	
 	/// <summary>
@@ -357,7 +352,7 @@ public class EditorCommon
 				ReceiveDamageData.Name = EditorGUILayout.TextField (new GUIContent ("Name:", ""), ReceiveDamageData.Name);
 			}
 			ReceiveDamageData.HaltAI = EditorGUILayout.Toggle (new GUIContent ("HaltAI", "Stop AI and animation and play receive damage animation?"), ReceiveDamageData.HaltAI);
-			ReceiveDamageData.ApplicableDamageForm = EditDamageFormArray("Edit applicable damageform:", ReceiveDamageData.ApplicableDamageForm);
+			ReceiveDamageData.ApplicableDamageForm = EditDamageFormArray ("Edit applicable damageform:", ReceiveDamageData.ApplicableDamageForm);
 			
 			
 			
@@ -368,7 +363,11 @@ public class EditorCommon
 				string[] decalDataNameArray = unit.DecalData.Select (x => x.Name).ToArray<string> ();
 				ReceiveDamageData.DecalDataName = EditStringArray ("--------- Edit receive damage decal data-----", ReceiveDamageData.DecalDataName, decalDataNameArray);
 			}
-
+			
+			if (unit.AudioData != null && unit.AudioData.Length > 0) {
+				string[] AudioDataNameArray = unit.AudioData.Select (x => x.Name).ToArray<string> ();
+				ReceiveDamageData.AudioDataName = EditStringArray ("--------- Edit audio data-----", ReceiveDamageData.AudioDataName, AudioDataNameArray);
+			}
                 
 			ReceiveDamageDataArray [i] = ReceiveDamageData;
 			//Delete ReceiveDamageData
@@ -395,71 +394,75 @@ public class EditorCommon
 			EffectData _EffectData = EffectDataArray [i];
 			EditorGUILayout.LabelField ("------------------------ " + _EffectData.Name);
 			_EffectData.Name = EditorGUILayout.TextField (new GUIContent ("Name", ""), _EffectData.Name);
-			_EffectData.InstantionType = (EffectObjectInstantiation)EditorGUILayout.EnumPopup(
-				                                                  new GUIContent("Instantion type","Create a new gameobject, or play a children object's particleSystem?"),
+			_EffectData.InstantionType = (EffectObjectInstantiation)EditorGUILayout.EnumPopup (
+				                                                  new GUIContent ("Instantion type", "Create a new gameobject, or play a children object's particleSystem?"),
 				                                                  _EffectData.InstantionType);
-				
-			_EffectData.UseGlobalEffect = EditorGUILayout.Toggle (new GUIContent ("Use global effect?", ""), _EffectData.UseGlobalEffect);
 			
-			EditorGUILayout.BeginHorizontal();
-			_EffectData.CreateDelay = EditorGUILayout.BeginToggleGroup(new GUIContent("Create in delay",""), _EffectData.CreateDelay );
-			if(_EffectData.CreateDelay)
-			{
-				_EffectData.CreateDelayTime = EditorGUILayout.FloatField(_EffectData.CreateDelayTime);
-			}
-			EditorGUILayout.EndToggleGroup();
-			EditorGUILayout.EndHorizontal();
+			//if type = create, create a new object, or use global setting
+			if (_EffectData.InstantionType == EffectObjectInstantiation.create) {
+				_EffectData.UseGlobalEffect = EditorGUILayout.Toggle (new GUIContent ("Use global effect?", ""), _EffectData.UseGlobalEffect);
 			
-			_EffectData.Count = EditorGUILayout.IntField(new GUIContent("Number count:",""), _EffectData.Count);
-			
-			if (_EffectData.UseGlobalEffect) {
-				_EffectData.GlobalType = (GlobalEffectType)EditorGUILayout.EnumPopup (new GUIContent ("Global effect type", "Use global effect instead of custom effect."),
-						_EffectData.GlobalType);
-				_EffectData.instantiationData = EditorCommon.EditInstantiationData(" -----------  Edit instantiation data ----------- ", _EffectData.instantiationData);
-			} else {
-				_EffectData.DestoryTimeOut = EditorGUILayout.FloatField (new GUIContent ("LifeTime:", ""), _EffectData.DestoryTimeOut);
-				_EffectData.EffectObject = (GameObject)EditorGUILayout.ObjectField (new GUIContent ("Effect object", ""), _EffectData.EffectObject, typeof(GameObject));
-				_EffectData.instantiationData = EditorCommon.EditInstantiationData(" -----------  Edit instantiation data ----------- ", _EffectData.instantiationData);
-				//Delete this effect data
-				if (GUILayout.Button ("Delete EffectData:" + _EffectData.Name)) {
-					EffectDataArray = Util.CloneExcept<EffectData> (EffectDataArray, _EffectData);
+				EditorGUILayout.BeginHorizontal ();
+				_EffectData.CreateDelay = EditorGUILayout.BeginToggleGroup (new GUIContent ("Create in delay", ""), _EffectData.CreateDelay);
+				if (_EffectData.CreateDelay) {
+					_EffectData.CreateDelayTime = EditorGUILayout.FloatField (_EffectData.CreateDelayTime);
 				}
+				EditorGUILayout.EndToggleGroup ();
+				EditorGUILayout.EndHorizontal ();
+			
+				_EffectData.Count = EditorGUILayout.IntField (new GUIContent ("Number count:", ""), _EffectData.Count);
+			
+				if (_EffectData.UseGlobalEffect) {
+					_EffectData.GlobalType = (GlobalEffectType)EditorGUILayout.EnumPopup (new GUIContent ("Global effect type", "Use global effect instead of custom effect."),
+						_EffectData.GlobalType);
+					_EffectData.instantiationData = EditorCommon.EditInstantiationData (" -----------  Edit instantiation data ----------- ", _EffectData.instantiationData);
+				} else {
+					_EffectData.DestoryTimeOut = EditorGUILayout.FloatField (new GUIContent ("LifeTime:", ""), _EffectData.DestoryTimeOut);
+					_EffectData.EffectObject = (GameObject)EditorGUILayout.ObjectField (new GUIContent ("Effect object", ""), _EffectData.EffectObject, typeof(GameObject));
+					_EffectData.instantiationData = EditorCommon.EditInstantiationData (" -----------  Edit instantiation data ----------- ", _EffectData.instantiationData);
+					//Delete this effect data
+					if (GUILayout.Button ("Delete EffectData:" + _EffectData.Name)) {
+						EffectDataArray = Util.CloneExcept<EffectData> (EffectDataArray, _EffectData);
+					}
+				}
+			} else if (_EffectData.InstantionType == EffectObjectInstantiation.play) {
+				_EffectData.EffectObject = (GameObject)EditorGUILayout.ObjectField ("Effect particle system:", _EffectData.EffectObject, typeof(GameObject));
+				_EffectData.UseGlobalEffect = false;
+				_EffectData.CreateDelay = false;
+				_EffectData.DestoryTimeOut = 0;
 			}
 			EditorGUILayout.Space ();
-			if(GUILayout.Button("Remove EffectData:" + _EffectData.Name))
-			{
-				EffectDataArray = Util.CloneExcept<EffectData>(EffectDataArray, _EffectData);
+			if (GUILayout.Button ("Remove EffectData:" + _EffectData.Name)) {
+				EffectDataArray = Util.CloneExcept<EffectData> (EffectDataArray, _EffectData);
 			}
 		}
 		return EffectDataArray;
 	}
 	
-	public static InstantiationData EditInstantiationData(string label, InstantiationData instantiationData)
+	public static InstantiationData EditInstantiationData (string label, InstantiationData instantiationData)
 	{
-		EditorGUILayout.LabelField(label);
-		instantiationData.BasicAnchor = (Transform)EditorGUILayout.ObjectField(new GUIContent("Base creation anchor:","The basic anchor to create instance."),
+		EditorGUILayout.LabelField (label);
+		instantiationData.BasicAnchor = (Transform)EditorGUILayout.ObjectField (new GUIContent ("Base creation anchor:", "The basic anchor to create instance."),
 			                                                                   instantiationData.BasicAnchor, 
 			                                                                   typeof(Transform));
-		EditorGUILayout.BeginHorizontal();
-		instantiationData.rotationOfInstance = (InstantiationRotationMode)EditorGUILayout.EnumPopup(new GUIContent("Instance rotation mode:","How to set the rotation of instance?"), instantiationData.rotationOfInstance);
-		if(instantiationData.rotationOfInstance == InstantiationRotationMode.SpecifiedQuaternion)
-		{
-			Vector4 v = new Vector4(instantiationData.specifiedQuaterion.x, instantiationData.specifiedQuaterion.y, 
+		EditorGUILayout.BeginHorizontal ();
+		instantiationData.rotationOfInstance = (InstantiationRotationMode)EditorGUILayout.EnumPopup (new GUIContent ("Instance rotation mode:", "How to set the rotation of instance?"), instantiationData.rotationOfInstance);
+		if (instantiationData.rotationOfInstance == InstantiationRotationMode.SpecifiedQuaternion) {
+			Vector4 v = new Vector4 (instantiationData.specifiedQuaterion.x, instantiationData.specifiedQuaterion.y, 
 				                    instantiationData.specifiedQuaterion.z, instantiationData.specifiedQuaterion.w);
-			v = EditorGUILayout.Vector4Field("Specified X,Y,Z,W:", v);
-			instantiationData.specifiedQuaterion = new Quaternion(v.x,v.y,v.z,v.w);
+			v = EditorGUILayout.Vector4Field ("Specified X,Y,Z,W:", v);
+			instantiationData.specifiedQuaterion = new Quaternion (v.x, v.y, v.z, v.w);
 		}
-		EditorGUILayout.EndHorizontal();
+		EditorGUILayout.EndHorizontal ();
 		
-		EditorGUILayout.BeginHorizontal();
-		instantiationData.RandomPositionInsideSphere = EditorGUILayout.Toggle("Randomly create inside sphere?",instantiationData.RandomPositionInsideSphere);
-		if(instantiationData.RandomPositionInsideSphere)
-		{
-		   instantiationData.RandomSphereUnit = EditorGUILayout.FloatField("Random sphere radius:", instantiationData.RandomSphereUnit);
+		EditorGUILayout.BeginHorizontal ();
+		instantiationData.RandomPositionInsideSphere = EditorGUILayout.Toggle ("Randomly create inside sphere?", instantiationData.RandomPositionInsideSphere);
+		if (instantiationData.RandomPositionInsideSphere) {
+			instantiationData.RandomSphereUnit = EditorGUILayout.FloatField ("Random sphere radius:", instantiationData.RandomSphereUnit);
 		}
-		EditorGUILayout.EndHorizontal();
+		EditorGUILayout.EndHorizontal ();
 		
-		instantiationData.WorldOffset = EditorGUILayout.Vector3Field("World position offset:", instantiationData.WorldOffset);
+		instantiationData.WorldOffset = EditorGUILayout.Vector3Field ("World position offset:", instantiationData.WorldOffset);
 		return instantiationData;
 	}
 	
@@ -510,39 +513,40 @@ public class EditorCommon
 			//Death animation is used only when: 1. there is no ragdoll, or 2.create ragdoll, after animation finishes.
 			if (DeathData.UseDieReplacement == false ||
                    (DeathData.UseDieReplacement == true &&
-                    (DeathData.ReplaceAfterAnimationFinish == true || DeathData.ReplaceAfterSeconds>0))) {
+                    (DeathData.ReplaceAfterAnimationFinish == true || DeathData.ReplaceAfterSeconds > 0))) {
 				EditBasicAnimationData (unit.gameObject,
 					                        string.Format (" ---------------------- {0}", DeathData.Name), 
 					                        DeathData as UnitAnimationData);
-			} 
-			else {
+			} else {
 				GUILayout.Label (string.Format (" ---------------------- {0}", DeathData.Name));
 				DeathData.Name = EditorGUILayout.TextField (new GUIContent ("Name:", ""), DeathData.Name);
 			}
-			DeathData.ApplicableDamageForm =  EditDamageFormArray("Applicable Damage Form",DeathData.ApplicableDamageForm);
+			DeathData.ApplicableDamageForm = EditDamageFormArray ("Applicable Damage Form", DeathData.ApplicableDamageForm);
 			DeathData.UseDieReplacement = EditorGUILayout.Toggle (new GUIContent ("Use Die replacement:", "死亡时,是否创建替代布娃娃?"), DeathData.UseDieReplacement);
 			if (DeathData.UseDieReplacement) {
 				DeathData.ReplaceAfterAnimationFinish = EditorGUILayout.Toggle (new GUIContent ("Create replacement following animation", "Replace by ragdoll after animation over?"), DeathData.ReplaceAfterAnimationFinish);
-				if(DeathData.ReplaceAfterAnimationFinish == false)
-				{
-					DeathData.ReplaceAfterSeconds = EditorGUILayout.FloatField(new GUIContent("Replace ragdoll after N seconds?","Ingore this field if its value = zero"),DeathData.ReplaceAfterSeconds);
+				if (DeathData.ReplaceAfterAnimationFinish == false) {
+					DeathData.ReplaceAfterSeconds = EditorGUILayout.FloatField (new GUIContent ("Replace ragdoll after N seconds?", "Ingore this field if its value = zero"), DeathData.ReplaceAfterSeconds);
 				}
 				DeathData.DieReplacement = (GameObject)EditorGUILayout.ObjectField (new GUIContent ("Die replacement:", ""), DeathData.DieReplacement, typeof(GameObject));
+				DeathData.ReplaceOldObjectInSpawnedList = EditorGUILayout.Toggle (new GUIContent ("Replace spawned list", " This is only available for runtime spawned units"), DeathData.ReplaceOldObjectInSpawnedList);
 				DeathData.CopyChildrenTransformToDieReplacement = EditorGUILayout.Toggle (new GUIContent ("Copy transform?", "是否把替代物的关节位置调整到和死亡单位一致?"), DeathData.CopyChildrenTransformToDieReplacement);
-			}
-			else {
-				EditorGUILayout.BeginHorizontal();
+			} else {
+				EditorGUILayout.BeginHorizontal ();
 				DeathData.DestoryGameObject = EditorGUILayout.Toggle (new GUIContent ("Destory GameObject:", ""), DeathData.DestoryGameObject);
-				if(DeathData.DestoryGameObject)
-				{
-					DeathData.DestoryLagTime = EditorGUILayout.FloatField("Destory lag time:", DeathData.DestoryLagTime);
+				if (DeathData.DestoryGameObject) {
+					DeathData.DestoryLagTime = EditorGUILayout.FloatField ("Destory lag time:", DeathData.DestoryLagTime);
 				}
-				EditorGUILayout.EndHorizontal();
+				EditorGUILayout.EndHorizontal ();
 			}
 			string[] effectDataNameArray = unit.EffectData.Select (x => x.Name).ToArray<string> ();
 			DeathData.EffectDataName = EditStringArray ("--------- Edit death effect data-----", DeathData.EffectDataName, effectDataNameArray);
 			string[] decalDataNameArray = unit.DecalData.Select (x => x.Name).ToArray<string> ();
 			DeathData.DecalDataName = EditStringArray ("--------- Edit death decal data-----", DeathData.DecalDataName, decalDataNameArray);
+			
+			string[] audioDataNameArray = unit.AudioData.Select (x => x.Name).ToArray<string> ();
+			DeathData.AudioDataName = EditStringArray ("--------- Edit audio data-----", DeathData.AudioDataName, audioDataNameArray);
+			
 			//Delete DeathData
 			if (GUILayout.Button ("Delete DeathData:" + DeathData.Name)) {
 				DeathDataArray = Util.CloneExcept<DeathData> (DeathDataArray, DeathData);
@@ -550,6 +554,43 @@ public class EditorCommon
 
 		}
 		return DeathDataArray;
+	}
+	
+	public static AudioData[] EditAudioData (Unit unit, AudioData[] AudioDataArray)
+	{
+		if (GUILayout.Button ("Add audio data")) {
+			AudioData audioData = new AudioData ();
+			audioData.enabled = true;
+			AudioDataArray = Util.AddToArray<AudioData> (audioData, AudioDataArray);
+		}
+		foreach (AudioData audioData in AudioDataArray) {
+			audioData.Name = EditorGUILayout.TextField ("AudioData Name:", audioData.Name);
+			audioData.mode = (AudioObjectMode)EditorGUILayout.EnumPopup ("Audio object mode:", audioData.mode);
+			audioData.playMode = (AudioPlayMode)EditorGUILayout.EnumPopup ("Play mode:", audioData.playMode);
+			if (audioData.playMode == AudioPlayMode.BindToAnimation) {
+				//when playmode = bindToAnimation, the Audio object must be an AudioSource.
+				audioData.mode = AudioObjectMode.AudioSouce;
+			}
+			switch (audioData.mode) {
+			case AudioObjectMode.AudioSouce:
+				audioData.randomAudioSources = EditorCommon.EditObjectArray<AudioSource> ("Edit audioSources:", audioData.randomAudioSources);
+				if (audioData.playMode == AudioPlayMode.BindToAnimation) {
+					audioData.AnimationBinded = EditorCommon.EditStringArray ("Animations Binded:", audioData.AnimationBinded, EditorCommon.GetAnimationNames (unit.gameObject));
+					audioData.BindedAudioSource = (AudioSource)EditorGUILayout.ObjectField (new GUIContent ("Binded audio:", "When the animation is playing/stoped, the AudioSource is playing/stoped automatically."), audioData.BindedAudioSource, typeof(AudioSource));
+				}
+				break;
+			case AudioObjectMode.Clip:
+				audioData.randomAudioClips = EditorCommon.EditObjectArray<AudioClip> ("Edit audioClips:", audioData.randomAudioClips);
+				audioData.PlayClipVolume = EditorGUILayout.Slider ("Volume:", audioData.PlayClipVolume, 0, 1);
+				audioData.Play3DClipAnchor = (Transform)EditorGUILayout.ObjectField ("Play audio anchor:", audioData.Play3DClipAnchor, typeof(Transform));
+				break;
+			}
+			if (GUILayout.Button ("Delete audio data:" + audioData.Name)) {
+				AudioDataArray = Util.CloneExcept<AudioData> (AudioDataArray, audioData);
+			}
+			EditorGUILayout.Space ();
+		}
+		return AudioDataArray;
 	}
 	
 	#endregion
@@ -602,8 +643,6 @@ public class EditorCommon
 		EditorGUILayout.LabelField (label);
 		Object[] newArray = OrigArray;
 		if (GUILayout.Button ("Add new object element")) {
-			//Object element = new Object ();
-			//newArray = Util.AddToArray<Object> (element, newArray);
 			newArray = Util.ExpandArray<Object> (OrigArray, 1);
 		}
 		if (newArray != null && newArray.Length > 0) {
@@ -622,21 +661,20 @@ public class EditorCommon
 		return newArray;
 	}
 	
-	public static AudioClip[] EditAudioClipArray (string label, AudioClip[] clipArray)
+	public static T[] EditObjectArray<T> (string label, T[] OrigArray) where T : Object
 	{
 		EditorGUILayout.LabelField (label);
-		AudioClip[] newArray = clipArray;
-		if (GUILayout.Button ("Add new audio clip element")) {
-			AudioClip element = null;
-			newArray = Util.AddToArray<AudioClip> (element, newArray);
+		T[] newArray = OrigArray;
+		if (GUILayout.Button ("Add new object element")) {
+			newArray = Util.ExpandArray<T> (OrigArray, 1);
 		}
 		if (newArray != null && newArray.Length > 0) {
 			for (int i = 0; i < newArray.Length; i++) {
 				EditorGUILayout.BeginHorizontal ();
-				AudioClip element = newArray [i];
-				element = (AudioClip)EditorGUILayout.ObjectField (element, typeof(AudioClip));
+				T element = newArray [i];
+				element = (T)EditorGUILayout.ObjectField (element, typeof(T));
 				if (GUILayout.Button ("Remove")) {
-					newArray = Util.CloneExcept<AudioClip> (newArray, i);
+					newArray = Util.CloneExcept<T> (newArray, i);
 					break;
 				}
 				newArray [i] = element;
@@ -646,7 +684,7 @@ public class EditorCommon
 		return newArray;
 	}
 	
-	public static DamageForm[] EditDamageFormArray(string label, DamageForm[] damageFormArray)
+	public static DamageForm[] EditDamageFormArray (string label, DamageForm[] damageFormArray)
 	{
 		EditorGUILayout.LabelField (label);
 		if (GUILayout.Button ("Add new DamageForm element")) {
@@ -655,14 +693,14 @@ public class EditorCommon
 		}
         
 		for (int i = 0; i < damageFormArray.Length; i++) {
-			EditorGUILayout.BeginHorizontal();
-			damageFormArray [i] = (DamageForm) EditorGUILayout.EnumPopup(damageFormArray [i]);
+			EditorGUILayout.BeginHorizontal ();
+			damageFormArray [i] = (DamageForm)EditorGUILayout.EnumPopup (damageFormArray [i]);
 			if (GUILayout.Button ("Remove")) {
 				damageFormArray = Util.CloneExcept<DamageForm> (damageFormArray, i);
-				EditorGUILayout.EndHorizontal();
+				EditorGUILayout.EndHorizontal ();
 				break;
 			}
-			EditorGUILayout.EndHorizontal();
+			EditorGUILayout.EndHorizontal ();
 		}
 		return damageFormArray;
 	}
@@ -679,7 +717,7 @@ public class EditorCommon
 		}
         
 		for (int i = 0; i < array.Length; i++) {
-			array [i] = EditorGUILayout.TextField(array[i]);
+			array [i] = EditorGUILayout.TextField (array [i]);
 			if (GUILayout.Button ("Remove")) {
 				array = Util.CloneExcept<string> (array, i);
 				break;
@@ -734,10 +772,10 @@ public class EditorCommon
 	public static void EditPropertyField (string label, string description, 
 		                                  string fieldname, Object theObject)
 	{
-		SerializedObject serObj = new SerializedObject(theObject);
-		SerializedProperty  p = serObj.FindProperty(fieldname);
-		EditorGUILayout.PropertyField (p, new GUIContent(label, description));
-		serObj.Update();
+		SerializedObject serObj = new SerializedObject (theObject);
+		SerializedProperty p = serObj.FindProperty (fieldname);
+		EditorGUILayout.PropertyField (p, new GUIContent (label, description));
+		serObj.Update ();
 	}
 	
 	/// <summary>
@@ -745,15 +783,12 @@ public class EditorCommon
 	/// </summary>
 	public static string EditPopup (string label, string _value, string[] displayOption)
 	{
-		if(displayOption.Length > 0)
-		{
-		   int index = IndexOfArray<string> (displayOption, _value);
-		   index = EditorGUILayout.Popup (label, index, displayOption);
-		   return displayOption [index];
-		}
-		else 
-		{
-			EditorGUILayout.LabelField(label);
+		if (displayOption.Length > 0) {
+			int index = IndexOfArray<string> (displayOption, _value);
+			index = EditorGUILayout.Popup (label, index, displayOption);
+			return displayOption [index];
+		} else {
+			EditorGUILayout.LabelField (label);
 			return "";
 		}
 	}
@@ -773,38 +808,37 @@ public class EditorCommon
 	/// <summary>
 	/// Copies the unit and AI component from Unit A to Unit B.
 	/// </summary>
-	public static void CopyUnitAndAIComponent(Unit A, GameObject B)
+	public static void CopyUnitAndAIComponent (Unit A, GameObject B)
 	{
-        Unit unit = B.AddComponent<Unit>();
-		A.CloneTo(unit);
+		Unit unit = B.AddComponent<Unit> ();
+		A.CloneTo (unit);
 		EditorUtility.SetDirty (B);
 	}
 	
-	public static void CopyAnimationEvents(AnimationClip A, AnimationClip B)
+	public static void CopyAnimationEvents (AnimationClip A, AnimationClip B)
 	{
-		AnimationEvent[] events = AnimationUtility.GetAnimationEvents(A);
-		AnimationUtility.SetAnimationEvents(B, events);
+		AnimationEvent[] events = AnimationUtility.GetAnimationEvents (A);
+		AnimationUtility.SetAnimationEvents (B, events);
 	}
 	
-	public static void AddAnimationEvent(AnimationClip clip, string function, 
+	public static void AddAnimationEvent (AnimationClip clip, string function, 
 		                                 string param, AnimationParameterType parameterType)
 	{
-		AnimationEvent _event = new AnimationEvent();
+		AnimationEvent _event = new AnimationEvent ();
 		_event.time = 0;
 		_event.functionName = function;
-		switch(parameterType)
-		{
-		    case AnimationParameterType.StringParam:
-			   _event.stringParameter = param;
-			   break;
-			case AnimationParameterType.IntParam:
-			   _event.intParameter = int.Parse(param);
-			   break;
-			case AnimationParameterType.FloatParam:
-			   _event.floatParameter = float.Parse(param);
-			   break;
+		switch (parameterType) {
+		case AnimationParameterType.StringParam:
+			_event.stringParameter = param;
+			break;
+		case AnimationParameterType.IntParam:
+			_event.intParameter = int.Parse (param);
+			break;
+		case AnimationParameterType.FloatParam:
+			_event.floatParameter = float.Parse (param);
+			break;
 		}
-	    clip.AddEvent(_event);
+		clip.AddEvent (_event);
 	}
 	
     #endregion
@@ -818,43 +852,166 @@ public class EditorCommon
 //		scenarioData.gameEventAtScenarioCameraDockingCompleted =  EditGameEventArray("---------- Edit GameEvents at scenario camera on dock -------", scenarioData.gameEventAtScenarioCameraDockingCompleted);
 //	}
 	
-	public static GameEvent[] EditGameEventArray(string label, GameEvent[] array)
+	public static GameEvent[] EditGameEventArray (string label, GameEvent[] array)
 	{
-		GUILayout.Label(label);
-		if(GUILayout.Button("Add GameEvent:"))
-		{
-			GameEvent e = new GameEvent();
-			array = Util.AddToArray<GameEvent>(e, array);
+		GUILayout.Label (label);
+		if (GUILayout.Button ("Add GameEvent:")) {
+			GameEvent e = new GameEvent ();
+			array = Util.AddToArray<GameEvent> (e, array);
 		}
-		foreach(GameEvent _e in array)
-		{
-			EditGameEvent(_e);
-			if(GUILayout.Button("Delete GameEvent:" + _e.Name))
-			{
-			   array = Util.CloneExcept<GameEvent>(array,_e);
+		foreach (GameEvent _e in array) {
+			EditGameEvent (_e);
+			if (GUILayout.Button ("Delete GameEvent:" + _e.Name)) {
+				array = Util.CloneExcept<GameEvent> (array, _e);
 			}
-			EditorGUILayout.Separator();
+			EditorGUILayout.Separator ();
 		}
 		return array;
 	}
 	
-	public static void EditGameEvent(GameEvent _event)
+	public static void EditGameEvent (GameEvent _event)
 	{
-		_event.Name = EditorGUILayout.TextField("Event name:",_event.Name);
-		EditorGUILayout.BeginHorizontal();
-		_event.type = (GameEventType) EditorGUILayout.EnumPopup("Event type:",_event.type);
-		_event.delaySend = EditorGUILayout.FloatField("Delay:",_event.delaySend);
-		EditorGUILayout.EndHorizontal();
-		_event.receiver = (GameObject)EditorGUILayout.ObjectField("Receiver gameobject:", _event.receiver, typeof(GameObject));
-		EditorGUILayout.BeginHorizontal();
-		_event.IntParameter = EditorGUILayout.IntField("Int param:",_event.IntParameter);
-		_event.FloatParameter = EditorGUILayout.FloatField("Float param:",_event.FloatParameter);
-		_event.BoolParameter = EditorGUILayout.Toggle("Bool param:",_event.BoolParameter);
-		EditorGUILayout.EndHorizontal();
+		_event.Name = EditorGUILayout.TextField ("Event name:", _event.Name);
+		EditorGUILayout.BeginHorizontal ();
+		_event.type = (GameEventType)EditorGUILayout.EnumPopup ("Event type:", _event.type);
+		_event.delaySend = EditorGUILayout.FloatField ("Delay:", _event.delaySend);
+		EditorGUILayout.EndHorizontal ();
+		_event.receiver = (GameObject)EditorGUILayout.ObjectField ("Receiver gameobject:", _event.receiver, typeof(GameObject));
+		EditorGUILayout.BeginHorizontal ();
+		_event.IntParameter = EditorGUILayout.IntField ("Int param:", _event.IntParameter);
+		_event.FloatParameter = EditorGUILayout.FloatField ("Float param:", _event.FloatParameter);
+		_event.BoolParameter = EditorGUILayout.Toggle ("Bool param:", _event.BoolParameter);
+		EditorGUILayout.EndHorizontal ();
 		
-		_event.StringParameter = EditorGUILayout.TextField("String param:",_event.StringParameter);
-		_event.CustomMessage = EditorGUILayout.TextField("Custom msg:",_event.CustomMessage);
+		_event.StringParameter = EditorGUILayout.TextField ("String param:", _event.StringParameter);
+		_event.CustomMessage = EditorGUILayout.TextField ("Custom msg:", _event.CustomMessage);
 	}
 #endregion
+	
+	/// <summary>
+	/// Creates the ragdoll from template.The template is an already working ragdoll.
+	/// </summary>
+	public static void CreateRagdollFromTemplate (GameObject template, GameObject destination)
+	{
+		//process template's character joint
+		CharacterJoint[] joints = template.GetComponentsInChildren<CharacterJoint> ();
+		foreach (CharacterJoint joint in joints) {
+			string path = Util.GetChildPath (template.transform, joint.transform);
+			Transform dstJointTransform = destination.transform.Find (path);
+			if (dstJointTransform == null) {
+				Debug.LogWarning ("Warning: " + path + " is not found at destination transform!");
+				continue;
+			}
+			if (dstJointTransform.gameObject.GetComponent<CharacterJoint> () == null) {
+				dstJointTransform.gameObject.AddComponent<CharacterJoint> ();
+			}
+			string connectedRigidPath = Util.GetChildPath (template.transform, joint.connectedBody.transform);
+			Transform dstConnectedRigid = destination.transform.Find (connectedRigidPath);
+			if (dstConnectedRigid == null) {
+				Debug.LogWarning ("Warning: " + path + " is not found at destination transform!");
+				continue;
+			}
+			if (dstConnectedRigid.GetComponent<Rigidbody> () == null) {
+				dstConnectedRigid.gameObject.AddComponent<Rigidbody> ();
+			}
+			//assign the connected rigidbody
+			dstJointTransform.gameObject.GetComponent<CharacterJoint> ().connectedBody = dstConnectedRigid.GetComponent<Rigidbody> ();
+			Util.CopyCharacterJointSetting (joint, dstJointTransform.gameObject.GetComponent<CharacterJoint> ());
+			if (joint.GetComponent<Collider> () != null) {
+				Util.CopyCollider (joint.GetComponent<Collider> (), dstJointTransform);
+			}
+			if (joint.connectedBody.GetComponent<Collider> () != null) {
+				Util.CopyCollider (joint.connectedBody.GetComponent<Collider> (), dstJointTransform.gameObject.GetComponent<CharacterJoint> ().connectedBody.transform);
+			}
+		}
+	}
+	
+	public static void CopyCurveDataIntoTransform (Transform root, AnimationClipCurveData curveData, float time)
+	{
+		string transformPath = curveData.path;
+		Transform _targetTransform = root.Find (transformPath);
+		if (_targetTransform == null) {
+			Debug.LogError (transformPath + " can not be found !");
+			return;
+		}
+		string property = curveData.propertyName;
+		CurvePropertyType curvePropertyType = CurvePropertyNameToType (property);
+		float curveValue = curveData.curve.Evaluate (time);
+		Debug.Log("Curve value:" + curveValue + " transform:" + _targetTransform.name + " type:" + curvePropertyType.ToString());
+		switch (curvePropertyType) {
+		case CurvePropertyType.Local_PositionX:
+			_targetTransform.localPosition = new Vector3 (curveValue, _targetTransform.localPosition.y, _targetTransform.localPosition.z);
+			break;
+		case CurvePropertyType.Local_PositionY:
+			_targetTransform.localPosition = new Vector3 (_targetTransform.localPosition.x, curveValue, _targetTransform.localPosition.z);
+			break;
+		case CurvePropertyType.Local_PositionZ:
+			_targetTransform.localPosition = new Vector3 (_targetTransform.localPosition.x, _targetTransform.localPosition.y, curveValue);
+			break;
+			
+		case CurvePropertyType.Local_RotationX:
+			_targetTransform.localRotation = new Quaternion (curveValue, _targetTransform.localRotation.y, _targetTransform.localRotation.z, _targetTransform.localRotation.w);
+			break;
+		case CurvePropertyType.Local_RotationY:
+			_targetTransform.localRotation = new Quaternion (_targetTransform.localRotation.x, curveValue, _targetTransform.localRotation.z, _targetTransform.localRotation.w);
+			break;
+		case CurvePropertyType.Local_RotationZ:
+			_targetTransform.localRotation = new Quaternion (_targetTransform.localRotation.x, _targetTransform.localRotation.y, curveValue, _targetTransform.localRotation.w);
+			break;
+		case CurvePropertyType.Local_RotationW:
+			_targetTransform.localRotation= new Quaternion (_targetTransform.localRotation.x, _targetTransform.localRotation.y, _targetTransform.localRotation.w, curveValue);
+			break;
+			
+		case CurvePropertyType.Local_ScaleX:
+			_targetTransform.localScale = new Vector3  (curveValue, _targetTransform.localScale.y, _targetTransform.localScale.z);
+			break;
+		case CurvePropertyType.Local_ScaleY:
+			_targetTransform.localScale = new Vector3  (_targetTransform.localScale.x, curveValue, _targetTransform.localScale.z);
+			break;
+		case CurvePropertyType.Local_ScaleZ:
+			_targetTransform.localScale = new Vector3  (_targetTransform.localScale.x, _targetTransform.localScale.y, curveValue);
+			break;
+		}
+	}
+	
+	public static CurvePropertyType CurvePropertyNameToType (string curveProperty)
+	{
+		//rotation
+		if (curveProperty.ToLower ().Contains ("localrotation.x")) {
+			return CurvePropertyType.Local_RotationX;
+		}
+		if (curveProperty.ToLower ().Contains ("localrotation.y")) {
+			return CurvePropertyType.Local_RotationY;
+		}
+		if (curveProperty.ToLower ().Contains ("localrotation.z")) {
+			return CurvePropertyType.Local_RotationZ;
+		}
+		if (curveProperty.ToLower ().Contains ("localrotation.w")) {
+			return CurvePropertyType.Local_RotationW;
+		}
+		//position
+		if (curveProperty.ToLower ().Contains ("localposition.x")) {
+			return CurvePropertyType.Local_PositionX;
+		}
+		if (curveProperty.ToLower ().Contains ("localposition.y")) {
+			return CurvePropertyType.Local_PositionY;
+		}
+		if (curveProperty.ToLower ().Contains ("localposition.z")) {
+			return CurvePropertyType.Local_PositionZ;
+		}
+		//scale
+		if (curveProperty.ToLower ().Contains ("localscale.x")) {
+			return CurvePropertyType.Local_ScaleX;
+		}
+		if (curveProperty.ToLower ().Contains ("localscale.y")) {
+			return CurvePropertyType.Local_ScaleY;
+		}
+		if (curveProperty.ToLower ().Contains ("localscale.z")) {
+			return CurvePropertyType.Local_ScaleZ;
+		}
+		
+		Debug.LogError ("Unknown CurveData property:" + curveProperty);
+		return CurvePropertyType.Unknown;
+	}
 }
 

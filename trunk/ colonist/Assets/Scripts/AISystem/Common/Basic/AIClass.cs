@@ -23,6 +23,14 @@ public class AlternateBehaviorData
 	/// </summary>
 	public CompositeConditionWrapper AlternateCondition = new CompositeConditionWrapper ();
 	public string NextBehaviorName = "";
+	
+	/// <summary>
+	/// Initialize this AlternateBehaviorData.
+	/// </summary>
+	public void Init()
+	{
+		AlternateCondition.Init();
+	}
 }
 
 /// <summary>
@@ -115,6 +123,17 @@ public class AIBehavior
 	/// </summary>
 	public string[] MessageAtStart = new string[]{};
 	public string[] MessageAtEnd = new string[]{};
+	
+	/// <summary>
+	/// The game event to be sent at behavior start.
+	/// For method that do not need parameters, use MessageAtStart/MessageAtEnd is more simpler.
+	/// </summary>
+	public GameEvent[] GameEventAtStart = new GameEvent[]{};
+	/// <summary>
+	/// The game event to be sent at behavior end.
+	///  For method that do not need parameters, use MessageAtStart/MessageAtEnd is more simpler.
+	/// </summary>
+	public GameEvent[] GameEventAtEnd = new GameEvent[]{};
 
 	/// <summary>
 	/// Count how many times the behavior has been executed.
@@ -163,8 +182,11 @@ public class AIBehavior
 	/// </summary>
 	public void InitBehavior ()
 	{
-		//sort the alternateBehaviorConditionArray by priority, in descending order.
-		IList <AlternateBehaviorData> sortedList = Util.CopyArrayToList<AlternateBehaviorData>(alternateBehaviorConditionArray);
-		this.alternateBehaviorConditionArray = sortedList.OrderBy(x=>x.priority).ToArray();
+		//sort the alternateBehaviorConditionArray by priority, from lower to higher ( 0 = least priority)
+		this.alternateBehaviorConditionArray = this.alternateBehaviorConditionArray.OrderBy(x=>x.priority).ToArray();
+		foreach(AlternateBehaviorData alterBehaviorData in alternateBehaviorConditionArray)
+		{
+			alterBehaviorData.Init();
+		}
 	}
 }

@@ -265,12 +265,9 @@ public class AIFunction : MonoBehaviour
 	/// </summary>
 	void _BackToCurrentTarget()
 	{ 
-		Debug.Break();
-//		_FaceToCurrentTarget();
 		Vector3 targetPos_XZ = new Vector3 (this.unit.CurrentTarget.position.x, transform.position.y, this.unit.CurrentTarget.position.z);
 		Vector3 direction = transform.position - targetPos_XZ;
 		transform.LookAt( transform.position + direction * 5);
-//		transform.RotateAroundLocal(Vector3.up, 180);
 	}
 	
 	/// <summary>
@@ -286,15 +283,22 @@ public class AIFunction : MonoBehaviour
 	/// Create a effect object.
 	/// Note: the %name% MUST BE an effective name in the key set of Unit.EffectDataDict
 	/// </summary>
-	/// <param name="name"></param>
 	public void _CreateEffect (string name)
 	{
-		try{
 		EffectData effectdata = this.unit.EffectDataDict [name];
-		GlobalBloodEffectDecalSystem.CreateEffect(effectdata);
-		}catch(System.Exception  exc)
+	    GlobalBloodEffectDecalSystem.CreateEffect(effectdata);
+	}
+	
+	/// <summary>
+	/// Stop a effectData.
+	/// For now, only a EffectData where instantiateType = Play can be stopped.
+	/// </summary>
+	public void _StopEffect (string name)
+	{
+		EffectData effectdata = this.unit.EffectDataDict [name];
+		if(effectdata.InstantionType == EffectObjectInstantiation.play)
 		{
-			Debug.LogError("Can create animation:" + name);
+			effectdata.EffectObject.GetComponent<ParticleSystem>().Stop();
 		}
 	}
 	

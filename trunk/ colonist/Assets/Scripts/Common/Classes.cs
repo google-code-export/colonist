@@ -339,18 +339,24 @@ public class FloatCurve
 	public float RandomFromValueMax;
 	public float RandomToValueMin;
 	public float RandomToValueMax;
-	
+	[HideInInspector]
+	public float MaxTime = 2;
 	/// <summary>
 	/// Gets the value at given percentage.
 	/// The percentage must be between 0..1
 	/// </summary>
-	public float GetValueAtPercentage(float percentage)
+	public float NormalizedEvaluate(float percentage)
 	{
 		float _from = UseRandomValue ? Random.Range(RandomFromValueMin, RandomFromValueMax) : FromValue;
 		float _to = UseRandomValue ? Random.Range(RandomToValueMin, RandomToValueMax) : ToValue;
 		float valueAtTime = curve.Evaluate(percentage);
 		float v = Mathf.Lerp(_from, _to, valueAtTime);
 		return v;
+	}
+	
+	public float Evaluate(float time)
+	{
+		return curve.Evaluate(time);
 	}
 }
 
@@ -366,9 +372,14 @@ public class Vector2Curve
 	/// Gets the value at given percentage.
 	/// The percentage must be between 0..1
 	/// </summary>
-	public Vector2 GetValueAtPercentage(float percentage)
+	public Vector2 NormalizedEvaluate(float percentage)
 	{
-		return new Vector2(XCurve.GetValueAtPercentage(percentage),YCurve.GetValueAtPercentage(percentage));
+		return new Vector2(XCurve.NormalizedEvaluate(percentage),YCurve.NormalizedEvaluate(percentage));
+	}
+	
+	public Vector2 Evaluate(float time)
+	{
+		return new Vector2(XCurve.Evaluate(time), YCurve.Evaluate(time));
 	}
 }
 
@@ -385,10 +396,46 @@ public class Vector3Curve
 	/// Gets the value at given time.
 	/// The percentage must be between 0..1
 	/// </summary>
-	public Vector3 GetValueAtPercentage(float percentage)
+	public Vector3 NormalizedEvaluate(float percentage)
 	{
-		return new Vector3(XCurve.GetValueAtPercentage(percentage),YCurve.GetValueAtPercentage(percentage),ZCurve.GetValueAtPercentage(percentage));
+		return new Vector3(XCurve.NormalizedEvaluate(percentage),YCurve.NormalizedEvaluate(percentage),ZCurve.NormalizedEvaluate(percentage));
 	}
+	
+	public Vector3 Evaluate(float time)
+	{
+		return new Vector3(XCurve.Evaluate(time), YCurve.Evaluate(time), ZCurve.Evaluate(time));
+	}	
+}
+
+[System.Serializable]
+public class RectCurve
+{
+	public FloatCurve XCurve;
+	public FloatCurve YCurve;
+	public FloatCurve WidthCurve;
+	public FloatCurve HeightCurve;
+	public float MaxTime = 3;
+	/// <summary>
+	/// Gets the value at given time.
+	/// The percentage must be between 0..1
+	/// </summary>
+	public Rect NormalizedEvaluate(float percentage)
+	{
+		return new Rect(XCurve.NormalizedEvaluate(percentage),
+			            YCurve.NormalizedEvaluate(percentage),
+			            WidthCurve.NormalizedEvaluate(percentage),
+			            HeightCurve.NormalizedEvaluate(percentage)
+			           );
+	}
+	
+	public Rect Evaluate(float time)
+	{
+		return new Rect(XCurve.Evaluate(time),
+			            YCurve.Evaluate(time),
+			            WidthCurve.Evaluate(time),
+			            HeightCurve.Evaluate(time)
+			           );
+	}	
 }
 
 [System.Serializable]
@@ -401,12 +448,12 @@ public class ColorCurve
 	/// Gets the value at given time.
 	/// The percentage must be between 0..1
 	/// </summary>
-	public Color GetValueAtPercentage(float percentage)
+	public Color NormalizedEvaluate(float percentage)
 	{
 		float valueAtTime = curve.Evaluate(percentage);
 		Color v = Color.Lerp(fromColor, toColor, valueAtTime);
 		return v;
-	}
+	}	
 }
 
 /// <summary>
@@ -433,4 +480,75 @@ public class TopDownCameraControlParameter
 	/// Layer mask to check if the current view sight has been blocked.
 	/// </summary>
 	public LayerMask lineOfSightMask = 0;
+}
+
+
+[System.Serializable]
+public class AdaptiveRect
+{
+	/// <summary>
+	/// The bound anchor to screen left.
+	/// </summary>
+	public AdaptiveAnchor AdaptiveAnchor_Left;
+	/// <summary>
+	/// The bound anchor to screen top.
+	/// </summary>
+	public AdaptiveAnchor AdaptiveAnchor_Top;
+	/// <summary>
+	/// The bound width.
+	/// </summary>
+	public AdaptiveLength AdaptiveWidth;
+	/// <summary>
+	/// The bound height.
+	/// </summary>
+	public AdaptiveLength AdaptiveHeight;
+	
+	/// <summary>
+	/// If the JoyButton need to refer to other joyButton, assign true and ReferrenceJoyButtonName.
+	/// </summary>
+	public bool HasReference = false;
+	public string ReferrenceJoyButtonNanme = "";
+	
+	[HideInInspector]
+	public JoyButton ReferrenceJoyButton = null;
+	
+	/// <summary>
+	/// Use this variable to store the bound (save per-frame cacluation)
+	/// </summary>
+	[HideInInspector]
+	public Rect Bound = new Rect();
+	
+	public Vector2 GetAnchor()
+	{
+		Vector2 anchor = HasReference ? new Vector2(AdaptiveAnchor_Left.GetValue(ReferrenceJoyButton.adaptiveBound.GetAnchor()),
+			                                     AdaptiveAnchor_Top.GetValue(ReferrenceJoyButton.adaptiveBound.GetAnchor()))
+			                       : new Vector2(AdaptiveAnchor_Left.GetValue(), AdaptiveAnchor_Top.GetValue());
+		return anchor;
+	}
+	
+	public Vector2 GetSize()
+	{
+		Vector2 size = new Vector2(AdaptiveWidth.GetValue(), AdaptiveHeight.GetValue());
+		return size;
+	}
+	
+	public Rect GetBound()
+	{
+		Vector2 anchor = GetAnchor();
+		Vector2 size = GetSize();
+		return new Rect(anchor.x, anchor.y, size.x, size.y);
+	}
+}
+
+/// <summary>
+/// An icon, self-adaptive to current screen resolution.
+/// </summary>
+[System.Serializable]
+public class AdaptiveIcon {
+	public Color color = Color.white;
+	public AdaptiveRect adaptiveRect = new AdaptiveRect();
+	public Texture texture;
+	
+	[HideInInspector]
+	public Rect realtimeRect;
 }

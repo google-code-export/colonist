@@ -6,12 +6,15 @@ using System.Linq;
 [CustomEditor(typeof(ObjectDock))]
 public class ObjectDockEditor : Editor {
 	
-	bool advancedEditor = false;
+	bool advancedEditor_EditGameEvent = false;
+	bool autoFillDockWithChildren = false;
+	DockFleetMode defaultDockFleeMode = DockFleetMode.InGeneralSpeed;
+	DockRotationType defaultDockRotationType = DockRotationType.Unchange;
 	IDictionary<string, bool> dictFlag = new Dictionary<string,bool>();
 	public override void OnInspectorGUI ()
 	{
 		ObjectDock objectDock = target as ObjectDock;
-		if(advancedEditor = EditorGUILayout.BeginToggleGroup(new GUIContent("Edit GameEvent",""),advancedEditor))
+		if(advancedEditor_EditGameEvent = EditorGUILayout.BeginToggleGroup(new GUIContent("Edit GameEvent",""),advancedEditor_EditGameEvent))
 		{
 			foreach(ObjectDockData dockData in objectDock.objectDockData)
 			{
@@ -34,6 +37,29 @@ public class ObjectDockEditor : Editor {
 			}
 		}
 		EditorGUILayout.EndToggleGroup();
+		
+		if(autoFillDockWithChildren = EditorGUILayout.BeginToggleGroup(new GUIContent("Fill dockdata of children",""),autoFillDockWithChildren))
+		{
+			defaultDockRotationType = (DockRotationType)EditorGUILayout.EnumPopup("Default rotation type:" , defaultDockRotationType);
+			defaultDockFleeMode = (DockFleetMode)EditorGUILayout.EnumPopup("Default flee mode:" , defaultDockFleeMode);
+			if(GUILayout.Button("Fill dockData"))
+			{
+				ObjectDockData[] dockDatas = new ObjectDockData[objectDock.transform.childCount];
+				int counter = 0;
+				foreach(Transform child in objectDock.transform)
+				{
+				   dockDatas[counter] = new ObjectDockData();
+				   dockDatas[counter].Name = child.name;
+				   dockDatas[counter].DockTransform = child;
+				   dockDatas[counter].fleeMode = defaultDockFleeMode;
+				   dockDatas[counter].rotationType = defaultDockRotationType;
+				   counter++;
+				}
+				objectDock.objectDockData = dockDatas;
+			}
+		}
+		EditorGUILayout.EndToggleGroup();
+		
 		EditorGUILayout.LabelField("--------------------  Base inspector ----------------------------");
 		base.OnInspectorGUI();
 		CheckDuplicatedName(objectDock.Name);

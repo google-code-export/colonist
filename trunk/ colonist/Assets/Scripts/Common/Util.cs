@@ -60,7 +60,7 @@ public class Util : MonoBehaviour {
 		}
 		else {
 		   newArray = new T[OrigArray.Length + slotCount];
-		   newArray = Util.CloneArray<T>(OrigArray); 
+		   newArray = Util.CloneArray<T>(OrigArray, newArray); 
 		}
 		return newArray;
 	}
@@ -115,10 +115,10 @@ public class Util : MonoBehaviour {
 	
 	public static IList<T> CopyArrayToList<T>(T[] src)
 	{
-		IList<T> ret = new List<T>();
-		for(int i=0; i<ret.Count; i++)
+		IList<T> ret = new List<T>(src.Length);
+		for(int i=0; i<src.Length; i++)
 		{
-			ret[i] = src[i];
+			ret.Add(src[i]);
 		}
 		return ret;
 	}
@@ -137,12 +137,35 @@ public class Util : MonoBehaviour {
 		return dst;
 	}
 	
+	public static T[] CloneArray<T>(T[] src, T[] dst)
+	{
+		if(src == null || src.Length == 0 || dst.Length < src.Length)
+		{
+			return null;
+		}
+		for(int i=0;i<src.Length;i++)
+		{
+			dst[i] = src[i];
+		}
+		return dst;
+	}
+	
 	public static IList<T> CloneList<T>(IList<T> list)
 	{
 		IList<T> ret = new List<T>();
 		for(int i=0; i<list.Count; i++)
 			ret.Add(list[i]);
 		return ret;
+	}
+	
+	public static T[] ConvertObjectArray<T>(Object[] objects) where T : Object
+	{
+		T[] newArray = new T[objects.Length];
+		for(int i=0; i<objects.Length; i++)
+		{
+			newArray[i] = (T)objects[i];
+		}
+		return newArray;
 	}
 	
     /// <summary>
@@ -440,7 +463,103 @@ public class Util : MonoBehaviour {
         int _lm = 1 << layer;
         return ((_lm & lm) == _lm);
     }
+	
+	public static string GetChildPath(Transform topParent, Transform child)
+	{
+		if(child.IsChildOf(topParent) == false)
+		{
+			Debug.LogError("Child:" + child + " is not child of parent:" + topParent);
+			return null;
+		}
+		Transform _parent = child.parent;
+		Transform _child = child;
+		string ret = _child.name.ToString();
 
+		while(_parent != topParent)
+		{
+			ret = _parent.name.ToString() + "/" + ret;
+			_child = _parent;
+			_parent = _child.parent;
+		}
+		//remove the first "/"
+		if(ret[0] == '/')
+		{
+			ret = ret.Remove(0,1);
+		}
+		return ret;
+	}
+	
+	/// <summary>
+	/// Copies the properties from src characterJoint to destination character joint.
+	/// Note: this method do NOT assign the connected rigidbody, you need to assign the variable somewhere outside.
+	/// </summary>
+	public static void CopyCharacterJointSetting(CharacterJoint src, CharacterJoint dst)
+	{
+		dst.swingAxis = src.swingAxis;
+		dst.lowTwistLimit = src.lowTwistLimit;
+		dst.highTwistLimit = src.highTwistLimit;
+		dst.swing1Limit = src.swing1Limit;
+		dst.swing2Limit = src.swing2Limit;
+		dst.anchor = src.anchor;
+		dst.axis = src.axis;
+		dst.breakForce = src.breakForce;
+		dst.breakTorque = src.breakTorque;
+	}
+	
+	/// <summary>
+	/// Copy a source collider to target, the collider attached to target object has duplicated properties to source collider.
+	/// </summary>
+	public static void CopyCollider(Collider srcCollider, Transform target)
+	{
+		if(srcCollider is BoxCollider)
+		{
+			BoxCollider boxCollider = srcCollider as BoxCollider;
+			CopyBoxCollider(boxCollider, target);
+		}
+		if(srcCollider is SphereCollider)
+		{
+			SphereCollider sphereCollider = srcCollider as SphereCollider;
+			CopySphereCollider(sphereCollider, target);
+		}
+		if(srcCollider is CapsuleCollider)
+		{
+			CapsuleCollider capsuleCollider = srcCollider as CapsuleCollider;
+			CopyCapsuleCollider(capsuleCollider, target);
+		}
+	}
+	
+	public static void CopyBoxCollider(BoxCollider src, Transform dst)
+	{
+		if(dst.GetComponent<BoxCollider>() == null)
+		{
+			dst.gameObject.AddComponent<BoxCollider>();
+		}
+		dst.GetComponent<BoxCollider>().size = src.size;
+		dst.GetComponent<BoxCollider>().center = src.center;
+	}
+	
+	public static void CopySphereCollider(SphereCollider src, Transform dst)
+	{
+		if(dst.GetComponent<SphereCollider>() == null)
+		{
+			dst.gameObject.AddComponent<SphereCollider>();
+		}
+		dst.GetComponent<SphereCollider>().radius = src.radius;
+		dst.GetComponent<SphereCollider>().center = src.center;
+	}
+	
+	public static void CopyCapsuleCollider (CapsuleCollider  src, Transform dst)
+	{
+		if(dst.GetComponent<CapsuleCollider >() == null)
+		{
+			dst.gameObject.AddComponent<CapsuleCollider >();
+		}
+		dst.GetComponent<CapsuleCollider >().radius = src.radius;
+		dst.GetComponent<CapsuleCollider >().center = src.center;
+		dst.GetComponent<CapsuleCollider >().height = src.height;
+		dst.GetComponent<CapsuleCollider >().direction = src.direction;
+	}
+	
     public static int GetLayerMask(string layerName)
     {
         int layer = LayerMask.NameToLayer(layerName);
@@ -483,6 +602,7 @@ public class Util : MonoBehaviour {
 
     public static T RandomFromArray<T>(T[] array)
     {
+//		Random.seed = System.DateTime.Now.Millisecond;
         int idx = Random.Range(0, array.Length);
         return array[idx];
     }
@@ -595,7 +715,7 @@ public class Util : MonoBehaviour {
     public static void PutToGround(Transform transform,LayerMask terrainLayer, float OffsetHeight)
     {
         RaycastHit hitInfo = new RaycastHit();
-        if (Physics.Raycast(transform.position, Vector3.down, out hitInfo, 9999, terrainLayer))
+        if (Physics.Raycast(transform.position, Vector3.down, out hitInfo, 9999, terrainLayer) || Physics.Raycast(transform.position, Vector3.up, out hitInfo, 9999, terrainLayer))
         {
 			Vector3 newPos = new Vector3(hitInfo.point.x, hitInfo.point.y + OffsetHeight, hitInfo.point.z);
             transform.position = newPos;
@@ -740,6 +860,14 @@ public class Util : MonoBehaviour {
         return comparePos && compareRot;
     }
 	
+	public static void AlignParentToChild(Transform parent, Transform child)
+	{
+		//first detach the child
+		child.parent = null;
+		parent.transform.position = child.transform.position;
+		child.parent = parent;
+	}
+	
 	public static float Angle_XZ(Vector3 a , Vector3 b)
 	{
         b.y = a.y;
@@ -815,7 +943,12 @@ public class Util : MonoBehaviour {
         Vector3 cloestPoint = a.ClosestPointOnBounds(point);
         return Util.Distance_XZ(cloestPoint, point);
     }
-
+	
+	public static void MoveSmoothly(Transform transform, Vector3 Velocity, CharacterController controller, float rotationSpeed)
+	{
+		MoveSmoothly(transform, Velocity, controller, rotationSpeed, true);
+	}
+	
     /// <summary>
     /// Move smoothly by a given velocity.
     /// </summary>
@@ -823,22 +956,48 @@ public class Util : MonoBehaviour {
     /// <param name="Velocity"></param>
     /// <param name="controller"></param>
     /// <param name="rotationSpeed"></param>
-    public static void MoveSmoothly(Transform transform, Vector3 Velocity, CharacterController controller, float rotationSpeed)
+    public static void MoveSmoothly(Transform transform, Vector3 Velocity, CharacterController controller, float rotationSpeed, bool UseGravity)
     {
         Vector3 forward = transform.forward;
         Util.RotateToward(transform, transform.position + Velocity, true, rotationSpeed);
         float speedModifier = Vector3.Dot(forward, Velocity.normalized);
         speedModifier = Mathf.Clamp01(speedModifier);
-        controller.SimpleMove(Velocity * speedModifier);
+		if(UseGravity)
+		{
+           controller.SimpleMove(Velocity * speedModifier);
+		}
+		else 
+		{
+		   controller.Move(Velocity * speedModifier * Time.deltaTime);
+		}
     }
-
-    public static void MoveTowards(Transform transform, Vector3 direction, CharacterController controller, float movementspeed)
+	
+    public static void MoveTowards(Transform transform, Vector3 direction, CharacterController controller, float movementspeed, bool UseGravity)
     {
         direction = direction.normalized * movementspeed;
-        controller.SimpleMove(direction);
+		if(UseGravity)
+		{
+           controller.SimpleMove(direction);
+		}
+		else 
+		{
+		   controller.Move(direction * Time.deltaTime);
+		}
     }
-
-    public static void MoveTowards(Transform transform, Vector3 pos, CharacterController controller, bool rotateWhileMoving, bool smoothRotate, float movementspeed, float rotationSpeed)
+	
+    public static void MoveTowards(Transform transform, Vector3 direction, CharacterController controller, float movementspeed)
+    {
+        MoveTowards(transform, direction, controller, movementspeed, true);
+    }
+	
+	public static void MoveTowards(Transform transform, Vector3 pos, CharacterController controller, bool rotateWhileMoving, bool smoothRotate, float movementspeed, float rotationSpeed)
+    {
+        MoveTowards(transform, pos, controller, rotateWhileMoving, smoothRotate, movementspeed, rotationSpeed, true);
+    }
+	
+    public static void MoveTowards(Transform transform, Vector3 pos, CharacterController controller, 
+		                           bool rotateWhileMoving, bool smoothRotate, float movementspeed, 
+		                           float rotationSpeed, bool UseGravity)
     {
         if (rotateWhileMoving)
         {
@@ -861,7 +1020,14 @@ public class Util : MonoBehaviour {
             }
             // Move the character (rateframe independent)
             direction = direction.normalized * movementspeed * speedModifier;
-            controller.SimpleMove(direction);
+			if(UseGravity)
+			{
+               controller.SimpleMove(direction);
+			}
+			else 
+			{
+			   controller.Move(direction * Time.deltaTime);
+			}
         }
         else
         {
@@ -871,7 +1037,14 @@ public class Util : MonoBehaviour {
             direction = direction * movementspeed;
             //Note: do NOT apply Time.deltaTime when calling SimpleMove(),
             //because SimpleMove() already take deltaTime into account !
-            controller.SimpleMove(direction);
+			if(UseGravity)
+			{
+               controller.SimpleMove(direction);
+			}
+			else 
+			{
+			   controller.Move(direction * Time.deltaTime);
+			}
         }
      }
 
@@ -974,4 +1147,16 @@ public class Util : MonoBehaviour {
             }
         }
     }
+	
+	/// <summary>
+	/// Return the last keyframe's time in the animation curve.
+	/// This is the max time defined by user.So we consider the last keyframe's time stands for the max time of the curve.
+	/// </summary>
+	public static float GetCurveMaxTime(AnimationCurve curve)
+	{
+		if(curve.keys.Length > 0)
+		   return curve.keys[curve.length - 1].time;
+		else 
+		   return 0;
+	}
 }

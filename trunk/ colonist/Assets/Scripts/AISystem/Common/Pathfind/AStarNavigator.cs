@@ -83,13 +83,13 @@ public class AStarNavigator : Navigator {
                 if (NavigationMoveData.CanRotate)
                 {
                     if (NavigationMoveData.SmoothRotate)
-                        Util.MoveSmoothly(transform, direction.normalized * Speed, controller, NavigationMoveData.RotateAngularSpeed);
+                        Util.MoveSmoothly(transform, direction.normalized * Speed, controller, NavigationMoveData.RotateAngularSpeed, NavigationMoveData.UseGravityWhenMoving);
                     else
-                        Util.MoveTowards(transform, transform.position + direction, controller, true, false, Speed, 0);
+                        Util.MoveTowards(transform, transform.position + direction, controller, true, false, Speed, 0, NavigationMoveData.UseGravityWhenMoving);
                 }
                 else
                 {
-                    Util.MoveTowards(transform, direction, controller, Speed);
+                    Util.MoveTowards(transform, direction, controller, Speed, NavigationMoveData.UseGravityWhenMoving);
                 }
                 animation.CrossFade(NavigationMoveData.AnimationName);
             }

@@ -33,6 +33,10 @@ public class PredatorPlayerJumpData
     /// The obstacle layer to let predator jump over.
     /// </summary>
 	public LayerMask ObstacleToJumpOver;
+	/// <summary>
+	/// The jump interval. The next jump must be at least %JumpInterval% seconds after the last jump.
+	/// </summary>
+	public float ResetJumpInterval = 1;
 }
 
 /// <summary>
@@ -44,7 +48,7 @@ public class PredatorPlayerJumpData
 [RequireComponent(typeof(Predator3rdPersonAudioController))]
 public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
 {
-
+	
 	#region variables for Idle
 	public IdleData IdleData = new IdleData();
 	#endregion
@@ -119,10 +123,9 @@ public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
         //Initalize jump animation:
         animation[JumpData.JumpingAnimation].layer = JumpData.AnimationLayer;
         animation[JumpData.PreJumpAnimation].layer = JumpData.AnimationLayer;
-        //animation[JumpData.GroundingAnimation].layer = JumpData.AnimationLayer;
-
+        //animation[JumpData.GroundingAnimation].layer = JumpData.AnimationLayer;		
         foreach (PredatorComboCombat comboCombat in this.ComboCombat)
-        {
+		{
             comboCombat.Init();
         }
 		

@@ -44,7 +44,10 @@ public class MoveData : UnitAnimationData
 	/// This variable is only used in Attack behavior.
 	/// </summary>
 	public float RedirectTargetInterval = 0.15f;
-	
+	/// <summary>
+	/// If UseGravityWhenMoving = true, the Behavior will use SimpleMove, else, use Move()
+	/// </summary>
+	public bool UseGravityWhenMoving = true;
 	public MoveData GetClone()
 	{
 		MoveData clone = new MoveData();
@@ -53,6 +56,7 @@ public class MoveData : UnitAnimationData
 		clone.CanRotate = this.CanRotate;
 		clone.SmoothRotate = this.SmoothRotate;
 		clone.RotateAngularSpeed = this.RotateAngularSpeed;
+		clone.UseGravityWhenMoving = this.UseGravityWhenMoving;
 		return clone;
 	}
 }
@@ -133,6 +137,11 @@ public class ReceiveDamageData : UnitAnimationData
     /// </summary>
     public string[] DecalDataName = new string[] { };
 	
+	/// <summary>
+	/// The audioData that should be played when the receiveDamageData is used.
+	/// </summary>
+	public string[] AudioDataName = new string[] { };
+	
     public ReceiveDamageData GetClone()
 	{
 		ReceiveDamageData clone = new ReceiveDamageData();
@@ -162,6 +171,10 @@ public class DeathData : UnitAnimationData
     /// DecalDataName - the decal object will be created when die
     /// </summary>
     public string[] DecalDataName = new string[] { };
+	/// <summary>
+	/// The AudioData which will be played when the DeathData triggered.
+	/// </summary>
+	public string[] AudioDataName = new string[]{ };
 	
 	/// <summary>
 	/// If this flag is marked true, the gameObject will be destoryed if UseDieReplacement = false.
@@ -193,6 +206,12 @@ public class DeathData : UnitAnimationData
     /// the DieReplacement's children transform will be aligned to gameObject.
     /// </summary>
     public bool CopyChildrenTransformToDieReplacement = false;
+	
+	/// <summary>
+	/// If ReplaceOldObjectInSpawnedList = true, means,
+	/// when this unit killed, the SpawnedList should replace this gameObject by the Replacement.
+	/// </summary>
+	public bool ReplaceOldObjectInSpawnedList = false;
 	
     public DeathData GetClone()
 	{
@@ -266,14 +285,16 @@ public class InstantiationData
 	/// </summary>
 	public Quaternion specifiedQuaterion = Quaternion.identity;
 	
-//	/// <summary>
-//	/// if RandomQuaternion = true, RandomQuaternion
-//	/// </summary>
-//	public bool RandomQuaternion = false;
-//	/// <summary>
-//	/// If Random Quaternion = false and IdentityQuaternion = true, effect object is created at Quaternion.identity.
-//	/// </summary>
-//	public bool IdentityQuaternion = false;
+    public InstantiationData GetClone()
+	{
+		InstantiationData clone = new InstantiationData();
+		clone.RandomSphereUnit = this.RandomSphereUnit;
+		clone.RandomPositionInsideSphere = this.RandomPositionInsideSphere;
+		clone.WorldOffset = this.WorldOffset;
+		clone.rotationOfInstance = this.rotationOfInstance;
+		clone.specifiedQuaterion = this.specifiedQuaterion;
+		return clone;
+	}
 
 }
 
@@ -303,6 +324,9 @@ public class EffectData
 	
     public GameObject EffectObject = null;
 	
+	/// <summary>
+	/// The destory time out.
+	/// </summary>
     public float DestoryTimeOut = 1;
     #endregion
 	
@@ -316,6 +340,7 @@ public class EffectData
 	/// The type of the instantion. create new instance, or play existing gameobject particle system.
 	/// </summary>
 	public EffectObjectInstantiation InstantionType = EffectObjectInstantiation.create;
+	
 	public EffectData GetClone()
 	{
 		EffectData clone = new EffectData();
@@ -327,6 +352,8 @@ public class EffectData
 		clone.DestoryTimeOut = this.DestoryTimeOut;
 		clone.CreateDelay = this.CreateDelay;
 		clone.CreateDelayTime = this.CreateDelayTime;
+		clone.instantiationData = this.instantiationData.GetClone();
+		clone.InstantionType = this.InstantionType;
 		return clone;
 	}
 }
@@ -387,6 +414,11 @@ public class DecalData
 [System.Serializable]
 public class AttackData : UnitAnimationData
 {
+	/// <summary>
+	/// If HasAnimation flag = false, means this attack data has no aniamtion and can not be used for AttackBehavior. It can only be
+	/// triggered by animation event.
+	/// </summary>
+	public bool HasAnimation = true;
     /// <summary>
     /// Attack type - the type of attack beheavior
     /// </summary>
@@ -487,6 +519,7 @@ public class AttackData : UnitAnimationData
 	{
 		AttackData clone = new AttackData();
 		base.CloneBasic(clone as UnitAnimationData);
+		clone.HasAnimation = this.HasAnimation;
 		clone.Type = this.Type;
 		clone.hitTriggerType = this.hitTriggerType;
 		clone.DamageForm = this.DamageForm;
@@ -508,10 +541,23 @@ public class AttackData : UnitAnimationData
 	}
 }
 
-public enum PlayAudioMode
+public enum AudioObjectMode
 {
-	PlayAudiosource = 0,
-	PlayAudioClipAtPosition = 1,
+	AudioSouce = 0,
+	Clip = 1,
+}
+
+public enum AudioPlayMode
+{
+	/// <summary>
+	/// Audio is triggered by animation event.
+	/// </summary>
+	ByAnimationEvent = 0,
+	/// <summary>
+	/// Audio is binded to animation, when an animation is playing, the audio is played as well.
+	/// If AudioPlayMode = BindToAnimation, the AudioObjectMode MUST BE AudioSouce
+	/// </summary>
+	BindToAnimation = 1,
 }
 
 /// <summary>
@@ -521,31 +567,42 @@ public enum PlayAudioMode
 public class AudioData
 {
     public string Name = "";
-	public PlayAudioMode mode = PlayAudioMode.PlayAudiosource;
-	
 	/// <summary>
-	/// The audio clips to be played.
+	/// The audio object mode.
 	/// </summary>
-	public AudioClip[] PlayedAudioClips = new AudioClip[]{};
+	public AudioObjectMode mode = AudioObjectMode.AudioSouce;
 	
 	/// <summary>
-	/// The audio sources to be played.
+	/// The audio play mode.
 	/// </summary>
-	public AudioSource[] PlayerAudioSources = new AudioSource[]{};
+	public AudioPlayMode playMode = AudioPlayMode.ByAnimationEvent;
 	
 	/// <summary>
-	/// The randomly placyed audio clips.
+	/// if enabled is false, the audio would not be played.
+	/// </summary>
+	public bool enabled = true;
+	
+	/// <summary>
+	/// The randomly placyed audio clips. Used when mode = Clip.
 	/// </summary>
     public AudioClip[] randomAudioClips = new AudioClip[]{};
 	/// <summary>
-	/// The randomly picked audio sources.
+	/// The randomly picked audio sources. Used when mode = AudioSource.
 	/// </summary>
 	public AudioSource[] randomAudioSources = new AudioSource[]{};
 	/// <summary>
-	/// When mode = PlayAudioClipAtPosition, the transform position to be played in 3D world.
+	/// When mode = Clip, the transform position to be played in 3D world.
 	/// </summary>
 	public Transform Play3DClipAnchor = null;
-	
+	/// <summary>
+	/// Only used when mode = Clip.
+	/// </summary>
+	public float PlayClipVolume = 1;
+	/// <summary>
+	/// Used when playMode = BindToAnimation
+	/// </summary>
+	public string[] AnimationBinded = new string[]{};
+	public AudioSource BindedAudioSource = null;
 	public AudioData GetClone()
 	{
 		AudioData clone = new AudioData();

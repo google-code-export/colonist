@@ -88,17 +88,15 @@ public class RagdollJointData
 
 public class Ragdoll : MonoBehaviour {
     public string Name = "";
+	/// <summary>
+	/// The create ragdoll delay.
+	/// </summary>
+	public float CreateRagdollDelay = 0;
     /// <summary>
     /// If AutoDestory = true, destory in %LifeTime% seconds
     /// </summary>
     public bool AutoDestory = true;
     public float LifeTime = 5;
-    /// <summary>
-    /// If DelgateFunction != String.Empty, will SendMessage(DelgateFunction) instead of destory the game object.
-    /// For example, you want to fade out the ragdoll by cliping its material, so you can put the 
-    /// clip material function name in %DelgateFunction% .
-    /// </summary>
-    public string DelgateDestoryFunction = string.Empty;
     /// <summary>
     /// Assign the center for this ragdoll (because ragdoll has NO character controller.)
     /// </summary>
@@ -113,7 +111,7 @@ public class Ragdoll : MonoBehaviour {
 
     void Start()
     {
-        StartRagdoll();
+        Invoke("StartRagdoll", CreateRagdollDelay);
         if (AutoDestory)
         {
             Invoke("DestoryRagdoll", LifeTime);
@@ -126,7 +124,7 @@ public class Ragdoll : MonoBehaviour {
 	}
 
     public virtual void StartRagdoll()
-    {
+    {	
         foreach (EffectData effectData in EffectData)
         {
             GlobalBloodEffectDecalSystem.CreateEffect(effectData);
