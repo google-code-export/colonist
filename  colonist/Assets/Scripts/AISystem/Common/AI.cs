@@ -427,7 +427,14 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 			{
 				Util.RotateToward(transform,target.position, movedata.SmoothRotate, movedata.RotateAngularSpeed);
 			}
-			controller.SimpleMove(transform.TransformDirection(Vector3.back) * movedata.MoveSpeed);
+			if(movedata.UseGravityWhenMoving)
+			{
+			   controller.SimpleMove(transform.TransformDirection(Vector3.back) * movedata.MoveSpeed);
+			}
+			else 
+			{
+				controller.Move(transform.TransformDirection(Vector3.back) * movedata.MoveSpeed * Time.deltaTime);
+			}
 			yield return null;
 		}
 	}
@@ -920,8 +927,14 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 				   break;
 				}
 			}
-			
-            controller.SimpleMove(velocity);
+			if(MoveData.UseGravityWhenMoving)
+			{
+               controller.SimpleMove(velocity);
+			}
+			else 
+			{
+			   controller.Move(velocity * Time.deltaTime);
+			}
             animation.CrossFade(MoveData.AnimationName);
             yield return null;
         }

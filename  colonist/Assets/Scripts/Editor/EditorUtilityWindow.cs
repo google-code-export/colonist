@@ -20,9 +20,11 @@ public class EditorUtilityWindow : EditorWindow
 	bool measureTwoObjects = false;
 	GameObject MeasureObjectA = null;
 	GameObject MeasureObjectB = null;
-	bool copyUnitAndAIComponents = false;
-	Unit CopyUnitObjectA = null;
-	GameObject CopyUnitObjectB = null;
+	bool MeasureTwoObjectRelativePosition = false;
+    Transform MeasureTransformA = null;
+	Transform MeasureTransformB = null;
+	Transform MeasureTransformC = null;
+	
 	bool copyAnimation = false;
 	AnimationClip CopyFromClipA = null;
 	AnimationClip CopyFromClipB = null;
@@ -31,10 +33,19 @@ public class EditorUtilityWindow : EditorWindow
 	string AnimationFunctionName = "";
 	string AnimationParam = "";
 	AnimationParameterType animationParameterType = AnimationParameterType.FloatParam;
-	
 	bool EnableCopyRagdollJointData = false;
 	Ragdoll copyRagdollFrom = null;
 	Ragdoll copyRagdollTo = null;
+	bool EnableCreateRagdollFromTemplate = false;
+	GameObject ragdollTemplate = null;
+	GameObject newRagdollObject = null;
+	bool EnableEditLevelCheckpoint = false;
+	string checkPointLevel;
+	string checkPointName;
+	bool EnableCopyPoseByAnimationFrame = false;
+	float copyPoseOfTime = 0;
+	AnimationClip PoseSourceClip = null;
+	GameObject PoseToCharacter = null;
 	
 	void OnGUI ()
 	{
@@ -55,25 +66,33 @@ public class EditorUtilityWindow : EditorWindow
 		
 		#region print position and rotation
 		
-		if (GUILayout.Button ("Print selection active position + rotation")) {
-			Debug.Log (string.Format("Position:{0}, Rotation:{1}", Selection.activeGameObject.transform.position, Selection.activeGameObject.transform.rotation));
+		if (GUILayout.Button ("Print selection active position + rotation, and audio source status.")) {
+			string msg = string.Format ("Position:{0}, Rotation:{1}, AudioSource:{2}", 
+				                       Selection.activeGameObject.transform.position, 
+				                       Selection.activeGameObject.transform.rotation,
+				                       Selection.activeGameObject.GetComponent<AudioSource> () != null ? Selection.activeGameObject.GetComponent<AudioSource> ().isPlaying.ToString () : "no audio"
+				                      );
+			Debug.Log (msg);
 		}
 		#endregion
 
-#region copy components from object to another object
-		copyUnitAndAIComponents = EditorGUILayout.BeginToggleGroup ("Copy unit and AI components", copyUnitAndAIComponents);
-		if (copyUnitAndAIComponents) {
-			CopyUnitObjectA = (Unit)EditorGUILayout.ObjectField (CopyUnitObjectA, typeof(Unit));
-			CopyUnitObjectB = (GameObject)EditorGUILayout.ObjectField (CopyUnitObjectB, typeof(GameObject));
-			if (GUILayout.Button ("Copy component from object A to Object B")) {
-				EditorCommon.CopyUnitAndAIComponent (CopyUnitObjectA, CopyUnitObjectB);
+#region measure two objects relative position
+		MeasureTwoObjectRelativePosition = EditorGUILayout.BeginToggleGroup ("Measure two object relative position", MeasureTwoObjectRelativePosition);
+		if (MeasureTwoObjectRelativePosition) {
+			MeasureTransformA = (Transform)EditorGUILayout.ObjectField ("Measured A:",MeasureTransformA, typeof(Transform));
+			MeasureTransformB = (Transform)EditorGUILayout.ObjectField ("Measured B:",MeasureTransformB, typeof(Transform));
+			MeasureTransformC = (Transform)EditorGUILayout.ObjectField (new GUIContent("Measured C:", "C can be null, then world space"),MeasureTransformC, typeof(Transform));
+			if (GUILayout.Button ("Measure object A relative position to Object B,in relative space of C")) {
+				Vector3 posA = MeasureTransformA.transform.position - (MeasureTransformC != null ? MeasureTransformC.position : Vector3.zero);
+				Vector3 posB = MeasureTransformB.transform.position - (MeasureTransformC != null ? MeasureTransformC.position : Vector3.zero);
+				Debug.Log("PositionB - PositionA = " + (posB - posA).ToString());
 			}
 		}
 		EditorGUILayout.EndToggleGroup ();
 #endregion
 		
 #region copy animation events from one aniamtion asset to another animation asset
-		copyAnimation = EditorGUILayout.BeginToggleGroup ("Copy animation", copyAnimation);
+		copyAnimation = EditorGUILayout.BeginToggleGroup ("Copy animation event", copyAnimation);
 		if (copyAnimation) {
 			CopyFromClipA = (AnimationClip)EditorGUILayout.ObjectField (CopyFromClipA, typeof(AnimationClip));
 			CopyFromClipB = (AnimationClip)EditorGUILayout.ObjectField (CopyFromClipB, typeof(AnimationClip));
@@ -111,27 +130,91 @@ public class EditorUtilityWindow : EditorWindow
 #endregion
 		
 #region print playing animation
-		string logStr_animation = "Plaing animation:";
+		string logStr_animation = "Playing animation:";
 		if (GUILayout.Button ("Print selection active animation status")) {
 			foreach (AnimationState ani in Selection.activeGameObject.animation) {
 				bool isplaying = Selection.activeGameObject.animation.IsPlaying (ani.name);
-				if(isplaying)
-				   logStr_animation += ani.name + "; ";
+				if (isplaying)
+					logStr_animation += ani.name + "; ";
 			}
 			Debug.Log (logStr_animation);
 		}
 #endregion		
 		
 #region Copy ragdollJoint from one unit to another
-		if (EnableCopyRagdollJointData = EditorGUILayout.BeginToggleGroup("Edit ragdoll joint data", EnableCopyRagdollJointData)) {
-			copyRagdollFrom = (Ragdoll)EditorGUILayout.ObjectField("Copy ragdoll from:", copyRagdollFrom, typeof(Ragdoll));
-			copyRagdollTo = (Ragdoll)EditorGUILayout.ObjectField("Copy ragdoll to:", copyRagdollTo, typeof(Ragdoll));
-			if(GUILayout.Button("Copy ragdoll from-to"))
-			{
-				RagdollEditor.CopyRagdollData(copyRagdollFrom, copyRagdollTo, true);
+		if (EnableCopyRagdollJointData = EditorGUILayout.BeginToggleGroup ("Copy ragdoll joint data", EnableCopyRagdollJointData)) {
+			copyRagdollFrom = (Ragdoll)EditorGUILayout.ObjectField ("Copy ragdoll from:", copyRagdollFrom, typeof(Ragdoll));
+			copyRagdollTo = (Ragdoll)EditorGUILayout.ObjectField ("Copy ragdoll to:", copyRagdollTo, typeof(Ragdoll));
+			if (GUILayout.Button ("Copy ragdoll from-to")) {
+				RagdollEditor.CopyRagdollData (copyRagdollFrom, copyRagdollTo);
 			}
 		}
-		EditorGUILayout.EndToggleGroup();
+		EditorGUILayout.EndToggleGroup ();
+#endregion
+		
+		#region print child transform path
+		if (GUILayout.Button ("Print child path")) {
+			string path = Util.GetChildPath (Selection.activeGameObject.transform.root, Selection.activeGameObject.transform);
+			Transform s = Selection.activeGameObject.transform.root.Find (path);
+			Debug.Log (s);
+			Debug.Log (path);
+		}
+		#endregion
+		
+#region copy ragdoll
+		if (EnableCreateRagdollFromTemplate = EditorGUILayout.BeginToggleGroup ("Create ragdoll from template", EnableCreateRagdollFromTemplate)) {
+			EditorGUILayout.BeginHorizontal ();
+			ragdollTemplate = (GameObject)EditorGUILayout.ObjectField ("Ragdoll template:", ragdollTemplate, typeof(GameObject));
+			newRagdollObject = (GameObject)EditorGUILayout.ObjectField ("New ragdoll:", newRagdollObject, typeof(GameObject));
+			if (GUILayout.Button ("Create ragdoll from template")) {
+				EditorCommon.CreateRagdollFromTemplate (ragdollTemplate, newRagdollObject);
+			}
+			EditorGUILayout.EndHorizontal ();
+		}
+		EditorGUILayout.EndToggleGroup ();
+#endregion
+		
+#region edit level checkpoint
+		if (EnableEditLevelCheckpoint = EditorGUILayout.BeginToggleGroup ("Edit level checkpoint", EnableEditLevelCheckpoint)) {
+			bool hasCheckPoint = Persistence.GetLastCheckPoint (out checkPointLevel, out checkPointName);
+			if (hasCheckPoint) {
+				checkPointLevel = EditorGUILayout.TextField ("check point level", checkPointLevel);
+				checkPointName = EditorGUILayout.TextField ("check point name", checkPointName);
+				if (GUILayout.Button ("Delete checkpoint")) {
+					Persistence.ClearCheckPoint ();
+				}
+			} else {
+				checkPointLevel = EditorGUILayout.TextField ("check point level", checkPointLevel);
+				checkPointName = EditorGUILayout.TextField ("check point name", checkPointName);
+				if (GUILayout.Button ("Save checkpoint")) {
+					Persistence.SaveCheckPoint (checkPointLevel, checkPointName); 
+				}
+			}
+		}
+		EditorGUILayout.EndToggleGroup ();
+#endregion
+		
+		
+#region copy character pose by animation clip frame
+		EnableCopyPoseByAnimationFrame = EditorGUILayout.BeginToggleGroup ("Copy pose by animation clip", EnableCopyPoseByAnimationFrame);
+		if (EnableCopyPoseByAnimationFrame) {
+			PoseSourceClip = (AnimationClip)EditorGUILayout.ObjectField ("Animation clip source:", PoseSourceClip, typeof(AnimationClip));
+			PoseToCharacter = (GameObject)EditorGUILayout.ObjectField ("Pose to object:", PoseToCharacter, typeof(GameObject));
+			if (PoseSourceClip != null && PoseToCharacter != null) {
+				copyPoseOfTime = EditorGUILayout.FloatField ("Copy pose at time of the curve:", copyPoseOfTime);
+				if (GUILayout.Button ("Copy pose at time")) {
+					AnimationClipCurveData[] curveDatas = AnimationUtility.GetAllCurves (PoseSourceClip, true);
+					string logMsg = "";
+					for (int i=curveDatas.Length-1; i>=0; i--) {
+						AnimationClipCurveData curveData = curveDatas[i];
+//						logMsg += string.Format("Path:" + curveData.path + " property:" + curveData.propertyName + " value:" + curveData.curve.Evaluate(copyPoseOfTime) + "\r\n");
+						EditorCommon.CopyCurveDataIntoTransform(PoseToCharacter.transform, curveData, copyPoseOfTime);
+					}
+//					Debug.Log(logMsg);
+				}
+			}
+		}
+		
 #endregion
 	}
 }

@@ -61,6 +61,10 @@ public class CameraFunction : MonoBehaviour,I_GameEventReceiver {
 	
 	// Update is called once per frame
 	void Update () {
+		if (this.camera.enabled == false && cookShadersObject != null)
+        {
+            Destroy(cookShadersObject);
+        }
 	}
 
     void DestroyCameraCoverPlane()
@@ -100,11 +104,6 @@ public class CameraFunction : MonoBehaviour,I_GameEventReceiver {
 			mat.SetColor("_Color", c);
 			yield return null;
 		 }
-//	     while (c.a > 0.0) {
-//            c.a -= Time.deltaTime * FadeSpeed;
-//            mat.SetColor("_Color", c);
-//		    yield return null;;
-//	     }
 	     DestroyCameraCoverPlane ();
 	}
 
@@ -134,14 +133,30 @@ public class CameraFunction : MonoBehaviour,I_GameEventReceiver {
 	{
 		switch(_event.type)
 		{
-		case GameEventType.PlayerCameraWhiteIn:
+		case GameEventType.WhiteInPlayerCamera:
 			StartCoroutine("WhiteIn", _event.FloatParameter > 0 ? _event.FloatParameter : this.WhiteInLength);
 			break;
-		case GameEventType.PlayerCameraWhiteOut:
+		case GameEventType.WhiteOutPlayerCamera:
 			StartCoroutine("WhiteOut", _event.BoolParameter);
 			break;
 		}
 	}
 	
+	void OnDisable()
+	{
+		if (cookShadersObject != null)
+        {
+            Destroy(cookShadersObject);
+        }
+	}
 	
+	void ActivateAudioListener()
+	{
+		gameObject.GetComponent<AudioListener>().enabled = true;
+	}
+	
+	void DeactivateAudioListener()
+	{
+		gameObject.GetComponent<AudioListener>().enabled = false;
+	}
 }

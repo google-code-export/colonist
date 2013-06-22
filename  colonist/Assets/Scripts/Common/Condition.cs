@@ -1,5 +1,10 @@
 using UnityEngine;
 using System.Collections.Generic;
+
+/// <summary>
+/// CompositeConditionWrapper wraps a full set of AtomCondition and CompositeCondition together in one class.
+/// The nature of CompositeConditionWrapper == CompositeCondition. It's just a TOP-MOST CompositeCondition.
+/// </summary>
 [System.Serializable]
 public class CompositeConditionWrapper
 {
@@ -16,7 +21,7 @@ public class CompositeConditionWrapper
 	/// <summary>
 	/// initialize the dictionary - put the atomCondition and compositeCondition into corresponding dictionary.
 	/// </summary>
-	public void InitDictionary()
+	public void Init()
 	{
 		foreach(CompositeCondition compositeCondition in CompositeConditionArray)
 		{
@@ -164,6 +169,11 @@ public class AtomConditionData
 	/// </summary>
 	public string[] StringValueArray = new string[] {};
 	
+	/// <summary>
+	/// The latest time when the condition is true.
+	/// </summary>
+	[HideInInspector]
+	public float PreviousConditionTrueTime = 0;
 	public string GetDescription()
 	{
 		string ret = "";

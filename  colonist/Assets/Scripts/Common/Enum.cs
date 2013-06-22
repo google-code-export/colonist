@@ -162,7 +162,7 @@ public enum MoveDirection
 public enum GameEventType
 {
     //Game level event
-    LevelStart = 0,
+//    LevelStart = 0,
     LevelPause = 1,
     LevelEnd = 2,
 	/// <summary>
@@ -172,26 +172,53 @@ public enum GameEventType
 	/// <summary>
 	/// LevelArea start spawning, the LevelArea Name is given in stringParameter
 	/// </summary>
-	LevelAreaStartSpawn = 4,
+//	LevelAreaStartSpawn = 4,
 	/// <summary>
 	/// Invoke a method in gameobject(given in GameEvent.receiver), method name is given in GameEvent.CustomMessage, 
 	/// parameter type is given at ParameterType.
 	/// </summary>
 	InvokeMethod = 5,
 	/// <summary>
-	/// Load a level in IntParameter.
+	/// Load a level in IntParameter or StringParameter.
 	/// </summary>
 	LoadLevel = 6,
+	/// <summary>
+	/// Name of the theme music is given in stringParameter.
+	/// </summary>
+	PlayBackgroundMusic = 7,
+	/// <summary>
+	/// Name of the theme music is given in stringParameter.
+	/// </summary>
+	StopBackgroundMusic = 8,
+	
+	/// <summary>
+	/// Stop all background music
+	/// </summary>
+	StopAllBackgroundMusic = 9,
+	
+	/// <summary>
+	/// Save check point, the check point name is given in stringParameter.
+	/// </summary>
+	SaveCheckPoint = 11,
+	/// <summary>
+	/// Load last check point.
+	/// </summary>
+	LoadCheckPoint = 12,
+	
+	/// <summary>
+	/// Set the controll pivot object to a new object in LevelManager.ControlDirectionPivot.
+	/// </summary>
+	SetPlayerControlDirectionPivot = 13,
 	
     //Player Character Event
-    PlayerBirth = 100,
-    PlayerDie = 101,
+//    PlayerBirth = 100,
+//    PlayerDie = 101,
     PlayerEnterArea = 102,
     PlayerLeaveArea = 103,
     DisplayDamageParameterOnPlayer = 104,
-    PlayerKill = 105,//Event when player kill NPC
-    PlayerAttack = 106,//Event when player perform an attack
-    PlayerReloading = 107,
+//    PlayerKill = 105,//Event when player kill NPC
+//    PlayerAttack = 106,//Event when player perform an attack
+//    PlayerReloading = 107,
     PlayerControlOn = 108,//player gained control
     PlayerControlOff = 109,//player lost control
 	/// <summary>
@@ -204,8 +231,8 @@ public enum GameEventType
 	/// Note: this will activated the root object of player, includes player camera, player control, player HUD ..etc
 	/// </summary>
 	PlayerSetToActive = 111, 
-	PlayerCameraWhiteIn = 112,//White In player camera
-	PlayerCameraWhiteOut = 113,//White out player camera
+	WhiteInPlayerCamera = 112,//White In player camera
+	WhiteOutPlayerCamera = 113,//White out player camera
 	PlayerCameraOff = 114,//set off the player camera
 	PlayerCameraOn = 115,//set on the player camera
 	PlayerCameraAudioListenerOn = 116,//set on the player camera's audio listener
@@ -223,10 +250,15 @@ public enum GameEventType
 	PlayerCameraSlowMotionOnTransform = 119,
 	
     //NPC Event
-    NPCBirth = 200,
-    NPCDie = 201,
-    NPCEnterArea = 202,
-    NPCLeaveArea = 203,
+//    NPCBirth = 200,
+//    NPCDie = 201,
+//    NPCEnterArea = 202,
+//    NPCLeaveArea = 203,
+	
+	/// <summary>
+	/// Place a NPC vertically on Ground.
+	/// </summary>
+	NPCPutToGround = 200,
 	/// <summary>
 	/// Notify that the game object is appling damage
 	/// </summary>
@@ -251,6 +283,20 @@ public enum GameEventType
 	/// Manipulate NPC to face to player.
 	/// </summary>
 	NPCFaceToPlayer = 212,
+	
+	/// <summary>
+	/// Request force to physical character. The receiver is the gameObject to be applied force.
+	/// the vector3 parameter means the force direction, the float parameter means the force magnitude.
+	/// </summary>
+	ForceToPhysicsCharacter = 213,
+	
+	/// <summary>
+	/// NPC play queue animation.
+	/// The animation name is splitted by ; at StringParameter at the play sequence.
+	/// example: 
+	/// walk;stand;idle;fire
+	/// </summary>
+	NPCPlayQueueAnimation = 214,
 	
 	//Spawn NPC event:
 	/// <summary>
@@ -286,6 +332,28 @@ public enum GameEventType
 	/// Activate a game object in GameEvent.receiver field.
 	/// </summary>
 	ActivateGameObject = 413,
+	/// <summary>
+	/// Deactivate a gameobject and don't impact the children game object
+	/// </summary>
+	DeactivateGameObjectIgnoreChildren = 414,
+	
+	/// <summary>
+	/// Activate a gameobject and don't impact the children game object.
+	/// </summary>
+	ActivateGameObjectIgnoreChildren = 415,
+	
+	/// <summary>
+	/// Attach a specified object to the parent.
+	/// object (child) = receiver
+	/// object (parent) = objectParameter
+	/// </summary>
+	AttachObjectToSpecifiedParent = 416,
+	
+	/// <summary>
+	/// Similiar to StartDocking(410), but the dockingObject is not the object given in inspector, 
+	/// but using runtime object, given in gameevent.receiver.
+	/// </summary>
+	StartDockingOnRuntimeTarget = 417,
 	
 	//Game setting event
 	/// <summary>
@@ -359,4 +427,23 @@ public enum HitTriggerType
 	/// ApplyDamage will be triggered by AnimationEvent.
 	/// </summary>
 	ByAnimationEvent = 1,
+}
+
+/// <summary>
+/// Curve property type.
+/// </summary>
+public enum CurvePropertyType
+{
+	Local_PositionX = 0,
+	Local_PositionY = 1,
+	Local_PositionZ = 2,
+	Local_RotationX = 3,
+	Local_RotationY = 4,
+	Local_RotationZ = 5,
+	Local_RotationW = 6,
+	Local_ScaleX = 7,
+	Local_ScaleY = 8,
+	Local_ScaleZ = 9,
+	
+	Unknown = 10,
 }

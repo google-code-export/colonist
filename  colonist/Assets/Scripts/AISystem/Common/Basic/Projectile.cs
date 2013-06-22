@@ -76,7 +76,9 @@ public class Projectile : MonoBehaviour {
     protected bool HitSomething = false;
     protected GameObject HitObject = null;
 #endregion
-
+	
+	public bool PrintDebugMessage = false;
+	
     void Awake()
     {
         StartPosition = transform.position;
@@ -307,7 +309,10 @@ public class Projectile : MonoBehaviour {
 
     void OnTriggerEnter(Collider other)
     {
-//        Debug.Log("OnTriggerEnter Hit with:" + other.gameObject.name + " layer:" + LayerMask.LayerToName(other.gameObject.layer));
+		if(PrintDebugMessage)
+		{
+           Debug.Log("OnTriggerEnter Hit with:" + other.gameObject.name + " layer:" + LayerMask.LayerToName(other.gameObject.layer));
+		}
         HitSomething = true;
         if (Util.CheckLayerWithinMask(other.gameObject.layer, this.AttackableLayer))
         {
@@ -317,7 +322,10 @@ public class Projectile : MonoBehaviour {
 
     void OnTriggerStay(Collider other)
     {
-//        Debug.Log("OnTriggerStay Hit with:" + other.gameObject.name);
+		if(PrintDebugMessage)
+		{
+           Debug.Log("OnTriggerStay Hit with:" + other.gameObject.name);
+		}
         HitSomething = true;
         if (Util.CheckLayerWithinMask(other.gameObject.layer, this.AttackableLayer))
         {

@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+
 /// <summary>
 /// Send event on a unit's birth and death.
 /// </summary>
@@ -12,7 +13,7 @@ public class GameEventLifeCycle : MonoBehaviour {
 	/// Note: to sent DynamicalEvent by animation event, the dynamical event must has a non-empty name.
 	/// </summary>
 	public GameEvent[] DynamicalEvent = new GameEvent[]{};
-	IDictionary<string, GameEvent> dynamicalEventDict = new Dictionary<string, GameEvent>();
+	public IDictionary<string, GameEvent> dynamicalEventDict = new Dictionary<string, GameEvent>();
 	
 	/// <summary>
 	/// The game event to be sent on birth.
@@ -45,15 +46,19 @@ public class GameEventLifeCycle : MonoBehaviour {
 		foreach(GameEvent _e in eventOnBirth)
 		{
 			_e.sender = this.gameObject;
-			LevelManager.OnGameEvent(_e);
+			LevelManager.OnGameEvent(_e, this);
 		}
+	}
+	
+	void Update()
+	{
 	}
 	
 	void OnDestroy () {
 		foreach(GameEvent _e in eventOnDestroy)
 		{
 			_e.sender = this.gameObject;
-			LevelManager.OnGameEvent(_e);
+			LevelManager.OnGameEvent(_e, this);
 		}
 	}
 	
@@ -65,7 +70,7 @@ public class GameEventLifeCycle : MonoBehaviour {
 		foreach(GameEvent _e in eventOnUnitDie)
 		{
 			_e.sender = this.gameObject;
-			LevelManager.OnGameEvent(_e);
+			LevelManager.OnGameEvent(_e, this);
 		}
 	}
 	
@@ -84,8 +89,11 @@ public class GameEventLifeCycle : MonoBehaviour {
 		eventOnUnitDie = Util.AddToArray<GameEvent> (_e, eventOnUnitDie);
 	}
 	
-	public void _SendGameEvent(string eventname)
+	/// <summary>
+	/// Fires a dynamical event by event name.
+	/// </summary>
+	public void _GameEvent(string eventname)
 	{
-		LevelManager.OnGameEvent(dynamicalEventDict[eventname]);
+		LevelManager.OnGameEvent(dynamicalEventDict[eventname], this);
 	}
 }

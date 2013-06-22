@@ -21,30 +21,31 @@ public class GlobalAudioSystem : MonoBehaviour {
 	
 	public static void PlayAudioData(AudioData audioData)
 	{
+		//do nothing if audiodata is disable.
+		if(audioData.enabled == false)
+			return;
+		
 		switch(audioData.mode)
 		{
-		case PlayAudioMode.PlayAudiosource:
-			//play the must-to-played
-			foreach(AudioSource source in audioData.PlayerAudioSources)
-			{
-				source.Play();
-			}
-			//play the random-to-play
+		case AudioObjectMode.AudioSouce:
 			if(audioData.randomAudioSources.Length > 0)
 			{
-				Util.RandomFromArray<AudioSource>(audioData.randomAudioSources).Play();
+				AudioSource audio = Util.RandomFromArray<AudioSource>(audioData.randomAudioSources);
+				///for playing and looping audiosource, do nothing
+				if(audio.loop == true && audio.isPlaying == false)
+				{
+					audio.Play();
+				}
+				else if(audio.isPlaying == false)
+				{
+					audio.Play();
+				}
 			}
 			break;
-		case PlayAudioMode.PlayAudioClipAtPosition:
-			//play the must-to-played
-			foreach(AudioClip clip in audioData.PlayedAudioClips)
-			{
-				AudioSource.PlayClipAtPoint(clip, audioData.Play3DClipAnchor.position);
-			}
-			//play the random-to-play
+		case AudioObjectMode.Clip:
 			if(audioData.randomAudioClips.Length > 0)
 			{
-				AudioSource.PlayClipAtPoint(Util.RandomFromArray<AudioClip>(audioData.randomAudioClips), audioData.Play3DClipAnchor.position);
+				AudioSource.PlayClipAtPoint(Util.RandomFromArray<AudioClip>(audioData.randomAudioClips), audioData.Play3DClipAnchor.position, audioData.PlayClipVolume);
 			}
 			break;
 		}

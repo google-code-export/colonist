@@ -2,7 +2,6 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-
 /// <summary>
 /// The ScenarioControl component is responsible for presenting scenario/story to player.
 /// Its responsibility includes : 
@@ -19,6 +18,11 @@ public class ScenarioControl : MonoBehaviour {
 	public Camera ScenarioCamera;
 	[HideInInspector]
 	public Camera PlayerCamera;
+	[HideInInspector]
+	public AudioListener ScenarioAudioListener;
+	[HideInInspector]
+	public AudioListener PlayerAudioListener;
+	[HideInInspector]
 	
 	public static ScenarioControl Instance = null;
 	
@@ -26,20 +30,33 @@ public class ScenarioControl : MonoBehaviour {
 	
 	public float SkippingTimeScale = 3;
 	IDictionary<string, ObjectDock> ObjectDockMonoDict = new Dictionary<string, ObjectDock>();
+	
 	void Awake()
 	{
 		Instance = this;
 		foreach(Camera c in Object.FindObjectsOfType(typeof(Camera)))
 		{
-			if(c.tag == "PlayerCamera")
+			if(c.tag.ToLower().Contains("player"))
 			{
 				PlayerCamera = c;
 			}
-			if(c.tag == "ScenarioCamera")
+			if(c.tag.ToLower().Contains("scenario"))
 			{
 				ScenarioCamera = c;
 			}
 		}
+		foreach(AudioListener listener in Object.FindObjectsOfType(typeof(AudioListener)))
+		{
+			if(listener.tag.ToLower().Contains("player"))
+			{
+				PlayerAudioListener = listener;
+			}
+			if(listener.tag.ToLower().Contains("scenario"))
+			{
+				ScenarioAudioListener = listener;
+			}
+		}
+		
 		foreach(ObjectDock dockMono in FindObjectsOfType(typeof(ObjectDock)))
 		{
 			ObjectDockMonoDict.Add(dockMono.Name, dockMono);
@@ -92,6 +109,10 @@ public class ScenarioControl : MonoBehaviour {
 			break;
 		case GameEventType.ScenarioCameraOn:
 		    this.ScenarioCamera.enabled = true;
+			if(ScenarioCamera.gameObject.active == false)
+			{
+				ScenarioCamera.gameObject.active = true;
+			}
 			break;
 		case GameEventType.PlayerCameraOn:
 		    this.PlayerCamera.enabled = true;
@@ -100,19 +121,22 @@ public class ScenarioControl : MonoBehaviour {
 			this.PlayerCamera.enabled = false;
 			break;
         case GameEventType.ScenarioCameraAudioListenerOn:
-		    this.ScenarioCamera.GetComponent<AudioListener>().enabled = true; 
+		    this.ScenarioAudioListener.enabled = true; 
 			break;
 		case GameEventType.ScenarioCameraAudioListenerOff:
-		    this.ScenarioCamera.GetComponent<AudioListener>().enabled = false;
+		    this.ScenarioAudioListener.enabled = false;
 			break;
 		case GameEventType.PlayerCameraAudioListenerOn:
-		    this.PlayerCamera.GetComponent<AudioListener>().enabled = true;
+		    this.PlayerAudioListener.enabled = true;
 			break;
         case GameEventType.PlayerCameraAudioListenerOff:		    
-			this.PlayerCamera.GetComponent<AudioListener>().enabled = false;
+			this.PlayerAudioListener.enabled = false;
 			break;
 		case GameEventType.StartDocking:
 			ObjectDockMonoDict[gameEvent.StringParameter].Dock();
+			break;
+		case GameEventType.StartDockingOnRuntimeTarget:
+			ObjectDockMonoDict[gameEvent.StringParameter].Dock(gameEvent.receiver.transform);
 			break;
 		case GameEventType.PlayerCameraSlowMotionOnFixedPoint:
 		case GameEventType.PlayerCameraSlowMotionOnTransform:

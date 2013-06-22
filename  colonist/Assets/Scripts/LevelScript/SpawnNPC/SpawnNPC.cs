@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+
 
 /// <summary>
 /// SpawnData defines the data to spawn NPC.
@@ -84,6 +86,15 @@ public class SpawnEntity
 		}
 		return ret;
 	}
+	
+	public void ReplaceGameObject(GameObject _old, GameObject _new)
+	{
+		if(spawnedObjects.Contains(_old))
+		{
+			spawnedObjects.Remove(spawnedObjects.Where(x=>x==_old).First());			
+		}
+		spawnedObjects.Add(_new);
+	}
 }
 
 /// <summary>
@@ -103,6 +114,8 @@ public class SpawnNPC : MonoBehaviour, I_GameEventReceiver {
 	/// SpawnEntity will be spawned one by one. 
 	/// </summary>
 	public SpawnEntity[] spawnEntityArray = new SpawnEntity[] {};
+	
+	public SpawnEntity CurrentSpawnEntity = null;
 	
 	void Awake()
 	{
@@ -127,6 +140,7 @@ public class SpawnNPC : MonoBehaviour, I_GameEventReceiver {
 	{
 	    foreach(SpawnEntity spawnEntity in this.spawnEntityArray)
 		{
+			CurrentSpawnEntity = spawnEntity;
 			if(spawnEntity.SpawnDelay > 0)
 			{
 				yield return new WaitForSeconds(spawnEntity.SpawnDelay);
@@ -149,7 +163,7 @@ public class SpawnNPC : MonoBehaviour, I_GameEventReceiver {
 		{
 			foreach(GameEvent e in Event_At_All_Spawned_DieOut)
 			{
-				LevelManager.OnGameEvent(e);
+				LevelManager.OnGameEvent(e , this);
 			}
 		}
 	}
@@ -160,8 +174,21 @@ public class SpawnNPC : MonoBehaviour, I_GameEventReceiver {
 	GameObject Spawn(SpawnData spawnData)
 	{
 		GameObject spawned = (GameObject)Object.Instantiate(spawnData.Spawned);
+		//assign the spawner field.
+		if(spawned.GetComponent<Unit>() != null )
+		{
+			spawned.GetComponent<Unit>().Spawner = this;
+		}
 		//locate the spawned object.
 		spawnData.objectDock.Dock(spawned.transform);
 		return spawned;
+	}
+	
+	public void ReplaceSpawnedWithNewObject(GameObject _old, GameObject _new)
+	{
+		if(CurrentSpawnEntity!=null)
+		{
+			CurrentSpawnEntity.ReplaceGameObject(_old, _new);
+		}
 	}
 }

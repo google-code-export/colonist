@@ -1,6 +1,12 @@
 public enum EffectObjectInstantiation
 {
+	/// <summary>
+	/// Instantiate a new object.
+	/// </summary>
 	create = 0,
+	/// <summary>
+	/// The particle system object is a children of the current unit, play it, rather than create new.
+	/// </summary>
     play = 1,
 }
 
@@ -325,6 +331,12 @@ public enum AIValueComparisionCondition
 	/// DoDamage counter value of the Unit.
 	/// </summary>
 	DoDamageCount = 10,
+	
+	/// <summary>
+	/// The time interval in seconds, from last time this condition data matches (=true), to now.
+	/// For example, a condition, last time it matchs at 01:22. And later, the time is 01:55, so the LastConditionMatchTimeInterval = 33s
+	/// </summary>
+	LastConditionMatchTimeInterval = 11,
 
 #endregion
 }

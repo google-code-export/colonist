@@ -2,44 +2,98 @@ using UnityEngine;
 using System.Collections;
 
 /// <summary>
-/// PhysicsCharacter represents a special ragdoll. The nature of physics character, is that this character can be switched to physics mode.
+/// Force pivot represents a rigidbody wraper, that can be applied force by PhysicsCharacter.
+/// </summary>
+[System.Serializable]
+public class ForcePivot
+{
+	public Rigidbody PivotRigid = null;
+	public ForceMode forceMode;
+	public Vector3 DirectionOffset_Min = Vector3.zero;
+	public Vector3 DirectionOffset_Max = Vector3.zero;
+}
+
+/// <summary>
+/// PhysicsCharacter represents a special ragdoll. The nature of physics character, is that this character can be switched to physical control, and switch back to animation control later.
 /// For example, predator can physically falldown. After 3 seconds, physic character mode is turned off, and predator stands up in animation.
 /// </summary>
-public class PhysicsCharacter : Ragdoll {
+public class PhysicsCharacter : MonoBehaviour, I_GameEventReceiver {
+	
+	Rigidbody[] rigids = new Rigidbody[]{};
+	public Transform centerOfMass = null;
+	public ForcePivot[] ForcePivotArray = null;
+	public float RecoverAfterNSeconds = 3;
+	public string RecoverAnimation = "";
 	
 	void Awake()
 	{
+		rigids = GetComponentsInChildren<Rigidbody>();
+	}
+	
+	void Start()
+	{
+	}
+	
+	void Update()
+	{
+		if(Input.GetKeyDown(KeyCode.T))
+		{
+			foreach(MonoBehaviour mono in this.GetComponents<MonoBehaviour>())
+			{
+				if(mono != this)
+				{
+					mono.enabled = false;
+				}
+			}
+			animation.Stop();
+			ApplyForceToPhysicsCharacter(transform.TransformDirection(Vector3.back), 50);
+		}
 	}
 	
 	public void ActivateRagdollJoint()
 	{
-		foreach (RagdollJointData JointData in RagdollJointData)
+		foreach (Rigidbody rigi in rigids)
 		{
-			JointData.Joint.useGravity = true;
-			JointData.Joint.isKinematic = false;
+			rigi.useGravity = true;
+			rigi.isKinematic = false;
 		}
 	}
 	
 	public void DeactivateRagdollJoint()
 	{
-		foreach (RagdollJointData JointData in RagdollJointData)
+		foreach (Rigidbody rigi in rigids)
 		{
-			JointData.Joint.useGravity = false;
-			JointData.Joint.isKinematic = true;
+			rigi.useGravity = false;
+			rigi.isKinematic = true;
 		}
 	}
 	
-	public virtual void StartRagdoll()
+	public void OnGameEvent(GameEvent e)
+	{
+		switch(e.type)
+		{
+		case GameEventType.ForceToPhysicsCharacter:
+			ApplyForceToPhysicsCharacter(e.Vector3Parameter, e.FloatParameter);
+			break;
+		}
+	}
+	
+	public void ApplyForceToPhysicsCharacter(Vector3 direction, float ForceMagnitude)
 	{
 		ActivateRagdollJoint();
-		foreach (RagdollJointData JointData in RagdollJointData)
+		foreach (ForcePivot forcePivot in ForcePivotArray)
 		{
-            if (JointData.CreateForce == false)
-                continue;
-            else
-            {
-                StartCoroutine("AddForce", JointData);
-            }
+            Vector3 ForceDirection = direction + Util.RandomVector(forcePivot.DirectionOffset_Min, forcePivot.DirectionOffset_Max);
+			Vector3 Force = ForceDirection * ForceMagnitude;
+			forcePivot.PivotRigid.AddForce(Force,forcePivot.forceMode);
 		}
+		Invoke("Recover", RecoverAfterNSeconds);
+	}
+	
+	void Recover()
+	{
+		DeactivateRagdollJoint();
+	    Util.AlignParentToChild(centerOfMass.parent, centerOfMass);
+	    animation.Play(RecoverAnimation);
 	}
 }

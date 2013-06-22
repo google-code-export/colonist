@@ -5,7 +5,6 @@ using System.Collections.Generic;
 /// <summary>
 /// Game global manager
 /// </summary>
-[ExecuteInEditMode]
 public class LevelManager : MonoBehaviour {
 	public string LevelName = "Level00";
     public static LevelManager Instance;
@@ -44,7 +43,19 @@ public class LevelManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-
+	    string level = "";
+		string checkpoint = "";
+		if(checkPointManager.HasLastCheckPoint(this.LevelName, out level, out checkpoint))
+		{
+			Debug.Log("Has check point:" + level + " " + checkpoint);
+			
+			checkPointManager.LoadCheckpoint(checkpoint);
+		}
+		else 
+		{
+			Debug.Log("No check point, load the first");
+			checkPointManager.LoadFirstCheckpoint();
+		}
 	}
 	
 	// Update is called once per frame
@@ -60,7 +71,7 @@ public class LevelManager : MonoBehaviour {
 	/// <summary>
 	/// Sends a GameEvent.
 	/// </summary>
-    public static void OnGameEvent(GameEvent gameEvent)
+    public static void OnGameEvent(GameEvent gameEvent, Object caller)
     {
 		if(gameEvent.delaySend > 0)
 		{
@@ -68,7 +79,13 @@ public class LevelManager : MonoBehaviour {
 		}
 		else 
 		{
-			Instance.ProcessGameEvent(gameEvent);
+			try{
+			    Instance.ProcessGameEvent(gameEvent);
+			}
+			catch(System.Exception exc)
+			{
+				Debug.LogError("GameEvent has exception, caller:" + caller + " type:" + caller.GetType().ToString() + "\n" + exc.Message + "\n" + exc.StackTrace);
+			}
 		}
     }
 	
@@ -82,6 +99,9 @@ public class LevelManager : MonoBehaviour {
 	{
 	    switch(gameEvent.type)
 		{
+		    case GameEventType.LevelPause:
+			    Time.timeScale = 0;
+			    break;
 			//GameDialogue object display dialogue text by dialog id.
 		    case GameEventType.ShowGameDialogue:
 			  this.gameDialogueObject.OnGameEvent(gameEvent);
@@ -99,6 +119,7 @@ public class LevelManager : MonoBehaviour {
 			case GameEventType.ScenarioCameraAudioListenerOn:
 			case GameEventType.ScenarioCameraAudioListenerOff:
 		    case GameEventType.StartDocking:
+		    case GameEventType.StartDockingOnRuntimeTarget:
 		    case GameEventType.PlayerCameraSlowMotionOnFixedPoint:
 			case GameEventType.PlayerCameraSlowMotionOnTransform:
 			  this.scenarioControlObject.OnGameEvent(gameEvent);
@@ -115,8 +136,17 @@ public class LevelManager : MonoBehaviour {
 			case GameEventType.WhiteOutPlayerCamera:
 			  player.transform.root.BroadcastMessage("OnGameEvent", gameEvent, SendMessageOptions.DontRequireReceiver);
 			  break;
+		    case GameEventType.NPCPutToGround:
+			  Util.PutToGround(gameEvent.receiver.transform, this.GroundLayer, 0.1f);
+			  break;
 		    case GameEventType.NPCPlayAnimation:
 			  gameEvent.receiver.animation.CrossFade(gameEvent.StringParameter);
+			  break;
+		    case GameEventType.NPCPlayQueueAnimation:
+			  foreach(string ani in gameEvent.StringParameter.Split(new char[] { ';' }))
+			  {
+			      gameEvent.receiver.animation.CrossFadeQueued(ani);
+			  }
 			  break;
 		    case GameEventType.NPCFaceToPlayer:
 			  gameEvent.sender.transform.LookAt(new Vector3(player.transform.position.x, gameEvent.sender.transform.position.y, player.transform.position.z));
@@ -128,9 +158,9 @@ public class LevelManager : MonoBehaviour {
 			case GameEventType.NPCStartDefaultAI:
 			  gameEvent.receiver.SendMessage("OnGameEvent", gameEvent);
 			  break;
-		    case GameEventType.LevelAreaStartSpawn:
-			  LevelArea.GetArea(gameEvent.StringParameter).StartSpawn();
-			  break;
+//		    case GameEventType.LevelAreaStartSpawn:
+//			  LevelArea.GetArea(gameEvent.StringParameter).StartSpawn();
+//			  break;
 		    case GameEventType.DeactivateGameObject:
 			  Util.DeactivateRecurrsive(gameEvent.receiver);
 			  break;
@@ -139,6 +169,12 @@ public class LevelManager : MonoBehaviour {
 			  break;
 		    case GameEventType.ActivateGameObject:
 			   Util.ActivateRecurrsive(gameEvent.receiver);
+			   break;
+		    case GameEventType.ActivateGameObjectIgnoreChildren:
+			   gameEvent.receiver.active = true;
+			   break;
+		    case GameEventType.DeactivateGameObjectIgnoreChildren:
+			   gameEvent.receiver.active = false;
 			   break;
 		    case GameEventType.SpecifiedSpawn:
 			  gameEvent.receiver.SendMessage("OnGameEvent", gameEvent);
@@ -169,6 +205,9 @@ public class LevelManager : MonoBehaviour {
 		     case GameEventType.LoadLevel:
 			     LoadLevel(gameEvent);
 			     break;
+		     case GameEventType.LoadCheckPoint:
+			     LoadLevelWithCheckPoint(gameEvent);
+			     break;
 		     case GameEventType.Mute:
 			     Persistence.Mute();
 			     break;
@@ -182,11 +221,25 @@ public class LevelManager : MonoBehaviour {
 			 case GameEventType.StopBackgroundMusic:
 			     backGroundMusicPlayer.OnGameEvent(gameEvent);
 			     break;
+		     case GameEventType.SaveCheckPoint:
+			     checkPointManager.CheckPointReach(gameEvent.StringParameter);
+			     break;
+		     case GameEventType.AttachObjectToSpecifiedParent:
+			     gameEvent.receiver.transform.parent = gameEvent.GameObjectParameter.transform;
+			     break;
+		     case GameEventType.SetPlayerControlDirectionPivot:
+			     this.ControlDirectionPivot = gameEvent.GameObjectParameter.transform;
+			     break;
 		}
 	}
 	
+	/// <summary>
+	/// Loads the level.The checkpoint is cleared. 
+	/// Call this method when user dedicated to play a level from the begin point.
+	/// </summary>
 	void LoadLevel(GameEvent gameEvent)
 	{
+		checkPointManager.ClearCheckpoint();
 		switch(gameEvent.parameterType)
 		{
 		case ParameterType.Int:
@@ -195,6 +248,20 @@ public class LevelManager : MonoBehaviour {
 		case ParameterType.String:
 			Application.LoadLevel(gameEvent.StringParameter);
 			break;
+		}
+	}
+	
+	/// <summary>
+	/// Loads the level with check point.
+	/// Call this method when user want to play the last checkpoint .
+	/// </summary>
+	void LoadLevelWithCheckPoint(GameEvent gameEvent)
+	{
+		string levelname = "";
+		string checkpointName = "";
+		if(checkPointManager.HasLastCheckPoint(this.LevelName, out levelname, out checkpointName))
+		{
+			Application.LoadLevel(levelname);
 		}
 	}
 	

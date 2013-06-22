@@ -29,7 +29,7 @@ public class Joybutton_Jump_Predator : JoyButton {
     /// <param name="touch"></param>
     public override void onTouchBegin(Touch touch)
     {
-        if (PredatorPlayerStatus.IsJumping == false)
+        if (JumpController.IsJumping == false)
         {
             base.onTouchBegin(touch);
         }

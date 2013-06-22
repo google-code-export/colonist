@@ -13,6 +13,14 @@ public enum DockRotationType
 	HeadToEnd_XZ = 1,
 	LerpToEndPoint = 2,
 	Unchange = 3,
+	AlighToEndPoint = 4,
+}
+
+public enum DockFleetMode
+{
+	InTime = 0,
+	InSpeed = 1,
+	InGeneralSpeed = 2,
 }
 
 /// <summary>
@@ -41,8 +49,21 @@ public class ObjectDockData
 	/// <summary>
 	/// How long should the object arrive this dock ?
 	/// If the FleetTime == zero, camera will be forced to set in the dock immediately.
+	/// This value is used when fleeMode = DockFleetMode.InTime
 	/// </summary>
 	public float FleetTime;
+	/// <summary>
+	/// The fleet speed.
+	/// Used when fleeMode = InSpeed.
+	/// </summary>
+	public float FleetSpeed;
+	/// <summary>
+	/// The speed type of the dockee when docking.
+	/// </summary>
+	public DockFleetMode fleeMode = DockFleetMode.InTime;
+	/// <summary>
+	/// How the object rotate when docking.
+	/// </summary>
 	public DockRotationType rotationType = DockRotationType.HeadToEnd;
 	
 	public AnimationCurve CurveForXAxis = AnimationCurve.Linear(0,0,1,1);
@@ -58,7 +79,6 @@ public class ObjectDockData
 	/// When end docking at this camera dock, the message should be sent.
 	/// </summary>
 	public GameEvent[] event_at_end = new GameEvent[]{};
-	
 
 }
 
@@ -71,6 +91,15 @@ public class ObjectDock : MonoBehaviour
 	public Transform objectToDock = null;
 	public bool PlayOnAwake = false;
 	public ObjectDockData[] objectDockData = new ObjectDockData[]{};
+	
+	/// <summary>
+	/// The general speed. Used when ObjectDockData.FleeMode = InGeneralSpeed
+	/// </summary>
+	public float GeneralSpeed = 3;
+	/// <summary>
+	/// If cycledock - true, the object will dock in the cycle of the objectDockData 
+	/// </summary>
+	public bool CycleDock = false;
 	
 	void Awake()
 	{
@@ -104,10 +133,16 @@ public class ObjectDock : MonoBehaviour
 	
 	IEnumerator StartDocking(Transform _object)
 	{
-		foreach(ObjectDockData dock in this.objectDockData)
+        for(int i=0; i<this.objectDockData.Length; i++)
 		{
+			ObjectDockData dock = this.objectDockData[i];
 			yield return StartCoroutine(Dock(dock, _object));
 //			Debug.Log("Docking done on :" + dock.Name + " at time:" + Time.time);
+			// if cycle = true, change the dock index to zero and cycling the dock behavior.
+			if( (i == this.objectDockData.Length - 1) && CycleDock)
+			{
+				i = 0;
+			}
 		}
 	}
 	
@@ -121,7 +156,21 @@ public class ObjectDock : MonoBehaviour
 		if (dock.DockImmediately) 
 		{
 			//handle rotation
-			dockingObject.rotation = dock.DockTransform.rotation;
+			switch(dock.rotationType)
+			{
+			    case DockRotationType.Unchange:
+				     break;
+			    case DockRotationType.HeadToEnd:
+			    case DockRotationType.LerpToEndPoint:
+			         dockingObject.LookAt(dock.DockTransform.position);
+				     break;
+			    case DockRotationType.HeadToEnd_XZ:
+				     dockingObject.LookAt(new Vector3(dock.DockTransform.position.x,dockingObject.position.y,dock.DockTransform.position.z));
+					 break;
+			    case DockRotationType.AlighToEndPoint:
+				     dockingObject.rotation = dock.DockTransform.rotation;
+				     break;
+			}
 			//handle position
 			dockingObject.position = dock.DockTransform.position;
 		} 
@@ -133,8 +182,23 @@ public class ObjectDock : MonoBehaviour
 			Vector3 distance = dock.DockTransform.position - startPos;
 			float AngleDistance = Quaternion.Angle(dockingObject.rotation, dock.DockTransform.rotation);
 			float rotateAnglarSpeed = AngleDistance / dock.FleetTime;
-			while ((Time.time - starttime) <= dock.FleetTime) {
-				float percentage = (Time.time - starttime) / dock.FleetTime;
+			float totalFleeTime = 0;
+			switch(dock.fleeMode)
+			{
+			case DockFleetMode.InTime:
+				totalFleeTime = dock.FleetTime;
+				break;
+			case DockFleetMode.InSpeed:
+				totalFleeTime = distance.magnitude / dock.FleetSpeed;
+				break;
+			case DockFleetMode.InGeneralSpeed:
+//				Debug.LogError("not supported!");
+				totalFleeTime = distance.magnitude / this.GeneralSpeed;
+				break;
+			}
+//			Debug.Log("GameObjct:" + this.gameObject.name + " totalFleeTime" + totalFleeTime);
+			while ((Time.time - starttime) <= totalFleeTime) {
+				float percentage = Mathf.Clamp01((Time.time - starttime) / totalFleeTime);
 				float xnormalized = dock.CurveForXAxis.Evaluate(percentage);
 				float ynormalized = dock.CurveForYAxis.Evaluate(percentage);
 				float znormalized = dock.CurveForZAxis.Evaluate(percentage);
@@ -154,7 +218,7 @@ public class ObjectDock : MonoBehaviour
 //					Vector3 rotationEulerIncrementValue = dock.RotationCurve.GetValueAtPercentage (percentage);
 //					Vector3 rotationEulerAngleOfTheFrame = startRotation.eulerAngles + rotationEulerIncrementValue;
 //					dockingObject.rotation = Quaternion.Euler (rotationEulerAngleOfTheFrame);
-					dockingObject.rotation = Quaternion.Lerp(startRotation, dock.DockTransform.rotation, percentage);//Quaternion.RotateTowards(dockingObject.rotation, dock.DockTransform.rotation, rotateAnglarSpeed * Time.deltaTime);
+					dockingObject.rotation = Quaternion.Slerp(startRotation, dock.DockTransform.rotation, percentage);//Quaternion.RotateTowards(dockingObject.rotation, dock.DockTransform.rotation, rotateAnglarSpeed * Time.deltaTime);
 					break;
 				case DockRotationType.Unchange:
 					break;
@@ -164,6 +228,7 @@ public class ObjectDock : MonoBehaviour
 		}
 		
 		//send end gameevent
+//		Debug.Log("GameObjct:" + this.gameObject.name + " send gameEvent");
 	    SendGameEvents(dock.event_at_end, dockingObject);
 		if(dock.PendingTime > 0)
 		{
@@ -193,13 +258,17 @@ public class ObjectDock : MonoBehaviour
 				    case GameEventType.InvokeMethod:
 				    case GameEventType.DeactivateGameObject:
 				    case GameEventType.DestroyGameObject:
-				      _e.receiver = dockingObject.gameObject;
+				    case GameEventType.AttachObjectToSpecifiedParent:
+				    case GameEventType.NPCPutToGround:
+					  //for these receiver-must-not-be-null events, override the receiver field to the dockingObject, if the event's receiver field is empty.
+					  if(_e.receiver == null)
+				         _e.receiver = dockingObject.gameObject;
 					  break;
 				    default:
 					  break;
 				}
 			}
-			LevelManager.OnGameEvent (_e);
+			LevelManager.OnGameEvent (_e , this);
 		}
 	}
 	

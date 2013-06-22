@@ -11,7 +11,9 @@ public class TopDownCamera : RuntimeCameraControl
 	/// The camera control parameter for player camera.
 	/// </summary>
 	public TopDownCameraControlParameter topDownCameraParameter;
-
+	
+	public Transform Focus = null;
+	
 	/// <summary>
 	/// The character which the camera is currenting viewing on
 	/// </summary>
@@ -49,7 +51,14 @@ public class TopDownCamera : RuntimeCameraControl
 		if (Working) {
 			//avoid too frequent update
 			if (Time.time - CameraLastDampTime >= CameraDampInterval) {
-				SetPosition (true, GetCharacterCenter ());
+				if(Focus == null)
+				{
+				   SetPosition (true, GetCharacterCenter ());
+				}
+				else 
+				{
+				   SetPosition (true, Focus.position);
+				}
 				CameraLastDampTime = Time.time;
 			}
 		}
