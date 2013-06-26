@@ -64,10 +64,10 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 		if (Working) {
 			switch (slowMotionCameraMode) {
 			case SlowMotionCameraFocusMode.FixedPoint:
-				SetPosition (true, LookAt);
+				ApplyCameraControlParameter (true, LookAt);
 				break;
 			case SlowMotionCameraFocusMode.OnTransform:
-				SetPosition (true, LookAtTransfrom.position);
+				ApplyCameraControlParameter (true, LookAtTransfrom.position);
 				break;
 			}
 		}
@@ -109,7 +109,7 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 			SlowMotionTimeLength_Overrided = this.SlowMotionDuration;
 		}
 		SlowMotionStartTime = Time.time;
-		SetPosition (false, LookAt);
+		ApplyCameraControlParameter (false, LookAt);
 		Time.timeScale = SlowMotionTimeScale;
 		Working = true;
 		//preserves the previous active runtime camera script
@@ -139,7 +139,7 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 			SlowMotionTimeLength_Overrided = this.SlowMotionDuration;
 		}
 		SlowMotionStartTime = Time.time;
-		SetPosition (false, LookAtTransfrom.position);
+		ApplyCameraControlParameter (false, LookAtTransfrom.position);
 		Time.timeScale = SlowMotionTimeScale;
 		Working = true;
 		//preserves the previous active runtime camera script

@@ -453,7 +453,25 @@ public class ColorCurve
 		float valueAtTime = curve.Evaluate(percentage);
 		Color v = Color.Lerp(fromColor, toColor, valueAtTime);
 		return v;
-	}	
+	}
+}
+
+public enum TopDownCameraControlMode
+{
+	/// <summary>
+	/// The default mode, camera's position and focus point is dynamically set by parameter. And always look at the Player.
+	/// </summary>
+	Default = 0,
+	
+	/// <summary>
+	/// Always put the camera at a fixed position, and look at the player.
+	/// </summary>
+	PoisitonAtPivotAndLookAtPlayer = 1,
+	
+	/// <summary>
+	/// Always put the camera at a fixed position, and look at the given transform.
+	/// </summary>
+	PositionAtPivotAndLookAtTransform = 2,
 }
 
 /// <summary>
@@ -463,6 +481,7 @@ public class ColorCurve
 public class TopDownCameraControlParameter
 {
 	public string Name = "";
+	public TopDownCameraControlMode mode = TopDownCameraControlMode.Default; 
 //	/// <summary>
 //	/// The transform to look at. Can be changed in runtime. e.g. for Slow motion camera.
 //	/// </summary>

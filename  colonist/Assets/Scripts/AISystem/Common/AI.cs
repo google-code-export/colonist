@@ -135,16 +135,6 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 		this.Unit.CurrentTarget = this.CurrentTarget;
     }
 	
-//	void OnEnable()
-//	{
-//		Unit.CurrentAI = this;
-//		StartAI();
-//	}
-//	
-//	void OnDisable()
-//	{
-//		StopAI();
-//	}
 	
 #region initialization
     /// <summary>
@@ -170,7 +160,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 	
 	/// <summary>
 	/// 1. Start A* pathfind daemon routines.
-	/// 2. Start AlterBehavior daemon routine.
+	/// 2. Start the first (default) AIBehavior.
 	/// </summary>
     public virtual void StartAI()
     {
@@ -880,7 +870,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 			}
 			
             float distance = Util.DistanceOfCharacters(gameObject, behavior.MoveToTarget.gameObject);
-            if (distance <= 1)
+            if (distance <= 0.5f)
             {
                 break;
             }
@@ -888,6 +878,8 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
         }
         StopBehavior(behavior);
     }
+	
+
 
     /// <summary>
     /// Stop behave stopping move to.

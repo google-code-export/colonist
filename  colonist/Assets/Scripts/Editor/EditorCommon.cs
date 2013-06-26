@@ -191,9 +191,19 @@ public class EditorCommon
 	public static MoveData EditMoveData (GameObject gameObject,
 		                                 MoveData MoveData)
 	{
-		EditBasicAnimationData (gameObject,
-				                string.Format (" ---------------------- {0}", MoveData.Name), 
-				                MoveData as UnitAnimationData);
+
+		if(MoveData.UseAnimation)
+		{
+		   EditBasicAnimationData (gameObject,
+				                   string.Format (" ---------------------- {0}", MoveData.Name), 
+				                   MoveData as UnitAnimationData);
+		}
+		else 
+		{
+			MoveData.Name = EditorGUILayout.TextField (new GUIContent ("Name:", ""), MoveData.Name);
+		}
+		MoveData.UseAnimation = EditorGUILayout.Toggle(new GUIContent("Use animation:", "If false, animation will not be played when moving."), MoveData.UseAnimation);
+		
 		MoveData.MoveSpeed = EditorGUILayout.FloatField (new GUIContent ("Speed:", "单位移动速度."), MoveData.MoveSpeed);
 		MoveData.UseGravityWhenMoving = EditorGUILayout.Toggle(new GUIContent("Use gravity:", "If use Gravity, move method = SimpleMove, else, Move()"), MoveData.UseGravityWhenMoving);
 		MoveData.CanRotate = EditorGUILayout.Toggle (new GUIContent ("CanRotate:", "单位移动的时候,是否朝向前进方向"), MoveData.CanRotate);
