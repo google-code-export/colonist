@@ -227,6 +227,9 @@ public class LevelManager : MonoBehaviour {
 		     case GameEventType.AttachObjectToSpecifiedParent:
 			     gameEvent.receiver.transform.parent = gameEvent.GameObjectParameter.transform;
 			     break;
+		     case GameEventType.DetachObjectFromParent:
+			     gameEvent.receiver.transform.parent = null;
+			     break;
 		     case GameEventType.SetPlayerControlDirectionPivot:
 			     this.ControlDirectionPivot = gameEvent.GameObjectParameter.transform;
 			     break;

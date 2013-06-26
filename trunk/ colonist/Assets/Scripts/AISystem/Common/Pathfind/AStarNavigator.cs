@@ -225,6 +225,31 @@ public class AStarNavigator : Navigator {
         return true;
     }
 	
+#region AnimationEvent
+	
+	/// <summary>
+	/// this function is for event invoking.(AnimationEvent, or GameEvent).
+	/// Because of the parameter restriction, you will usually need to call _StopNavigationInTime to stop in pair.
+	/// </summary>
+	public void _NavigateToCurrentTarget(string name)
+	{
+		this.StartNavigation(this.unit.CurrentTarget, true, this.unit.MoveDataDict[name]);
+	}
+	
+	/// <summary>
+	/// After N seconds, stop navigation
+	/// </summary>
+	public IEnumerator _StopNavigationInTime(float time)
+	{
+		if(time != 0)
+		{
+		   yield return new WaitForSeconds(time);
+		}
+		this.StopNavigation();
+	}
+	
+#endregion
+	
 	void OnDrawGizmosSelected()
     {
         if (AStarPath != null && AStarPath.vectorPath != null)

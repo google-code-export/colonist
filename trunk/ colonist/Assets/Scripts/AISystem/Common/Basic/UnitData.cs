@@ -28,6 +28,11 @@ public class UnitAnimationData
 [System.Serializable]
 public class MoveData : UnitAnimationData
 {
+	/// <summary>
+	/// If UseAnimation = false, the MoveData's animation will not be played when moving.
+	/// </summary>
+	public bool UseAnimation = true;
+	
     public float MoveSpeed = 1;
     /// <summary>
     /// CanRotate + SmoothRotate + RotateAngularSpeed
@@ -227,26 +232,6 @@ public class DeathData : UnitAnimationData
 		return clone;
 	}
 }
-
-/// <summary>
-/// Wrap the trail render effect data.
-/// </summary>
-[System.Serializable]
-public class TrailRenderEffectData
-{
-	public string Name = "";
-	public TrailRenderer trailRenderObject = null;
-	/// <summary>
-	/// if enabled = false, the trail render data would not be used.
-	/// </summary>
-	public bool enabled = true;
-	[HideInInspector]
-	public bool IsActive = false;
-	[HideInInspector]
-	public float LastDisplayTime = 0;
-	[HideInInspector]
-	public float DisplayLength = 0;
-} 
 
 /// <summary>
 /// Instantiation data defines the position/quaternion to instanitate a gameobject.

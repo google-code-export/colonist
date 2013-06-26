@@ -355,6 +355,11 @@ public enum GameEventType
 	/// </summary>
 	StartDockingOnRuntimeTarget = 417,
 	
+	/// <summary>
+	/// Detach the receiver from its parent - set receiver.transform.parent = null
+	/// </summary>
+	DetachObjectFromParent = 418,
+	
 	//Game setting event
 	/// <summary>
 	/// Set language to a given value in StringParameter

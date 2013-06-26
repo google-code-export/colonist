@@ -28,10 +28,18 @@ public class TopDownCamera : RuntimeCameraControl
 	private Vector3 originPosition;
 	private float CameraDampInterval = 0.02f;
 	private float CameraLastDampTime = 0;
-
+	
+	/// <summary>
+	/// The current top down camera parameter.
+	/// Can be overrided at runtime.
+	/// By default, the predefined parameter is used.
+	/// </summary>
+	public TopDownCameraControlParameter CurrentTopDownCameraParameter = null;
+	
 	void Awake ()
 	{
 		PlayerCharacter = transform.root.GetComponentInChildren<CharacterController> ();
+		CurrentTopDownCameraParameter = topDownCameraParameter;
 	}
 
 	// Use this for initialization
@@ -39,11 +47,6 @@ public class TopDownCamera : RuntimeCameraControl
 	{
 		//restore the original position
 		originPosition = transform.position;
-	}
-	
-	// Update is called once per frame
-	void Update ()
-	{
 	}
 
 	void LateUpdate ()
@@ -53,11 +56,11 @@ public class TopDownCamera : RuntimeCameraControl
 			if (Time.time - CameraLastDampTime >= CameraDampInterval) {
 				if(Focus == null)
 				{
-				   SetPosition (true, GetCharacterCenter ());
+				   ApplyCameraControlParameter (true, GetCharacterCenter ());
 				}
 				else 
 				{
-				   SetPosition (true, Focus.position);
+				   ApplyCameraControlParameter (true, Focus.position);
 				}
 				CameraLastDampTime = Time.time;
 			}
@@ -71,15 +74,13 @@ public class TopDownCamera : RuntimeCameraControl
 		return PlayerCharacter.transform.position + PlayerCharacter.center;
 	}
 
-	protected void SetPosition (bool smoothDamp, Vector3 CharacterCenter)
+	protected void ApplyCameraControlParameter (bool smoothDamp, Vector3 CharacterCenter)
 	{
-		//Vector3 newPosition = characterCeneter + Vector3.up * DynamicLockHeight;
-		//Vector3 NewPositionOffset = Character.transform.TransformDirection(Vector3.back) * Mathf.Abs(DynamicLockDistance);
 		if (LevelManager.Instance != null && LevelManager.Instance.ControlDirectionPivot != null) {
-			Vector3 NewPositionOffset = LevelManager.Instance.ControlDirectionPivot.TransformDirection (Vector3.back) * topDownCameraParameter.DynamicDistance;
-			NewPositionOffset += Vector3.up * topDownCameraParameter.DynamicHeight;
+			Vector3 NewPositionOffset = LevelManager.Instance.ControlDirectionPivot.TransformDirection (Vector3.back) * CurrentTopDownCameraParameter.DynamicDistance;
+			NewPositionOffset += Vector3.up * CurrentTopDownCameraParameter.DynamicHeight;
 			Vector3 newPosition = (smoothDamp) ?
-                                   Vector3.SmoothDamp (transform.position, CharacterCenter + NewPositionOffset, ref dampingVelocity, topDownCameraParameter.smoothLag) 
+                                   Vector3.SmoothDamp (transform.position, CharacterCenter + NewPositionOffset, ref dampingVelocity, CurrentTopDownCameraParameter.smoothLag) 
                                    : CharacterCenter + NewPositionOffset;
 			newPosition = AdjustLineOfSight (newPosition, CharacterCenter);
 			transform.position = newPosition;
@@ -97,7 +98,7 @@ public class TopDownCamera : RuntimeCameraControl
 	protected Vector3 AdjustLineOfSight (Vector3 newPosition, Vector3 target)
 	{
 		RaycastHit hit;
-		if (Physics.Linecast (target, newPosition, out hit, topDownCameraParameter.lineOfSightMask.value)) {
+		if (Physics.Linecast (target, newPosition, out hit, CurrentTopDownCameraParameter.lineOfSightMask.value)) {
 			dampingVelocity = Vector3.zero;
 			return hit.point;
 		}
@@ -107,7 +108,7 @@ public class TopDownCamera : RuntimeCameraControl
 	void OnEnable ()
 	{
 		Debug.Log ("Position damp immediately!");
-		SetPosition (false, GetCharacterCenter ());
+		ApplyCameraControlParameter (false, GetCharacterCenter ());
 		transform.LookAt (PlayerCharacter.transform);
 	}
 	
@@ -123,10 +124,5 @@ public class TopDownCamera : RuntimeCameraControl
 		}
 		yield return new WaitForSeconds(shake_interval);
 		isShaking = false;
-	}
-
-	public IEnumerator SlowMotion (Vector3 LookAtPoint)
-	{
-		yield return null;
 	}
 }

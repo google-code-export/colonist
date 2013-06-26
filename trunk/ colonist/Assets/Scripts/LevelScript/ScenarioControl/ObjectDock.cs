@@ -260,6 +260,7 @@ public class ObjectDock : MonoBehaviour
 				    case GameEventType.DestroyGameObject:
 				    case GameEventType.AttachObjectToSpecifiedParent:
 				    case GameEventType.NPCPutToGround:
+				    case GameEventType.DetachObjectFromParent:
 					  //for these receiver-must-not-be-null events, override the receiver field to the dockingObject, if the event's receiver field is empty.
 					  if(_e.receiver == null)
 				         _e.receiver = dockingObject.gameObject;

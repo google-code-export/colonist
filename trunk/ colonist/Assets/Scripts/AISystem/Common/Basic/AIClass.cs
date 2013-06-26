@@ -155,6 +155,13 @@ public class AIBehavior
 	[HideInInspector]
 	public string NextBehaviorName = "";
 	
+	/// <summary>
+	/// The waypoint names. It's used in type = MoveToTransform behavior.
+	/// </summary>
+	public string[] WaypointNames = new string[]{};
+	public bool MoveToWaypoint = false;
+	
+	
 	public AIBehavior GetClone ()
 	{
 		AIBehavior clone = new AIBehavior ();

@@ -38,7 +38,7 @@ public enum AIBehaviorType
     #region base 0~999
     /// <summary>
     /// Idle - AI standing idle, just animating Idle animation.
-    /// If there're enemy coming insight, shift to AttackTo Command.
+    /// However, it's really not important, you can put AnimationEvent into IdleAnimation- Attack, Navigate, etc, to make Idle behavior to be Attack behavior.
     /// </summary>
     Idle = 0,
     /// <summary>
@@ -82,6 +82,7 @@ public enum AIBehaviorType
 	/// This AI will be set off , another AI will be set active.
 	/// </summary>
 	SwitchToAI = 8,
+
     #endregion
 }
 
