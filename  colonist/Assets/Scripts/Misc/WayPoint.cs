@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// Way point is nothing else, a mark to the static objects in game scene.
@@ -18,13 +19,24 @@ public class WayPoint : MonoBehaviour {
 		return WayDict[name];
 	}
 	
+	public static WayPoint[] GetWaypoints(string[] names)
+	{
+		IList<WayPoint> ret = new List<WayPoint>();
+		foreach(string n in names)
+		{
+			ret.Add(WayDict[n]);
+		}
+		return ret.ToArray();
+	}
+	
+	public static WayPoint[] GetAllWaypoints()
+	{
+		return WayDict.Values.ToArray();
+	}
+	
 	void Awake()
 	{
 		WayDict.Add(this.name, this);
 	}
 	
-	void OnDrawGizmos()
-	{
-		Gizmos.DrawSphere(this.transform.position, 1);
-	}
 }

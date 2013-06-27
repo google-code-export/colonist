@@ -12,8 +12,8 @@ Shader "Custom/Stealth(surf)" {
             Tags 
             { 
                 "RenderType" = "Opaque"
+                "Queue" = "Transparent+1" 
                 "LightMode" = "Always" 
-                "Queue" = "Transparent+1"
             }
             Cull Front
             ZWrite On

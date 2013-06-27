@@ -31,7 +31,7 @@ public class Persistence : MonoBehaviour {
 	void Update () {
 	}
 	
-	void InitializePlayerLanguage()
+	static void InitializePlayerLanguage()
 	{
 		if(PlayerPrefs.HasKey(Language) == false)
 		{
@@ -48,7 +48,7 @@ public class Persistence : MonoBehaviour {
 		}
 	}
 	
-	void InitializePlayerQualityLevel()
+	static void InitializePlayerQualityLevel()
 	{
 		if(PlayerPrefs.HasKey(Quality) == false)
 		{
@@ -60,6 +60,11 @@ public class Persistence : MonoBehaviour {
 	
 	public static SystemLanguage GetPlayerLanguage()
 	{
+		//if there is no language, set the current device language as default one
+		if(PlayerPrefs.HasKey(Language) == false)
+		{
+			InitializePlayerLanguage();
+		}
 		SystemLanguage l = (SystemLanguage)System.Enum.Parse(typeof(SystemLanguage), PlayerPrefs.GetString(Language));
 		return l;
 	}
