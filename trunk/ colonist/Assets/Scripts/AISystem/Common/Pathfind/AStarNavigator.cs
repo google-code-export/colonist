@@ -91,7 +91,10 @@ public class AStarNavigator : Navigator {
                 {
                     Util.MoveTowards(transform, direction, controller, Speed, NavigationMoveData.UseGravityWhenMoving);
                 }
-                animation.CrossFade(NavigationMoveData.AnimationName);
+				if(NavigationMoveData.UseAnimation)
+				{
+                   animation.CrossFade(NavigationMoveData.AnimationName);
+				}
             }
             else //reach the current node
             {

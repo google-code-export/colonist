@@ -56,11 +56,11 @@ public class TopDownCamera : RuntimeCameraControl
 			if (Time.time - CameraLastDampTime >= CameraDampInterval) {
 				if(Focus == null)
 				{
-				   ApplyCameraControlParameter (true, GetCharacterCenter ());
+				   ApplyCameraControlParameter (true, GetCharacterCenter (), this.CurrentTopDownCameraParameter);
 				}
 				else 
 				{
-				   ApplyCameraControlParameter (true, Focus.position);
+				   ApplyCameraControlParameter (true, Focus.position, this.CurrentTopDownCameraParameter);
 				}
 				CameraLastDampTime = Time.time;
 			}
@@ -73,13 +73,21 @@ public class TopDownCamera : RuntimeCameraControl
 			PlayerCharacter = transform.root.GetComponentInChildren<CharacterController> ();
 		return PlayerCharacter.transform.position + PlayerCharacter.center;
 	}
-
-	protected void ApplyCameraControlParameter (bool smoothDamp, Vector3 CharacterCenter)
+	
+	/// <summary>
+	/// Applies the camera control parameter to the current camera.
+	/// smoothDamp - if smoothly damp from current camera position ? if false, the camera control parameter takes effect immediately.
+	/// CharacterCenter - the camera center.
+	/// topdownCameraControlParameter - the topDownCameraControlParameter.
+	/// </summary>
+	public virtual void ApplyCameraControlParameter (bool SmoothDamp, 
+		                                             Vector3 CharacterCenter, 
+		                                             TopDownCameraControlParameter topdownCameraControlParameter)
 	{
 		if (LevelManager.Instance != null && LevelManager.Instance.ControlDirectionPivot != null) {
-			Vector3 NewPositionOffset = LevelManager.Instance.ControlDirectionPivot.TransformDirection (Vector3.back) * CurrentTopDownCameraParameter.DynamicDistance;
-			NewPositionOffset += Vector3.up * CurrentTopDownCameraParameter.DynamicHeight;
-			Vector3 newPosition = (smoothDamp) ?
+			Vector3 NewPositionOffset = LevelManager.Instance.ControlDirectionPivot.TransformDirection (Vector3.back) * topdownCameraControlParameter.DynamicDistance;
+			NewPositionOffset += Vector3.up * topdownCameraControlParameter.DynamicHeight;
+			Vector3 newPosition = (SmoothDamp) ?
                                    Vector3.SmoothDamp (transform.position, CharacterCenter + NewPositionOffset, ref dampingVelocity, CurrentTopDownCameraParameter.smoothLag) 
                                    : CharacterCenter + NewPositionOffset;
 			newPosition = AdjustLineOfSight (newPosition, CharacterCenter);
@@ -107,8 +115,8 @@ public class TopDownCamera : RuntimeCameraControl
 
 	void OnEnable ()
 	{
-		Debug.Log ("Position damp immediately!");
-		ApplyCameraControlParameter (false, GetCharacterCenter ());
+		//Debug.Log ("Position damp immediately!");
+		ApplyCameraControlParameter (false, GetCharacterCenter (), this.CurrentTopDownCameraParameter);
 		transform.LookAt (PlayerCharacter.transform);
 	}
 	

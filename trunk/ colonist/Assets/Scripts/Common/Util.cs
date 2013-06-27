@@ -334,6 +334,25 @@ public class Util : MonoBehaviour {
         Distance = closestDistance;
         return closest;
     }
+	
+	/// <summary>
+	/// Return the transform that nearest to %pos%
+	/// </summary>
+	public static Transform FindClosest(Vector3 pos, Transform[] transforms)
+	{
+        Transform nearest = null;
+        float closestDistance = 99999f;
+        foreach (Transform t in transforms)
+        {
+            float distance = Mathf.Abs((t.position - pos).magnitude);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                nearest = t;
+            }
+        }
+        return nearest;
+	}
 
 	public static Collider FindClosest(Vector3 pos, Collider[] colliders)
     {
@@ -357,7 +376,26 @@ public class Util : MonoBehaviour {
         Distance = closestDistance;
         return closest;
     }
-
+	
+	/// <summary>
+	/// Return the transform that farest to %pos%
+	/// </summary>
+	public static Transform findFarest(Vector3 pos, Transform[] transforms)
+	{
+        Transform farest = null;
+        float farestDistance = 0f;
+        foreach (Transform t in transforms)
+        {
+            float distance = Mathf.Abs((t.position - pos).magnitude);
+            if (distance > farestDistance)
+            {
+                farestDistance = distance;
+                farest = t;
+            }
+        }
+        return farest;
+	}
+	
     public static Collider findFarest(Vector3 pos, Collider[] colliders)
     {
         Collider farest = null;
