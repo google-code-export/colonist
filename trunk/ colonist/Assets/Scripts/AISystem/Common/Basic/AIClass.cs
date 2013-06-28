@@ -190,7 +190,7 @@ public class AIBehavior
 	public void InitBehavior ()
 	{
 		//sort the alternateBehaviorConditionArray by priority, from lower to higher ( 0 = least priority)
-		this.alternateBehaviorConditionArray = this.alternateBehaviorConditionArray.OrderBy(x=>x.priority).ToArray();
+		this.alternateBehaviorConditionArray = this.alternateBehaviorConditionArray.OrderByDescending(x=>x.priority).ToArray();
 		foreach(AlternateBehaviorData alterBehaviorData in alternateBehaviorConditionArray)
 		{
 			alterBehaviorData.Init();
