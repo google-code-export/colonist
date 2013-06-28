@@ -468,8 +468,13 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 		behavior.NextBehaviorName = string.Empty;
 		for(int i=0; i<behavior.alternateBehaviorConditionArray.Length; i++)
 		{
-			AlternateBehaviorData alternateBehaviorData = behavior.alternateBehaviorConditionArray[i];
-			if(CheckConditionWrapper( alternateBehaviorData.AlternateCondition, behavior)){
+			AlternateBehaviorData alternateBehaviorData = behavior.alternateBehaviorConditionArray[i];	
+			bool IsAlterBehaviorConditionMatched = CheckConditionWrapper( alternateBehaviorData.AlternateCondition, behavior);
+			if(this.PrintDebugMessage)
+			{
+				Debug.Log("AlernateBehavior name:" + alternateBehaviorData.Name + " is matched:" + IsAlterBehaviorConditionMatched);
+			}
+			if(IsAlterBehaviorConditionMatched){
 				behavior.NextBehaviorName = alternateBehaviorData.NextBehaviorName;
 				hasConditionMatched = true;
 //				Debug.Log("At frame:" + Time.frameCount + " behavior:" + behavior.Name + " condition match at: " + alternateBehaviorData.Name + " alter to next behavior:" + alternateBehaviorData.NextBehaviorName);
