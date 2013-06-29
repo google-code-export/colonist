@@ -237,6 +237,7 @@ public class AIFunction : MonoBehaviour
 	
 	/// <summary>
 	/// move to current target in %duration% seconds.
+	/// Note: this function is very simple, if you're looking for a more controllable one, you should use AStarNavigator._NavtigateToCurrentTarget
 	/// </summary>
 	IEnumerator _MoveToCurrentTarget (float _duration)
 	{
@@ -287,6 +288,16 @@ public class AIFunction : MonoBehaviour
 	{
 		EffectData effectdata = this.unit.EffectDataDict [name];
 	    GlobalBloodEffectDecalSystem.CreateEffect(effectdata);
+	}
+	
+	/// <summary>
+	/// _s the ignore collision.
+	/// </summary>
+	public IEnumerator _IgnoreCollision(float time)
+	{
+		this.controller.detectCollisions = false;
+		yield return new WaitForSeconds(time);
+		this.controller.detectCollisions = true;
 	}
 	
 	/// <summary>
