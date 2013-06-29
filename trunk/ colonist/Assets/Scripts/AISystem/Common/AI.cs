@@ -667,7 +667,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
                 break;
             case AIValueComparisionCondition.RandomValue:
                 ShouldCompare = true;
-                Random.seed = System.DateTime.Now.Millisecond;
+//                Random.seed = System.DateTime.Now.Millisecond;
                 LeftValue = Random.Range(0, 100);
                 break;
 		    case AIValueComparisionCondition.BehaveTime:
