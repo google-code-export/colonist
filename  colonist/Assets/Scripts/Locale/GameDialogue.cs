@@ -72,18 +72,6 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
         SetupDisplayedRect();
     }
 
-    // Use this for initialization
-    void Start()
-    {
-        //		StartCoroutine ("DisplayDialogue", "0");
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public void OnGameEvent(GameEvent _event)
     {
         switch (_event.type)
@@ -116,6 +104,7 @@ public class GameDialogue : MonoBehaviour, I_GameEventReceiver
     {
         LocalizedDialogue dialog = Localization.GetDialogue(DialogueID);
         HasDialog = true;
+		
         foreach (LocalizedDialogueItem dialogItem in dialog.dialogueItem)
         {
             LocalizeCharacter speaker = Localization.GetCharacter(dialogItem.DialogCharacterID);
