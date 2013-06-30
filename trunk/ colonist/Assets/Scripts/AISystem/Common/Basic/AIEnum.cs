@@ -8,6 +8,10 @@ public enum EffectObjectInstantiation
 	/// The particle system object is a children of the current unit, play it, rather than create new.
 	/// </summary>
     play = 1,
+	/// <summary>
+	/// Create the effect instance, and attach the instance to anchor object.
+	/// </summary>
+	createAndAttachToAnchor = 2,
 }
 
 /// <summary>
