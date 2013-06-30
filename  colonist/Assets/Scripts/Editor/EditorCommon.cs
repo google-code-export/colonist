@@ -409,7 +409,7 @@ public class EditorCommon
 				                                                  _EffectData.InstantionType);
 			
 			//if type = create, create a new object, or use global setting
-			if (_EffectData.InstantionType == EffectObjectInstantiation.create) {
+			if (_EffectData.InstantionType == EffectObjectInstantiation.create || _EffectData.InstantionType == EffectObjectInstantiation.createAndAttachToAnchor) {
 				_EffectData.UseGlobalEffect = EditorGUILayout.Toggle (new GUIContent ("Use global effect?", ""), _EffectData.UseGlobalEffect);
 			
 				EditorGUILayout.BeginHorizontal ();

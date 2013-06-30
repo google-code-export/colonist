@@ -124,8 +124,10 @@ public class GlobalBloodEffectDecalSystem : MonoBehaviour {
 		}
 		for(int i=0; i < effectData.Count; i++)
 		{
-			//if effectData is using global setting or create mode:
-            if (effectData.UseGlobalEffect || effectData.InstantionType == EffectObjectInstantiation.create)
+			//if effectData is using global setting or create/createAndAttach mode:
+            if (effectData.UseGlobalEffect || 
+				(effectData.InstantionType == EffectObjectInstantiation.create || effectData.InstantionType == EffectObjectInstantiation.createAndAttachToAnchor)
+				)
             {
 				//decide the position to create the effect object
 			    Vector3 instantiationPosition = Vector3.zero;
@@ -165,6 +167,10 @@ public class GlobalBloodEffectDecalSystem : MonoBehaviour {
               Object effectObject = Object.Instantiate(effectObjectPrototype,
                                                  instantiationPosition,
                                                  instantiationQuaternion);
+			  if(effectData.InstantionType == EffectObjectInstantiation.createAndAttachToAnchor)
+			  {
+				 ((GameObject)effectObject).transform.parent = effectData.instantiationData.BasicAnchor;
+			  }
 			  float LifeTime = effectData.UseGlobalEffect ? Instance.GlobalEffectDataDict[effectData.GlobalType].EffectLifetime : effectData.DestoryTimeOut;
               //Destory the effect object after life time, if life time > 0
 				if(LifeTime > 0)
