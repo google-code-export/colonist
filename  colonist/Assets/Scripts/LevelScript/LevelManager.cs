@@ -79,7 +79,9 @@ public class LevelManager : MonoBehaviour
 			try {
 				Instance.ProcessGameEvent (gameEvent);
 			} catch (System.Exception exc) {
-				Debug.LogError ("GameEvent has exception, caller:" + caller + " type:" + caller.GetType ().ToString () + "\n" + exc.Message + "\n" + exc.StackTrace);
+				Debug.LogError ("GameEvent has exception, caller:" + caller + " type:" + caller.GetType ().ToString () + 
+					"\n" + "Event name:" + gameEvent.Name + "\n" + "Event type:" + gameEvent.type +
+					"\n" + exc.Message + "\n" + exc.StackTrace);
 			}
 		}
 	}
@@ -173,17 +175,22 @@ public class LevelManager : MonoBehaviour
 			gameEvent.receiver.SendMessage ("OnGameEvent", gameEvent);
 			break;
 		case GameEventType.InvokeMethod:
-			if (gameEvent.parameterType == ParameterType.None)
-				gameEvent.receiver.SendMessage (gameEvent.CustomMessage);
-			else if (gameEvent.parameterType == ParameterType.Int)
-				gameEvent.receiver.SendMessage (gameEvent.CustomMessage, gameEvent.IntParameter);
-			else if (gameEvent.parameterType == ParameterType.Float)
-				gameEvent.receiver.SendMessage (gameEvent.CustomMessage, gameEvent.FloatParameter);
-			else if (gameEvent.parameterType == ParameterType.String)
-				gameEvent.receiver.SendMessage (gameEvent.CustomMessage, gameEvent.StringParameter);
-			else if (gameEvent.parameterType == ParameterType.Bool)
-				gameEvent.receiver.SendMessage (gameEvent.CustomMessage, gameEvent.BoolParameter);
-			break;
+			//in case the receiver is destroyed in runtime.
+			if (gameEvent.receiver == null) {
+				break;
+			} else {
+				if (gameEvent.parameterType == ParameterType.None)
+					gameEvent.receiver.SendMessage (gameEvent.CustomMessage);
+				else if (gameEvent.parameterType == ParameterType.Int)
+					gameEvent.receiver.SendMessage (gameEvent.CustomMessage, gameEvent.IntParameter);
+				else if (gameEvent.parameterType == ParameterType.Float)
+					gameEvent.receiver.SendMessage (gameEvent.CustomMessage, gameEvent.FloatParameter);
+				else if (gameEvent.parameterType == ParameterType.String)
+					gameEvent.receiver.SendMessage (gameEvent.CustomMessage, gameEvent.StringParameter);
+				else if (gameEvent.parameterType == ParameterType.Bool)
+					gameEvent.receiver.SendMessage (gameEvent.CustomMessage, gameEvent.BoolParameter);
+				break;
+			}
 		case GameEventType.SetLanguage:
 			SystemLanguage systemlanguage = (SystemLanguage)System.Enum.Parse (typeof(SystemLanguage), gameEvent.StringParameter);
 			if (Persistence.GetPlayerLanguage () != systemlanguage) {
@@ -234,9 +241,8 @@ public class LevelManager : MonoBehaviour
 	/// </summary>
 	void LoadLevel (GameEvent gameEvent)
 	{
-		if(checkPointManager != null)
-		{
-		   checkPointManager.ClearCheckpoint ();
+		if (checkPointManager != null) {
+			checkPointManager.ClearCheckpoint ();
 		}
 		switch (gameEvent.parameterType) {
 		case ParameterType.Int:

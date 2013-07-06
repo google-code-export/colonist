@@ -73,7 +73,8 @@ public class JoyButtonManager : MonoBehaviour {
 	}
 	
     /// <summary>
-    /// 
+    /// This method should be called per-frame.
+    /// Loops each touch (if any), and check the touch position against every JoyButton's area.
     /// </summary>
     private void CheckTouch()
     {

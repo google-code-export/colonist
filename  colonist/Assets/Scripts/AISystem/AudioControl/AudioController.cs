@@ -48,7 +48,13 @@ public class AudioController : MonoBehaviour
 	
 	public void _PlayAudio (string AudioDataName)
 	{
-		GlobalAudioSystem.PlayAudioData (unit.AudioDataDict [AudioDataName]);
+		try{
+		   GlobalAudioSystem.PlayAudioData (unit.AudioDataDict [AudioDataName]);
+		}
+		catch(System.Collections.Generic.KeyNotFoundException keyNotFoundExc)
+		{
+		   Debug.LogError("Key not found exception for Audio data name:" + AudioDataName);
+		}
 	}
 	
 	void _EnableAudio (string AudioDataName)

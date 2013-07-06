@@ -167,7 +167,7 @@ public class RagdollEditor : EditorWindow {
 						_RagdollJointData.ForceDirection = EditorGUILayout.Vector3Field("Force direction:",_RagdollJointData.ForceDirection);
 					}
 				}
-				
+				_RagdollJointData.RandomRotation = EditorGUILayout.Toggle(new GUIContent ("Randomize rotation?", ""), _RagdollJointData.RandomRotation);
 				if (GUILayout.Button ("Delete RagdollJointData:" + _RagdollJointData.Name)) {
   					  IList<RagdollJointData> l = selectedRagdoll.RagdollJointDataArray.ToList<RagdollJointData> ();  
 					  l.Remove (_RagdollJointData);

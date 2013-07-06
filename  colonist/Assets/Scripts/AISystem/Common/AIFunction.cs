@@ -184,6 +184,10 @@ public class AIFunction : MonoBehaviour
 			target.SendMessage ("ApplyDamage", attackData.GetDamageParameter (this.gameObject));
 			//accumulate the doDamageCounter by 1
 			this.unit.DoDamageCounter ++;
+			if(this.unit.currentWeapon != null)
+			{
+				this.unit.currentWeapon.CreateHitEffect(target);
+			}
 		}
 	}
 	
@@ -286,8 +290,14 @@ public class AIFunction : MonoBehaviour
 	/// </summary>
 	public void _CreateEffect (string name)
 	{
-		EffectData effectdata = this.unit.EffectDataDict [name];
-	    GlobalBloodEffectDecalSystem.CreateEffect(effectdata);
+		try{
+		   EffectData effectdata = this.unit.EffectDataDict [name];
+	       GlobalBloodEffectDecalSystem.CreateEffect(effectdata);
+		}
+		catch(System.Collections.Generic.KeyNotFoundException exc)
+		{
+		   Debug.LogError("Key not found exception for EffectData name:" + name);
+		}
 	}
 	
 	/// <summary>

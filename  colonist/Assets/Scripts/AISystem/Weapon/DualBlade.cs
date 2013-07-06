@@ -57,4 +57,8 @@ public class DualBlade : MonoBehaviour, WeaponControl  {
 		frontTrail.ClearTrail();
 		backTrail.ClearTrail();
 	}
+	
+	public virtual void CreateHitEffect(GameObject hitObject)
+	{
+	}
 }

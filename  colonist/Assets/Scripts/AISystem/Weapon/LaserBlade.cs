@@ -20,4 +20,8 @@ public class LaserBlade : MonoBehaviour, WeaponControl {
 	{
 		ControllableWeapon.active = false;
 	}
+	
+	public virtual void CreateHitEffect(GameObject hitObject)
+	{
+	}
 }

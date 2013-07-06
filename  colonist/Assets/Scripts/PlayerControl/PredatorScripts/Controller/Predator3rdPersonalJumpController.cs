@@ -11,24 +11,75 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
 
     [HideInInspector]
     public bool checkJump = true;
-
+	
+	/// <summary>
+	/// ForwardJumpTime defines max time of the predator jump forward.
+	/// </summary>
     private float ForwardJumpTime = 0.5f;
+	/// <summary>
+	/// ForwardJumpSpeed jump speed defines speed of the predator jump forward.
+	/// The final jumpDistance = ForwardJumpTime * ForwardJumpSpeed
+	/// </summary>
     private float ForwardJumpSpeed = 12f;
+	
+	/// <summary>
+	/// JumpOverSpeed defines when under jump-over-obstacle mode, the speed during jump over.
+	/// </summary>
     private float JumpOverSpeed = 10f;
+	
+	/// <summary>
+	/// The JumpoverCheckDistance defines when under jump-over-obstacle mode, the distance for the predator to detect a jump-over-obstacle.
+	/// </summary>
     private float JumpoverCheckDistance = 3;
+	
+	/// <summary>
+	/// The jumping animation name.
+	/// </summary>
     private string JumpingAnimation = "jumping";
+	
+	/// <summary>
+	/// The grounding animation name.
+	/// </summary>
     private string GroundingAnimation = "jumpToGround";
+	
+	/// <summary>
+	/// The prejump animation name.
+	/// </summary>
     private string PrejumpAnimation = "prejump";
+	
+	/// <summary>
+	/// Runtime-persist value, record the last jump time.
+	/// </summary>
 	private float LastJumpTime = 9999;
-
+	
+	/// <summary>
+	/// The CharacterController of the predator.
+	/// </summary>
     private CharacterController controller;
+	
+	/// <summary>
+	/// The ground layer.
+	/// </summary>
     private LayerMask GroundLayer;
+	
+	/// <summary>
+	/// The jump over obstacle layer.Used to detect the jump-over obstacle ahead.
+	/// </summary>
     private LayerMask JumpOverObstacleLayer;
-//    private Predator3rdPersonVisualEffectController ClawEffectController;
+    
+	/// <summary>
+	/// The predator player unit.
+	/// </summary>
     private Predator3rdPersonalUnit PredatorPlayerUnit = null;
 	
+	/// <summary>
+	/// The safe trigger. In case jumping status takes over-long (During jumping, player is NOT allowed any input!), after that time, the jump status will be set false.
+	/// </summary>
 	private float ResetJumpInterval;
 	
+	/// <summary>
+	/// When jump forward, the max height of the parabola line.
+	/// </summary>
 	public float JumpForwardMaxHeight = 5;
 	
 	
@@ -66,17 +117,22 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
 
     /// <summary>
     /// Trigger a Jump beheavior.
-    /// if there is a jump over obstacle ahead, jump over it
+    /// if there is a jump over obstacle ahead, jump over it.
     /// else , jump forward.
     /// </summary>
-    /// <returns></returns>
-    public IEnumerator Jump()
+    /// <param name='Power'>
+    /// Power - a value to indicate the jump power, if power = 1, means the predator will jump max forward distance. 
+    /// Note: the power is eventually converted to time : 
+    ///  - if power = 1, the jumpforward time = ForwardJumpTime.
+    ///  - if power = 0 (which is not possible, beacuse min-power = 0.2f, but in theory), means the jumpforward time = 0.
+    /// </param>
+    public IEnumerator Jump(float Power)
     {
 		if(IsJumping)
 		{
 			yield break;
 		}
-		Debug.Log("Jump at frame:" + Time.frameCount + " isJumping:" + IsJumping + " at time:" + Time.time);
+//		Debug.Log("Jump at frame:" + Time.frameCount + " isJumping:" + IsJumping + " at time:" + Time.time);
         JumpOverObstacle obstacle = null;
         bool HasObstacle = CheckJumpOverObstacle(out obstacle);
         //If there is obstacle, jump over it
@@ -101,10 +157,10 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
     {
         IsJumping = true;
         Vector3 jumpDirection = transform.forward;
-        //animation.CrossFade(PrejumpAnimation);
+        //animation.CrossFade(PrejumpAnimation); //don't play the prejump animation
         animation.Play(PrejumpAnimation);
         yield return new WaitForSeconds(animation[PrejumpAnimation].length);
-        LastJumpTime = Time.time;
+        LastJumpTime = Time.time;//record the current time as last jump time.
 		
 		//rising time = 1/2 of ForwardJumpTime
 		float RisingTime = ForwardJumpTime * 0.5f;
@@ -214,7 +270,20 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
         //Grounding animation is optional - player may skip this part 
         animation.CrossFade(GroundingAnimation);
     }
-
+	
+	/// <summary>
+	/// Prepare for jumping.
+	/// This method is called when player holding the jump button.
+	/// It does:
+	/// 1. Mark the jump status to true. (To disable other player input)
+	/// 2. Play prejump animation.
+	/// </summary>
+	public void PrepareJump()
+	{
+		IsJumping = true;
+		animation.CrossFade(PrejumpAnimation);
+	}
+	
     /// <summary>
     /// Check if the predator is facing an obstacle
     /// </summary>

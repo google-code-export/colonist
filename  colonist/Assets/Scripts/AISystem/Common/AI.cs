@@ -18,7 +18,10 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 	/// The name of this AI.
 	/// </summary>
 	public string Name = ""; 
-	
+	/// <summary>
+	/// Designer can put description of the AI at here.
+	/// </summary>
+	public string Description = "";
     [HideInInspector]
     public Unit Unit;
     /// <summary>
