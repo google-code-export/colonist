@@ -72,6 +72,8 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
 	/// </summary>
     private Predator3rdPersonalUnit PredatorPlayerUnit = null;
 	
+	private PredatorPlayerStatus predatorPlayerStatus = null;
+	
 	/// <summary>
 	/// The safe trigger. In case jumping status takes over-long (During jumping, player is NOT allowed any input!), after that time, the jump status will be set false.
 	/// </summary>
@@ -88,7 +90,9 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
         controller = GetComponent<CharacterController>();
 //        ClawEffectController = GetComponent<Predator3rdPersonVisualEffectController>();
         PredatorPlayerUnit = this.GetComponent<Predator3rdPersonalUnit>();
-
+		
+		predatorPlayerStatus = this.GetComponent<PredatorPlayerStatus>();
+		
         GroundLayer = PredatorPlayerUnit.GroundLayer;
         JumpOverObstacleLayer = PredatorPlayerUnit.JumpData.ObstacleToJumpOver;
 
@@ -125,6 +129,7 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
     /// Note: the power is eventually converted to time : 
     ///  - if power = 1, the jumpforward time = ForwardJumpTime.
     ///  - if power = 0 (which is not possible, beacuse min-power = 0.2f, but in theory), means the jumpforward time = 0.
+    /// Note: power is only applicable for jump forward case.
     /// </param>
     public IEnumerator Jump(float Power)
     {
@@ -132,7 +137,7 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
 		{
 			yield break;
 		}
-//		Debug.Log("Jump at frame:" + Time.frameCount + " isJumping:" + IsJumping + " at time:" + Time.time);
+//		Debug.Log("Jump at frame:" + Time.frameCount + " isJumping:" + IsJumping + " at time:" + Time.time + "at jump power:" + Power);
         JumpOverObstacle obstacle = null;
         bool HasObstacle = CheckJumpOverObstacle(out obstacle);
         //If there is obstacle, jump over it
@@ -145,7 +150,7 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
         //Else, jump forward
         else
         {
-            yield return StartCoroutine(JumpStraightForward());
+            yield return StartCoroutine(JumpStraightForward(Power));
         }
     }
 
@@ -153,24 +158,24 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
     /// Jumping straight forward at speed = ForwardJumpSpeed, in ForwardJumpTime
     /// </summary>
     /// <returns></returns>
-    IEnumerator JumpStraightForward()
+    IEnumerator JumpStraightForward(float power)
     {
         IsJumping = true;
         Vector3 jumpDirection = transform.forward;
-        //animation.CrossFade(PrejumpAnimation); //don't play the prejump animation
-        animation.Play(PrejumpAnimation);
-        yield return new WaitForSeconds(animation[PrejumpAnimation].length);
+
         LastJumpTime = Time.time;//record the current time as last jump time.
 		
 		//rising time = 1/2 of ForwardJumpTime
-		float RisingTime = ForwardJumpTime * 0.5f;
+		float _jumpTime = ForwardJumpTime * power;
+		Debug.Log("Jump time:" + _jumpTime + " max jump forward time:" + ForwardJumpTime);
+		float RisingTime = _jumpTime * 0.5f;
 		float gravity = (float)(this.JumpForwardMaxHeight / (1.5f * RisingTime * RisingTime));
 		float upwardInitalSpeed = gravity * RisingTime;
 		
-		Vector3 jumpForwardVelocity = jumpDirection * ForwardJumpSpeed;
+		Vector3 jumpForwardVelocity = jumpDirection * this.ForwardJumpSpeed;
 		jumpForwardVelocity.y = 0;
 		Vector3 upwardVelocity = new Vector3(0, upwardInitalSpeed, 0);
-        while ((Time.time - LastJumpTime) <= ForwardJumpTime)
+        while ((Time.time - LastJumpTime) <= _jumpTime)
         {
             animation.Play(JumpingAnimation);
 //            Vector3 jumpVelocity = jumpDirection * ForwardJumpSpeed * Time.deltaTime;
@@ -278,10 +283,17 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
 	/// 1. Mark the jump status to true. (To disable other player input)
 	/// 2. Play prejump animation.
 	/// </summary>
-	public void PrepareJump()
+	public void PreJumpBegin()
 	{
-		IsJumping = true;
+        predatorPlayerStatus.DisableUserMovement = true;
+		animation.Stop();
 		animation.CrossFade(PrejumpAnimation);
+	}
+	
+	public void PreJumpEnd()
+	{
+		predatorPlayerStatus.DisableUserMovement = false;
+		animation.Stop(PrejumpAnimation);
 	}
 	
     /// <summary>

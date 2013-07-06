@@ -49,7 +49,7 @@ public class Joybutton_Jump_Predator : JoyButton {
         {
             base.onTouchBegin(touch);
 			//Do PreJump work.
-			JumpController.PrepareJump();
+			JumpController.PreJumpBegin();
         }
     }
     /// <summary>
@@ -69,8 +69,9 @@ public class Joybutton_Jump_Predator : JoyButton {
 		float holdFingerTime = Time.time - this.TouchStartTime;
 		if(holdFingerTime >= MaxHoldTime)
 		{
+			Debug.Log("Hold time > maxHoldTime! Force jumping!");
 			//if player holding finger on jump button longer than MaxHoldTime, predator will jump anyway.
-			onTouchEnd(touch);
+			this.onTouchEnd(touch);
 		}
     }
 
@@ -85,7 +86,8 @@ public class Joybutton_Jump_Predator : JoyButton {
 		float holdFingerTime = Time.time - this.TouchStartTime;
 		float JumpPower = holdFingerTime / MaxHoldTime;
 		//Min Power = 0.2f, Max Power = 1.
-		JumpPower = Mathf.Clamp(JumpPower, 0.2f, 1);
+		JumpPower = Mathf.Clamp(JumpPower, 0.3f, 1);
+		JumpController.PreJumpEnd();
         StartCoroutine(JumpController.Jump(JumpPower));
     }
 
