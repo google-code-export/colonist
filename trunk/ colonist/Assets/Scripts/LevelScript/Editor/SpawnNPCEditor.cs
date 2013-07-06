@@ -51,7 +51,7 @@ public class SpawnNPCEditor : Editor {
 			spawnDataArray[i].objectDock = (ObjectDock)EditorGUILayout.ObjectField("Spawned Dock:",spawnDataArray[i].objectDock, typeof(ObjectDock));
 			if(GUILayout.Button("Remove this SpawnData"))
 			{
-				Util.CloneExcept<SpawnData>(spawnDataArray, spawnDataArray[i]);
+				spawnDataArray = Util.CloneExcept<SpawnData>(spawnDataArray, spawnDataArray[i]);
 			}
 			EditorGUILayout.Space();
 		}

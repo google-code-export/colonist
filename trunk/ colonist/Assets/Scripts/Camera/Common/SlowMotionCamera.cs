@@ -68,7 +68,17 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 				ApplyCameraControlParameter (true, LookAt,CurrentTopDownCameraParameter);
 				break;
 			case SlowMotionCameraFocusMode.OnTransform:
-				ApplyCameraControlParameter (true, LookAtTransfrom.position,CurrentTopDownCameraParameter);
+				if(LookAtTransfrom != null)
+				{
+				   ApplyCameraControlParameter (true, LookAtTransfrom.position,CurrentTopDownCameraParameter);
+				}
+				else 
+					//it's possible, that the focus gameobject is destroyed afterward, in runtime, so we avoid the error.
+				{
+					Working = false; //in this case, reset the working status.
+					Time.timeScale = 1;
+					previousCameraScript.Working = true;
+				}
 				break;
 			}
 		}
@@ -89,9 +99,17 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 			break;
 			
 		case GameEventType.PlayerCameraSlowMotionOnTransform:
-			GameObject focused = _e.GameObjectParameter;
-			this.LookAtTransfrom = focused.transform;
-			StartSlowMotion_MovableTransform (TimeLength);
+			if(_e.GameObjectParameter == null)
+			{
+				break;
+			} 
+			//do nothing, if the gameObjectParameter is missing.
+			else 
+			{
+			  GameObject focused = _e.GameObjectParameter;
+			  this.LookAtTransfrom = focused.transform;
+			  StartSlowMotion_MovableTransform (TimeLength);
+			}
 			break;
 		}
 	}

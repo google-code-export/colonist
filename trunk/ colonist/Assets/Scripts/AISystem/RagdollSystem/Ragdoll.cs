@@ -62,6 +62,11 @@ public class RagdollJointData
 	public bool JointGameObjectInitialActive = true;
 	
 	/// <summary>
+	/// if RandomRotation = true, the join object's rotation will be changed to a random value.
+	/// </summary>
+	public bool RandomRotation = false;
+	
+	/// <summary>
 	/// Gets a clone of this RagdollJointData. The Joint object is null and need to be assigned other way.
 	/// </summary>
 	public RagdollJointData GetClone()
@@ -87,6 +92,7 @@ public class RagdollJointData
 }
 
 public class Ragdoll : MonoBehaviour {
+	
     public string Name = "";
 	/// <summary>
 	/// The create ragdoll delay.
@@ -101,7 +107,19 @@ public class Ragdoll : MonoBehaviour {
     /// Assign the center for this ragdoll (because ragdoll has NO character controller.)
     /// </summary>
     public Transform RagdollCenter = null;
+	
+	public bool StartAtAwake = true;
+	
+	/// <summary>
+	/// The effect data array.
+	/// The EffectData will be played when the ragdoll start.
+	/// </summary>
     public EffectData[] EffectData = new EffectData[] { };
+	
+	/// <summary>
+	/// The decal data array.
+	/// The DecalData will be played when the ragdoll start.
+	/// </summary>
     public DecalData[] DecalData = new DecalData[] { };
     public RagdollJointData[] RagdollJointDataArray = new RagdollJointData[] { };
 
@@ -111,7 +129,10 @@ public class Ragdoll : MonoBehaviour {
 
     void Start()
     {
-        Invoke("StartRagdoll", CreateRagdollDelay);
+		if(StartAtAwake)
+		{
+           Invoke("StartRagdoll", CreateRagdollDelay);
+		}
         if (AutoDestory)
         {
             Invoke("DestoryRagdoll", LifeTime);
@@ -147,6 +168,10 @@ public class Ragdoll : MonoBehaviour {
 			if(JointData.JointGameObjectInitialActive == false)
 			{
 				JointData.Joint.gameObject.active = false;
+			}
+			if(JointData.RandomRotation)
+			{
+				JointData.Joint.gameObject.transform.rotation = Random.rotation;
 			}
             if (JointData.CreateForce == false)
                 continue;

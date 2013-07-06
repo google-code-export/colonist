@@ -41,7 +41,11 @@ public class PredatorPlayerJumpData
 
 /// <summary>
 /// Predator player unit.
-/// Don't use AttackData, use ComboCombat instead.
+/// IdleData - defines the idle animation data of the predator.
+/// MoveData - defines the move animation-speed data of the predator.
+/// JumpData - defines the jump animation-speed data of the predator.
+/// PredatorAttackData - defines the Attack data of the predator.
+/// PredatorCombatData - defines the PredatorCombatData of the predator.
 /// </summary>
 [RequireComponent(typeof(JoyButtonManager))]
 [RequireComponent(typeof(Predator3rdPersonVisualEffectController))]

@@ -139,13 +139,18 @@ public class Unit : UnitBase , I_GameEventReceiver
 
 	CharacterController controller = null;
 	
-	
+	/// <summary>
+	/// The weapon of the Unit. For weapon hit effect control.
+	/// </summary>
+	[HideInInspector]
+	public WeaponControl currentWeapon;
 	
 	void Awake ()
 	{
 		InitUnitData ();
 		InitAnimation ();
 		InitUnitAI ();
+		InitUnitWeapon();
 	}
 	
 	public void Start ()
@@ -313,6 +318,18 @@ public class Unit : UnitBase , I_GameEventReceiver
 			AIDict.Add (_AI.Name, _AI);
 		}
 		controller = GetComponent<CharacterController> ();
+	}
+	
+	public void InitUnitWeapon()
+	{
+		foreach(MonoBehaviour behavior in this.GetComponents<MonoBehaviour>())
+		{
+			if(behavior is WeaponControl)
+			{
+				this.currentWeapon = behavior as WeaponControl;
+				break;
+			}
+		}
 	}
 	
 	/// <summary>

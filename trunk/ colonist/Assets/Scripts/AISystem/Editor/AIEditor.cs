@@ -156,6 +156,7 @@ public class AIEditor
 	{
 		EditorGUILayout.LabelField (new GUIContent ("------------- AI Base property", ""));
 		AI.Name = EditorGUILayout.TextField (new GUIContent ("AI Name", "Name of this AI component."), AI.Name);
+		AI.Description = EditorGUILayout.TextField (new GUIContent ("AI Description", "Description:."), AI.Description);
 		AI.OffensiveRange = EditorGUILayout.FloatField (new GUIContent ("AI Offensive range", "当敌人进入Offsensive range, AI会主动发起进攻."), AI.OffensiveRange);
 		AI.DetectiveRange = EditorGUILayout.FloatField (new GUIContent ("AI Detective range", "当敌人进入Detective range, AI会监测到这个敌人.DetectiveRange应该大于Offensive Range."), AI.DetectiveRange);
 		AI.DetectiveRange = AI.DetectiveRange >= AI.OffensiveRange ? AI.DetectiveRange : AI.OffensiveRange;
@@ -185,7 +186,6 @@ public class AIEditor
 			behavior.Type = (AIBehaviorType)EditorGUILayout.EnumPopup (new GUIContent ("Behavior type:", ""), behavior.Type);
 			
             AIBehavior[] AIBehaviors = this.AI.Behaviors; 
-//			behavior.NextBehaviorName = EditorCommon.EditPopup ("Next Behavior:", behavior.NextBehaviorName, AIBehaviors.Select (x => x.Name).ToArray ());
 			
 			behavior.AlterBehaviorInterval = EditorGUILayout.FloatField("Alter behavior interval:" , behavior.AlterBehaviorInterval);
 			
@@ -193,23 +193,8 @@ public class AIEditor
 			//Edit behavior data
 			EditAIBehaviorData (behavior);
 			
-			//Edit Start Condition Wrapper:
-//			EditorGUILayout.LabelField ("Start condition:");
-//			EditorGUILayout.LabelField (GetCompositeConditionDescription (behavior.StartConditionWrapper.RootCompositeCondition, behavior.StartConditionWrapper));			
-//			if (GUILayout.Button ("Edit start condition")) {
-//				ConditionEditorWindow.DisplayConditionEditorWindow (this, behavior.StartConditionWrapper);
-//			}
-//			EditorGUILayout.Space ();
-			
-			
 			//Edit End Condition Wrapper, for behavior type = SwitchToAI, it's not necessary to edit end condition.
 			if (behavior.Type != AIBehaviorType.SwitchToAI) {
-//				EditorGUILayout.LabelField ("Alternate to behavior data:");
-//				EditorGUILayout.LabelField (GetCompositeConditionDescription (behavior.EndConditionWrapper.RootCompositeCondition, behavior.EndConditionWrapper));			
-//				if (GUILayout.Button ("Edit end condition")) {
-//					ConditionEditorWindow.DisplayConditionEditorWindow (this, behavior.EndConditionWrapper);
-//				}
-//				EditorGUILayout.Space ();
 				EditorGUILayout.Space();
 				if(GUILayout.Button("Edit alternate behavior data"))
 				{

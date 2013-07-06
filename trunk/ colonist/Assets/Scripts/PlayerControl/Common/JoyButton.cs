@@ -305,7 +305,9 @@ public abstract class JoyButton : MonoBehaviour
     public abstract void onTouchStationary(Touch touch);
 	
     /// <summary>
-    /// Call when touch.phase = End
+    /// Call when touch.phase = End.
+    /// Do common things to every JoyButton.
+    /// Mark the flags, and clean the value, ... etc
     /// </summary>
     /// <param name="touch"></param>
     public virtual void onTouchEnd(Touch touch)
