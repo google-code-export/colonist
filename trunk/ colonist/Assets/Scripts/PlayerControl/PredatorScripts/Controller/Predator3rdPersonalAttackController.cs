@@ -486,16 +486,25 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	/// <returns></returns>
 	private GameObject _FindEnemyAtDirection (Vector3 direction, float SweepDistance, out float distance)
 	{
+		distance = 0;
 		float CapsuleRadius = controller.radius;
 		Vector3 topPoint = controller.center + transform.position + Vector3.up * controller.height * 0.5f;
 		Vector3 bottomPoint = topPoint - Vector3.down * controller.height;
 		RaycastHit[] hits = Physics.CapsuleCastAll (topPoint, bottomPoint, CapsuleRadius, direction, SweepDistance, EnemyLayer);
 		if (hits != null && hits.Length > 0) {
 			GameObject[] enemies = hits.Select(x=>x.collider.gameObject).ToArray<GameObject>();
-			GameObject closetEnemy = Util.FindClosestCharacter(this.gameObject, enemies, out distance);
-			return closetEnemy;
+			//Filter out the unattackable targets.
+			GameObject[] validTargets = enemies.Where(x=> this.IsTargetAttackable(x) == true).ToArray();
+			if(validTargets != null && validTargets.Length > 0)
+			{
+			   GameObject closetEnemy = Util.FindClosestCharacter(this.gameObject, validTargets, out distance);
+			   return closetEnemy;
+			}
+			else 
+			{
+				return null;
+			}
 		} else {
-			distance = 0;
 			return null;
 		}
 	}
@@ -519,7 +528,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 		if(NextTarget == null)
 		{
 			if(CurrentTarget != null && IsTargetDead(CurrentTarget) == false && 
-				((distance = Util.DistanceOfCharacters(this.gameObject, CurrentTarget)) <= RushToRadius))
+				((distance = Util.DistanceOfCharacters(this.gameObject, CurrentTarget)) <= RushToRadius) && IsTargetAttackable(CurrentTarget) == true)
 			{
 				NextTarget = CurrentTarget;
 			}
@@ -530,8 +539,12 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 			Collider[] colliders = Physics.OverlapSphere(this.transform.position, RushToRadius, EnemyLayer);
 			if(colliders != null && colliders.Length > 0)
 			{
-			   Collider closest = Util.FindClosest(this.transform.position, colliders, out distance);
-			   NextTarget = closest.gameObject;
+			   GameObject[] allTargets = colliders.Select(x=>x.gameObject).ToArray();
+			   GameObject[] allAttackableTargets = allTargets.Where (x=> IsTargetAttackable(x)).ToArray();
+			   if(allAttackableTargets != null && allAttackableTargets.Length > 0)
+			   {
+			      NextTarget = Util.FindClosest(this.transform.position, allAttackableTargets, out distance);
+			   }
 			}
 		}
 		
@@ -566,5 +579,15 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 			isDead = true;
 		}
 		return isDead;
+	}
+	
+	bool IsTargetAttackable(GameObject gameObject)
+	{
+		bool isAttackable = true;
+		if(gameObject.GetComponent<UnitBase>() != null && gameObject.GetComponent<UnitBase>().IsUnitAttackable() == false)
+		{
+			isAttackable = false;
+		}
+		return isAttackable;
 	}
 }

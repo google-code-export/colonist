@@ -104,8 +104,8 @@ public class LevelManager : MonoBehaviour
 			break;
 		case GameEventType.WhiteInScenarioCamera:
 		case GameEventType.WhiteOutScenarioCamera:
-		case GameEventType.StartScenario:
-		case GameEventType.ScenarioComplete:
+		case GameEventType.TimeScaleOn:
+		case GameEventType.TimeScaleOff:
 		case GameEventType.ScenarioCameraOff:
 		case GameEventType.ScenarioCameraOn:
 		case GameEventType.PlayerCameraOn:
@@ -118,6 +118,8 @@ public class LevelManager : MonoBehaviour
 		case GameEventType.StartDockingOnRuntimeTarget:
 		case GameEventType.PlayerCameraSlowMotionOnFixedPoint:
 		case GameEventType.PlayerCameraSlowMotionOnTransform:
+		case GameEventType.ShiftToPlayerMode:
+		case GameEventType.ShiftToScenarioMode:
 			this.scenarioControlObject.OnGameEvent (gameEvent);
 			break;
 		case GameEventType.PlayerSetToActive:

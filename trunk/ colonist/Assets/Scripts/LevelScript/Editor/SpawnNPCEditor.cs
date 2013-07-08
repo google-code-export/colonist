@@ -68,11 +68,16 @@ public class SpawnNPCEditor : Editor {
 		for(int i=0; i<spawnEntityArray.Length; i++)
 		{
 			EditorGUILayout.LabelField("------------------------ SpawnEntity:" + spawnEntityArray[i].Name);
-			spawnEntityArray[i].Name = EditorGUILayout.TextField("Name:",spawnEntityArray[i].Name);			
-			spawnEntityArray[i].SpawnDelay = EditorGUILayout.FloatField("Spawn delay in seconds:",spawnEntityArray[i].SpawnDelay);	
+			spawnEntityArray[i].Name = EditorGUILayout.TextField("Name:",spawnEntityArray[i].Name);
 			spawnEntityArray[i].SpawnDataNameArray = EditorCommon.EditStringArray("Use these spawn data:", 
 				                                                               spawnEntityArray[i].SpawnDataNameArray,
 				                                                               SpawnDataNameArray);
+			spawnEntityArray[i].WaitForSpawnedDieOut = EditorGUILayout.Toggle(new GUIContent("Wait for spawned unit die out to spawn next:",""),
+				spawnEntityArray[i].WaitForSpawnedDieOut);
+			if(spawnEntityArray[i].WaitForSpawnedDieOut == false)
+			{
+				spawnEntityArray[i].WaitTime = EditorGUILayout.FloatField(new GUIContent("Wait time to spawn next:",""),spawnEntityArray[i].WaitTime);
+			}
 			if(GUILayout.Button("Remove this SpawnEntity"))
 			{
 				Util.CloneExcept<SpawnEntity>(spawnEntityArray, spawnEntityArray[i]);

@@ -2,11 +2,135 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+public enum ApplyDamageConditionType
+{
+	/// <summary>
+	/// The unit receives damage greater than a valve. 
+	/// </summary>
+	ReceiveDamageAmountGreaterThanValue = 0,
+	/// <summary>
+	/// In a fixed time, receive amount great enough.
+	/// For example, in 3 seconds receive damage > 50.
+	/// </summary>
+	ReceiveDamageAmountInTimePeriod = 1,
+}
 
-
+/// <summary>
+/// Defines in what condition should applying the ReceiveDamageData.
+/// For example, there is a high-level enemy, which you want the enemy not react to player's every hit, 
+/// but only react to when player do a great amount of hit in a period of time.
+/// </summary>
+[System.Serializable]
+public class ApplyDamagerCondition
+{
+	public string Name = "";
+	public ApplyDamageConditionType applyDamageConditionType = ApplyDamageConditionType.ReceiveDamageAmountGreaterThanValue;
+	/// <summary>
+	/// The in-time period.
+	/// </summary>
+	public float InTime = 3;
+	/// <summary>
+	/// The damage amount valve to trigger ReceiveDamageData
+	/// </summary>
+	public float DamageAmountValve = 50;
+	
+	/// <summary>
+	/// The last reset time, recorded in runtime.
+	/// </summary>
+	[HideInInspector]
+	public float LastResetTime = 0;
+	
+	/// <summary>
+	/// The current damage amount recorded in run-time.
+	/// </summary>
+	[HideInInspector]
+	public float CurrentDamageAmount = 0;
+	
+	/// <summary>
+	/// Shoulds do the reset behavior to this ApplyDamageCondition object?
+	/// It's only applicable for those time-related type.
+	/// </summary>
+//	public bool ShouldReset()
+//	{
+//		bool shouldReset = true;
+//		switch(this.applyDamageConditionType)
+//		{
+//		case ApplyDamageConditionType.ReceiveDamageAmountGreaterThanValue:
+//			shouldReset = CurrentDamageAmount > 0;
+//			break;
+//		case ApplyDamageConditionType.ReceiveDamageAmountInTimePeriod:
+//			shouldReset = CurrentDamageAmount > 0 && ((Time.time - LastResetTime) > InTime);
+//			break;
+//		}
+//		return shouldReset;
+//	}
+//	
+	/// <summary>
+	/// for those time-related condition-type, reset the condition data.
+	/// </summary>
+	public void Reset()
+	{
+		switch(this.applyDamageConditionType)
+		{
+		case ApplyDamageConditionType.ReceiveDamageAmountGreaterThanValue:
+			CurrentDamageAmount = 0;
+			break;
+		case ApplyDamageConditionType.ReceiveDamageAmountInTimePeriod:
+			CurrentDamageAmount = 0;
+			LastResetTime = 0;
+			break;
+		}
+	}
+	
+	/// <summary>
+	/// Determines whether this instance is apply damage condition match.
+	/// if the applyDamage condition matched, reset the internal condition values.
+	/// </summary>
+	public bool IsApplyDamageConditionMatch ()
+	{
+		bool isMatched = false;
+		switch(this.applyDamageConditionType)
+		{
+		case ApplyDamageConditionType.ReceiveDamageAmountGreaterThanValue:
+			isMatched = CurrentDamageAmount > this.DamageAmountValve;
+			if(isMatched)
+			{
+				this.Reset();
+			}
+			break;
+		case ApplyDamageConditionType.ReceiveDamageAmountInTimePeriod:
+			isMatched = CurrentDamageAmount > this.DamageAmountValve;
+			if(isMatched)
+			{
+				this.Reset();
+			}
+			break;
+		}
+		return isMatched;
+	}
+	
+	/// <summary>
+	/// CALL this method, when the unit apply a damageParameter.
+	/// </summary>
+	public void UpdateDamageInfo(DamageParameter dp)
+	{
+		switch(this.applyDamageConditionType)
+		{
+		case ApplyDamageConditionType.ReceiveDamageAmountGreaterThanValue:
+			this.CurrentDamageAmount += dp.damagePoint;
+			break;
+		case ApplyDamageConditionType.ReceiveDamageAmountInTimePeriod:
+			this.CurrentDamageAmount += dp.damagePoint;
+			this.LastResetTime = Time.time;
+			break;
+		}
+	}
+}
 
 public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
-
+	
+	public ApplyDamagerCondition[] ApplyDamagerConditionArray = new ApplyDamagerCondition[]{};
+	
 	protected Unit unit;
 	protected CharacterController controller;
 	
@@ -57,6 +181,42 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
 		if(this.unit.receiveDamageStatus == UnitReceiveDamageStatus.vulnerableButNotReactToDamage || 
 			this.unit.receiveDamageStatus == UnitReceiveDamageStatus.invincible)
 			yield break;
+		
+#region if the unit is defined with ApplyDamageCondition, update the condition data.
+        if(this.ApplyDamagerConditionArray != null && ApplyDamagerConditionArray.Length > 0)
+		{
+			foreach(ApplyDamagerCondition applyDamageCondition in ApplyDamagerConditionArray)
+			{
+				applyDamageCondition.UpdateDamageInfo(damageParam);
+			}
+		}
+#endregion
+		
+#region check the ApplyDamageCondition
+		bool CanApplyDamage = false;
+        if(this.ApplyDamagerConditionArray != null && ApplyDamagerConditionArray.Length > 0)
+		{
+			foreach(ApplyDamagerCondition applyDamageCondition in ApplyDamagerConditionArray)
+			{
+				if(applyDamageCondition.IsApplyDamageConditionMatch())
+				{
+					CanApplyDamage = true;
+					continue;
+				}
+			}
+		}
+		else 
+		{
+			//if no applyDamageCondition is defined, we assume the unit can apply any damage by default.
+			CanApplyDamage = true;
+		}
+		
+		if(CanApplyDamage == false)
+		{
+			yield break;
+		}
+#endregion
+		
 		#region Look for the suitable ReceiveDamageData 
 		//if there is no receive damage defined, quit now!
 		if(this.unit.ReceiveDamageData.Length == 0)

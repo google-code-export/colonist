@@ -166,9 +166,9 @@ public enum GameEventType
     LevelPause = 1,
     LevelEnd = 2,
 	/// <summary>
-	/// notify that scenario has been started. Then the scenario control object set isPlayingScenario = true, to allow fast passing time scale.
+	/// Enable time scaling.
 	/// </summary>
-    StartScenario = 3,
+    TimeScaleOn = 3,
 	/// <summary>
 	/// LevelArea start spawning, the LevelArea Name is given in stringParameter
 	/// </summary>
@@ -249,6 +249,23 @@ public enum GameEventType
 	/// </summary>
 	PlayerCameraSlowMotionOnTransform = 119,
 	
+	/// <summary>
+	/// Shift to scenario camera immediately. 
+	/// Consist of below operations:
+	/// 1. Player set to Inactive
+	/// 3. ScenarioCameraOn
+	/// 4. ScenarioCameraAudioListenerOn
+	/// </summary>
+	ShiftToScenarioMode = 120,
+	
+	/// <summary>
+	/// Shift to player camera immediately. 
+	/// Note - for the BOOL parameter :
+	/// If BOOL parameter = true: The player will be set inactive (Invisible)
+	/// Else if BOOL parameter = false: The player camera+audio is disabled, and player's control is set off, but the player is visible.
+	/// </summary>
+	ShiftToPlayerMode = 121,
+	
     //NPC Event
 //    NPCBirth = 200,
 //    NPCDie = 201,
@@ -310,7 +327,10 @@ public enum GameEventType
 	WhiteInScenarioCamera = 401,//White in scenario camera
 	WhiteOutScenarioCamera = 402,//white out scenario camera
 	
-	ScenarioComplete = 405,//indicate the scenario stop playing
+	/// <summary>
+	/// Disable time scaling.
+	/// </summary>
+	TimeScaleOff = 405,
 	ScenarioCameraOff = 406,//Set off the scenario camera
 	ScenarioCameraOn = 407,//Set on the scenario camera
 	ScenarioCameraAudioListenerOn = 408,//set on the Scenario camera's audio listener

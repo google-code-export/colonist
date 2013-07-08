@@ -377,6 +377,23 @@ public class Util : MonoBehaviour {
         return closest;
     }
 	
+    public static GameObject FindClosest(Vector3 pos, GameObject[] gameObjects, out float Distance)
+    {
+        GameObject closest = null;
+        float closestDistance = 9999f;
+        foreach (GameObject g in gameObjects)
+        {
+            float distance = Mathf.Abs((g.transform.position - pos).magnitude);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closest = g;
+            }
+        }
+        Distance = closestDistance;
+        return closest;
+    }
+	
 	/// <summary>
 	/// Return the transform that farest to %pos%
 	/// </summary>
