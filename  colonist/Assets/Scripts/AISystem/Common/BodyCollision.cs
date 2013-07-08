@@ -22,7 +22,6 @@ public class BodyCollision : MonoBehaviour {
 
     public void OnCollisionEnter(Collision hit)
     {
-
         if (hit.gameObject.layer != LayerMask.NameToLayer(LayerToReceiveHit))
         {
             return;

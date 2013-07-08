@@ -97,10 +97,10 @@ public class ScenarioControl : MonoBehaviour {
 		case GameEventType.WhiteOutScenarioCamera:
 			this.ScenarioCamera.SendMessage("WhiteOut", gameEvent.BoolParameter);
 			break;
-        case GameEventType.StartScenario:
+        case GameEventType.TimeScaleOn:
 			isPlayingScenario = true;
 			break;
-		case GameEventType.ScenarioComplete:
+		case GameEventType.TimeScaleOff:
 			isPlayingScenario = false;
 			Time.timeScale = 1;
 			break;
@@ -141,6 +141,37 @@ public class ScenarioControl : MonoBehaviour {
 		case GameEventType.PlayerCameraSlowMotionOnFixedPoint:
 		case GameEventType.PlayerCameraSlowMotionOnTransform:
 			this.PlayerCamera.SendMessage("OnGameEvent", gameEvent);
+			break;
+		case GameEventType.ShiftToPlayerMode:
+			//to shift to Player mode:
+			//1. activate player
+			//2. deactivate scenario camera + audio listener
+			LevelManager.Instance.player.transform.root.gameObject.SetActiveRecursively(true);
+			GameEvent event_player_control_on = new GameEvent(GameEventType.PlayerControlOn);
+			LevelManager.OnGameEvent(event_player_control_on, this);
+			PlayerCamera.enabled = true;
+			PlayerAudioListener.enabled = true;
+			this.ScenarioCamera.enabled = false;
+			this.ScenarioAudioListener.enabled = false;
+			break;
+		case GameEventType.ShiftToScenarioMode:
+			//to shift to scenario mode:
+			//1. if BOOL parameter = false, de-activate player , else , deactivate player control and camera+audio
+			//2. deactivate scenario camera + audio listener
+			if(gameEvent.BoolParameter == true)
+			{
+				//let player visible in camera.
+			   this.PlayerCamera.enabled = false;
+			   this.PlayerAudioListener.enabled = false;
+			   GameEvent event_player_control_off = new GameEvent(GameEventType.PlayerControlOff);
+			   LevelManager.OnGameEvent(event_player_control_off, this);
+			}
+			else 
+			{
+			   LevelManager.Instance.player.transform.root.gameObject.SetActiveRecursively(false);
+			}
+			this.ScenarioCamera.enabled = true;
+			this.ScenarioAudioListener.enabled = true;
 			break;
 		}
 	}

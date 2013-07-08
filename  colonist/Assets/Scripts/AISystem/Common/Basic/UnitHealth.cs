@@ -6,6 +6,11 @@ public abstract class UnitHealth : MonoBehaviour {
     public abstract void SetMaxHP(float value);
     public abstract float GetCurrentHP();
     public abstract float GetMaxHP();
+	/// <summary>
+	/// Determines whether this unit is attackable.
+	/// If isAttackable = false, the unit should not be attacked.
+	/// </summary>
+	public abstract bool IsUnitAttackable();
 }
 
 public abstract class UnitBase : UnitHealth

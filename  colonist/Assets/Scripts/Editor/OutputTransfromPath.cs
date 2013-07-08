@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEngine;
 using System.Collections;
 
-public class OutputTransfromPath : MonoBehaviour {
+public class OutputTransfromPath {
 
     [MenuItem("GameObject/PrintTransformPath #o")]
     public static void ShowTransformPath()

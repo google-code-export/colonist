@@ -367,6 +367,13 @@ public class Unit : UnitBase , I_GameEventReceiver
 	{
 		return MaxHP;
 	}
+	/// <summary>
+	/// If the unit's receive damage status = invincible, the unit is not attackable.
+	/// </summary>
+	public override bool IsUnitAttackable()
+	{
+		return this.receiveDamageStatus != UnitReceiveDamageStatus.invincible;
+	}
     #endregion
 	
 		

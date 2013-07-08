@@ -179,6 +179,12 @@ public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
 	{
 		return MaxHP;
 	}
+	
+	public override bool IsUnitAttackable()
+	{
+		return true;
+	}
+	
 #endregion
 
     void OnDrawGizmosSelected()

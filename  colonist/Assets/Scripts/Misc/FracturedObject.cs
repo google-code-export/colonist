@@ -23,6 +23,7 @@ public class FracturedObject : MonoBehaviour {
 	{
 		foreach(Transform child in this.transform)
 		{
+			//only create fracture on visible object
 			if(child.GetComponent<Renderer>() != null)
 			{
 				child.gameObject.AddComponent<BoxCollider>();

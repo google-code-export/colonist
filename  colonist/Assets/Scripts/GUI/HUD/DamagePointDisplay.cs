@@ -69,7 +69,7 @@ public class DamagePointDisplay : MonoBehaviour, I_GameEventReceiver
 	/// <summary>
 	/// Call this function to display magical number in given Screen Position.
 	/// </summary>
-	public void ShowNumber (Vector2 GUIPosition, int Number, DynamicNumberTextureFadeSetting setting)
+	void ShowNumber (Vector2 GUIPosition, int Number, DynamicNumberTextureFadeSetting setting)
 	{
 		Texture2D runtimeTexture = setting.GetNumberTexture (Number);
 		DynamicGUINumberTextureData dynamicGUITextureData = new DynamicGUINumberTextureData (runtimeTexture, 
@@ -80,7 +80,7 @@ public class DamagePointDisplay : MonoBehaviour, I_GameEventReceiver
 	/// <summary>
 	/// Shows the number to display magical number over game object.
 	/// </summary>
-	public void ShowNumberOverGameObject (GameObject gameObject, int Number, DynamicNumberTextureFadeSetting setting)
+	void ShowNumberOverGameObject (GameObject gameObject, int Number, DynamicNumberTextureFadeSetting setting)
 	{
 		Vector3 worldPos = gameObject.transform.position;
 		CharacterController controller = gameObject.GetComponent<CharacterController> ();

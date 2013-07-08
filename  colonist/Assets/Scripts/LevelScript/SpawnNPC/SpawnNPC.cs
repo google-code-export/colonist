@@ -3,15 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-
 /// <summary>
 /// SpawnData defines the data to spawn NPC.
 /// Includes:
-/// 1. Prefab to spawn. Mandatory.
-/// 2. ObjectDock for the initial movement of the spawned unit. Optional.
-/// 3. GameEvent to be sent , when spawning a unit.
-/// 4. GameEvent to be sent , when a spawned unit destroyed.
-/// 5. GameEvent to be sent, when a spawned die(require ApplyDamage component)
+/// 1. Prefab to spawn.
+/// 2. ObjectDock for the initial movement of the spawned unit.
 /// </summary>
 [System.Serializable]
 public class SpawnData
@@ -19,9 +15,6 @@ public class SpawnData
 	public string Name = "";
 	public string Description = "";
 	public GameObject Spawned = null;
-	/// <summary>
-	/// If useObjectDock = true, objectDock must not be null.
-	/// </summary>
 	public ObjectDock objectDock = null;
 }
 
@@ -40,7 +33,7 @@ public class SpawnEntity
 	/// <summary>
 	/// if SpawnDelay > 0, will wait for the seconds then start spawning.
 	/// </summary>
-	public float SpawnDelay = 0;
+//	public float SpawnDelay = 0;
 	/// <summary>
 	/// Assign the spawn data name in the array.
 	/// </summary>
@@ -49,17 +42,27 @@ public class SpawnEntity
 	/// <summary>
 	/// The spawned objects lists.
 	/// </summary>
-	IList<GameObject> spawnedObjects = new List<GameObject>();
+	IList<GameObject> spawnedObjects = new List<GameObject> ();
 	
-	public void AddSpawned(GameObject spawned)
+	/// <summary>
+	/// When WaitForSpawnedDieOut = true, next spawn entity will be invoked after the spawned unit of this entity die out.
+	/// </summary>
+	public bool WaitForSpawnedDieOut = true;
+	
+	/// <summary>
+	/// Used when WaitForSpawnedDieOut = false, next spawn entity will be invoked after %WaitTime%
+	/// </summary>
+	public float WaitTime = 3;
+	
+	public void AddSpawned (GameObject spawned)
 	{
-		spawnedObjects.Add(spawned);
+		spawnedObjects.Add (spawned);
 	}
 	
 	/// <summary>
 	/// return true if all unit is spawned
 	/// </summary>
-	public bool IsSpawnedCompleted()
+	public bool IsSpawnedCompleted ()
 	{
 		return (spawnedObjects.Count == SpawnDataNameArray.Length);
 	}
@@ -67,17 +70,13 @@ public class SpawnEntity
 	/// <summary>
 	/// return true if all spawned unit is dead.
 	/// </summary>
-	public bool IsSpawnedDieOut()
+	public bool IsSpawnedDieOut ()
 	{
 		bool ret = true;
-		if(IsSpawnedCompleted())
-		{
-			foreach(GameObject o in spawnedObjects)
-			{
-				if(o != null)
-				{
-					if(o.GetComponent<UnitHealth>() != null && o.GetComponent<UnitHealth>().GetCurrentHP() > 0)
-					{
+		if (IsSpawnedCompleted ()) {
+			foreach (GameObject o in spawnedObjects) {
+				if (o != null) {
+					if (o.GetComponent<UnitHealth> () != null && o.GetComponent<UnitHealth> ().GetCurrentHP () > 0) {
 						ret = false;
 						break;
 					}
@@ -87,23 +86,23 @@ public class SpawnEntity
 		return ret;
 	}
 	
-	public void ReplaceGameObject(GameObject _old, GameObject _new)
+	public void ReplaceGameObject (GameObject _old, GameObject _new)
 	{
-		if(spawnedObjects.Contains(_old))
-		{
-			spawnedObjects.Remove(spawnedObjects.Where(x=>x==_old).First());			
+		if (spawnedObjects.Contains (_old)) {
+			spawnedObjects.Remove (spawnedObjects.Where (x => x == _old).First ());			
 		}
-		spawnedObjects.Add(_new);
+		spawnedObjects.Add (_new);
 	}
 }
 
 /// <summary>
 /// Monobehavior to control spawning NPC.
 /// </summary>
-public class SpawnNPC : MonoBehaviour, I_GameEventReceiver {
+public class SpawnNPC : MonoBehaviour, I_GameEventReceiver
+{
 	public string Name = "";
 	public SpawnData[] spawnNPCData = new SpawnData[]{};
-	IDictionary<string, SpawnData> spawnDict = new Dictionary<string, SpawnData>();
+	IDictionary<string, SpawnData> spawnDict = new Dictionary<string, SpawnData> ();
 	
 	/// <summary>
 	/// The events fired when the spawned units of the last SpawnData in spawnNPCData, has die out.
@@ -114,56 +113,52 @@ public class SpawnNPC : MonoBehaviour, I_GameEventReceiver {
 	/// SpawnEntity will be spawned one by one. 
 	/// </summary>
 	public SpawnEntity[] spawnEntityArray = new SpawnEntity[] {};
-	
 	public SpawnEntity CurrentSpawnEntity = null;
 	
-	void Awake()
+	void Awake ()
 	{
-		foreach(SpawnData s in spawnNPCData)
-		{
-		   spawnDict.Add(s.Name, s);
+		foreach (SpawnData s in spawnNPCData) {
+			spawnDict.Add (s.Name, s);
 		}
 	}
 	
-	public void OnGameEvent(GameEvent _event)
+	public void OnGameEvent (GameEvent _event)
 	{
-		switch(_event.type)
-		{
+		switch (_event.type) {
 		case GameEventType.SpecifiedSpawn:
 //			Spawn(spawnDict[_event.StringParameter]);
-			StartCoroutine("DoSpawn");
+			StartCoroutine ("DoSpawn");
 			break;
 		}
 	}
 	
-	IEnumerator DoSpawn()
+	IEnumerator DoSpawn ()
 	{
-	    foreach(SpawnEntity spawnEntity in this.spawnEntityArray)
-		{
+		foreach (SpawnEntity spawnEntity in this.spawnEntityArray) {
 			CurrentSpawnEntity = spawnEntity;
-			if(spawnEntity.SpawnDelay > 0)
-			{
-				yield return new WaitForSeconds(spawnEntity.SpawnDelay);
+//			if(spawnEntity.SpawnDelay > 0)
+//			{
+//				yield return new WaitForSeconds(spawnEntity.SpawnDelay);
+//			}
+			foreach (string spawnDataName in spawnEntity.SpawnDataNameArray) {
+				SpawnData spawnData = spawnDict [spawnDataName];
+				GameObject spawnedUnit = Spawn (spawnDict [spawnDataName]);
+				spawnEntity.AddSpawned (spawnedUnit);
 			}
-			foreach(string spawnDataName in spawnEntity.SpawnDataNameArray)
-			{
-				SpawnData spawnData = spawnDict[spawnDataName];
-				GameObject spawnedUnit = Spawn(spawnDict[spawnDataName]);
-				spawnEntity.AddSpawned(spawnedUnit);
+			if (spawnEntity.WaitForSpawnedDieOut) {
+				//when all spawned unit dies, turn to next SpawnEntity
+				while (spawnEntity.IsSpawnedDieOut() == false) {
+					yield return new WaitForSeconds(0.3333f);
+				}
+			} else {
+				yield return new WaitForSeconds(spawnEntity.WaitTime);
 			}
-			//when all spawned unit dies, turn to next SpawnEntity
-			while(spawnEntity.IsSpawnedDieOut() == false)
-			{
-				yield return new WaitForSeconds(0.3333f);
-			}
-			Debug.Log("SpawnEntity:" + spawnEntity.Name + " has die out!");
+			Debug.Log ("SpawnEntity:" + spawnEntity.Name + " has die out!");
 		}
 		
-		if(Event_At_All_Spawned_DieOut != null && Event_At_All_Spawned_DieOut.Length > 0)
-		{
-			foreach(GameEvent e in Event_At_All_Spawned_DieOut)
-			{
-				LevelManager.OnGameEvent(e , this);
+		if (Event_At_All_Spawned_DieOut != null && Event_At_All_Spawned_DieOut.Length > 0) {
+			foreach (GameEvent e in Event_At_All_Spawned_DieOut) {
+				LevelManager.OnGameEvent (e, this);
 			}
 		}
 	}
@@ -171,24 +166,22 @@ public class SpawnNPC : MonoBehaviour, I_GameEventReceiver {
 	/// <summary>
 	/// Given a spawn data, and perform the actual spawning behavior.
 	/// </summary>	
-	GameObject Spawn(SpawnData spawnData)
+	GameObject Spawn (SpawnData spawnData)
 	{
-		GameObject spawned = (GameObject)Object.Instantiate(spawnData.Spawned);
+		GameObject spawned = (GameObject)Object.Instantiate (spawnData.Spawned);
 		//assign the spawner field.
-		if(spawned.GetComponent<Unit>() != null )
-		{
-			spawned.GetComponent<Unit>().Spawner = this;
+		if (spawned.GetComponent<Unit> () != null) {
+			spawned.GetComponent<Unit> ().Spawner = this;
 		}
 		//locate the spawned object.
-		spawnData.objectDock.Dock(spawned.transform);
+		spawnData.objectDock.Dock (spawned.transform);
 		return spawned;
 	}
 	
-	public void ReplaceSpawnedWithNewObject(GameObject _old, GameObject _new)
+	public void ReplaceSpawnedWithNewObject (GameObject _old, GameObject _new)
 	{
-		if(CurrentSpawnEntity!=null)
-		{
-			CurrentSpawnEntity.ReplaceGameObject(_old, _new);
+		if (CurrentSpawnEntity != null) {
+			CurrentSpawnEntity.ReplaceGameObject (_old, _new);
 		}
 	}
 }

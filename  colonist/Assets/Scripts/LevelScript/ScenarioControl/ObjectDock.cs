@@ -153,6 +153,13 @@ public class ObjectDock : MonoBehaviour
 	{
 		//send start gameevent
 		SendGameEvents(dock.event_at_start, dockingObject);
+		
+		//it's possible that the game object is destroyed when docking, so we quit docking immediately:
+		if(dockingObject == null)
+		{
+			goto end;
+		}
+		
 		if (dock.DockImmediately) 
 		{
 			//handle rotation
@@ -198,6 +205,13 @@ public class ObjectDock : MonoBehaviour
 			}
 //			Debug.Log("GameObjct:" + this.gameObject.name + " totalFleeTime" + totalFleeTime);
 			while ((Time.time - starttime) <= totalFleeTime) {
+				
+				//it's possible that the game object is destroyed when docking, so we quit docking immediately:
+				if(dockingObject == null)
+				{
+					goto end;
+				}
+				
 				float percentage = Mathf.Clamp01((Time.time - starttime) / totalFleeTime);
 				float xnormalized = dock.CurveForXAxis.Evaluate(percentage);
 				float ynormalized = dock.CurveForYAxis.Evaluate(percentage);
@@ -229,6 +243,7 @@ public class ObjectDock : MonoBehaviour
 		
 		//send end gameevent
 //		Debug.Log("GameObjct:" + this.gameObject.name + " send gameEvent");
+	end:
 	    SendGameEvents(dock.event_at_end, dockingObject);
 		if(dock.PendingTime > 0)
 		{
@@ -262,7 +277,7 @@ public class ObjectDock : MonoBehaviour
 				    case GameEventType.NPCPutToGround:
 				    case GameEventType.DetachObjectFromParent:
 					  //for these receiver-must-not-be-null events, override the receiver field to the dockingObject, if the event's receiver field is empty.
-					  if(_e.receiver == null)
+					  if(_e.receiver == null && dockingObject != null)
 				         _e.receiver = dockingObject.gameObject;
 					  break;
 				    default:
