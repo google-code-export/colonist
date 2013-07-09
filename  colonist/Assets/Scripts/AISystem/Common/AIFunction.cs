@@ -38,12 +38,6 @@ public class AIFunction : MonoBehaviour
 	bool RotateToCurrentTarget = false;
 	float StopRotationTime = 0;
 	
-	/// <summary>
-	/// When current Time > RevertReceiveDamageStatusTime, should revert the 
-	/// unit's ReceiveDamageStatus to original : vulnerable
-	/// </summary>
-	float RevertReceiveDamageStatusTime = 0;
-	
 	Transform CurrentTarget {
 		get {
 			return this.unit.CurrentTarget;
@@ -105,12 +99,6 @@ public class AIFunction : MonoBehaviour
 			RotateToCurrentTarget = false;
 		}
 		
-		if(this.unit != null && 
-		   this.unit.receiveDamageStatus != UnitReceiveDamageStatus.vulnerable && 
-		   Time.time > RevertReceiveDamageStatusTime)
-		{
-			this.unit.receiveDamageStatus = UnitReceiveDamageStatus.vulnerable;
-		}
 	}
 	
 	public void _Moveforward (float duration)
@@ -361,24 +349,6 @@ public class AIFunction : MonoBehaviour
 		forward = true;
 		startForwardTime = Time.time;
 		stopForwardTime = Time.time + Util.GetCurveMaxTime(CurrentSpeedCurve);
-	}
-	
-	/// <summary>
-	/// Change Unit.UnitReceiveDamageStatus to vulnerableButNotReactToDamage in furture N seconds.
-	/// </summary>
-	public void _UnitNotReactToDamageInSeconds(float seconds)
-	{
-		this.unit.receiveDamageStatus = UnitReceiveDamageStatus.vulnerableButNotReactToDamage;
-		RevertReceiveDamageStatusTime = Time.time + seconds;
-	}
-	
-	/// <summary>
-	/// Change Unit.UnitReceiveDamageStatus to invincible in furture N seconds.
-	/// </summary>
-	public void _UnitInvincibleInSeconds(float seconds)
-	{
-		this.unit.receiveDamageStatus = UnitReceiveDamageStatus.invincible;
-		RevertReceiveDamageStatusTime = Time.time + seconds;
 	}
 	
 }

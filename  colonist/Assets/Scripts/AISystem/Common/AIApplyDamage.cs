@@ -47,25 +47,6 @@ public class ApplyDamagerCondition
 	public float CurrentDamageAmount = 0;
 	
 	/// <summary>
-	/// Shoulds do the reset behavior to this ApplyDamageCondition object?
-	/// It's only applicable for those time-related type.
-	/// </summary>
-//	public bool ShouldReset()
-//	{
-//		bool shouldReset = true;
-//		switch(this.applyDamageConditionType)
-//		{
-//		case ApplyDamageConditionType.ReceiveDamageAmountGreaterThanValue:
-//			shouldReset = CurrentDamageAmount > 0;
-//			break;
-//		case ApplyDamageConditionType.ReceiveDamageAmountInTimePeriod:
-//			shouldReset = CurrentDamageAmount > 0 && ((Time.time - LastResetTime) > InTime);
-//			break;
-//		}
-//		return shouldReset;
-//	}
-//	
-	/// <summary>
 	/// for those time-related condition-type, reset the condition data.
 	/// </summary>
 	public void Reset()
@@ -134,11 +115,27 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
 	protected Unit unit;
 	protected CharacterController controller;
 	
+	/// <summary>
+	/// When current Time > RevertReceiveDamageStatusTime, should revert the 
+	/// unit's ReceiveDamageStatus to original : vulnerable
+	/// </summary>
+	float RevertReceiveDamageStatusTime = 0;
+	
 	void Awake()
 	{
 		unit = GetComponent<Unit>();
 		unit.receiveDamageStatus = UnitReceiveDamageStatus.vulnerable;
 		controller = GetComponent<CharacterController>();
+	}
+	
+	void Update()
+	{
+		if(this.unit != null && 
+		   this.unit.receiveDamageStatus != UnitReceiveDamageStatus.vulnerable && 
+		   Time.time > RevertReceiveDamageStatusTime)
+		{
+			this.unit.receiveDamageStatus = UnitReceiveDamageStatus.vulnerable;
+		}
 	}
 	
 #region Receive Damage and Die
@@ -244,7 +241,8 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
             receiveDamageData = unit.ReceiveDamageDataDict[DamageForm.Common][0];
         }
 		#endregion
-        yield return StartCoroutine(ProcessReceiveDamageData(receiveDamageData));
+		//play receive damage animation
+        yield return StartCoroutine("ProcessReceiveDamageData",receiveDamageData);
     }
 	
 	public virtual IEnumerator ProcessReceiveDamageData(ReceiveDamageData receiveDamageData)
@@ -395,5 +393,23 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
         
     }
 #endregion
-
+	/// <summary>
+	/// Change Unit.UnitReceiveDamageStatus to vulnerableButNotReactToDamage in furture N seconds.
+	/// </summary>
+	public void _UnitNotReactToDamageInSeconds(float seconds)
+	{
+		this.unit.receiveDamageStatus = UnitReceiveDamageStatus.vulnerableButNotReactToDamage;
+		RevertReceiveDamageStatusTime = Time.time + seconds;
+		this.unit.Halt = false;		
+	}
+	
+	/// <summary>
+	/// Change Unit.UnitReceiveDamageStatus to invincible in furture N seconds.
+	/// </summary>
+	public void _UnitInvincibleInSeconds(float seconds)
+	{
+		this.unit.receiveDamageStatus = UnitReceiveDamageStatus.invincible;
+		RevertReceiveDamageStatusTime = Time.time + seconds;
+		this.unit.Halt = false;
+	}
 }

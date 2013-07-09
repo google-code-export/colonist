@@ -182,6 +182,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     public virtual void StopAI()
     {
 		StopAllCoroutines();
+		StopNavigation();
 		this.enabled = false;
     }
 	
@@ -1121,10 +1122,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 	public virtual void Start_SwitchToAI(AIBehavior behavior)
 	{
 		string NextAIName = Util.RandomFromArray(behavior.SwitchToAIName);
-		AI nextAI = this.Unit.AIDict[NextAIName];
-		//switch to next AI.
-		this.enabled = false;
-		nextAI.enabled = true;
+		this.Unit.SwitchAI(NextAIName);
 	}
 	
 #endregion

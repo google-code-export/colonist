@@ -338,13 +338,22 @@ public class Unit : UnitBase , I_GameEventReceiver
 	/// </summary>
 	public void SwitchAI (string SwitchToAIName)
 	{
-		if (CurrentAI != null && CurrentAI.Name != SwitchToAIName) {
-//			CurrentAI.enabled = false;
-			CurrentAI.StopAI();
+		if (CurrentAI != null) {
+			if(CurrentAI.Name != SwitchToAIName)
+			{
+			   CurrentAI.enabled = false;
+			   CurrentAI.StopAI();
+			   AI newAI = AIDict [SwitchToAIName];
+		       newAI.StartAI();
+		       CurrentAI = newAI;
+			}
 		}
-		AI newAI = AIDict [SwitchToAIName];
-		newAI.StartAI();
-		this.CurrentAI = newAI;
+		else
+		{
+			AI newAI = AIDict [SwitchToAIName];
+		    newAI.StartAI();
+		    this.CurrentAI = newAI;
+		}
 	}
 	
 #region implement UnitHealth interface
