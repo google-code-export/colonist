@@ -109,7 +109,7 @@ public class Projectile : MonoBehaviour {
                 }
                 else
                 {
-                    yield return StartCoroutine(MoveInStraightLine(transform.position, Target.transform.position, Speed));
+                    yield return StartCoroutine(MoveInStraightLine(transform.position, Target.transform.position, Speed, false));
                 }
                 break;
             case ProjectileMovementMode.Parabola:
@@ -128,7 +128,10 @@ public class Projectile : MonoBehaviour {
         if (HitEffect != null)
         {
             Object effectObject = Object.Instantiate(HitEffect, transform.position, transform.rotation);
-//			Debug.Log("Instantiate effectObject:" + HitEffect.name + " at pos:" + transform.position);
+			if(this.PrintDebugMessage)
+			{
+			   Debug.Log("Instantiate effectObject:" + HitEffect.name + " at pos:" + transform.position + " hasHitSomething:" + HitSomething);
+			}
             if (HitEffectTimeout > 0)
             {
                 Destroy(effectObject, HitEffectTimeout);
@@ -215,16 +218,17 @@ public class Projectile : MonoBehaviour {
     }
 
     /// <summary>
-    /// Transform move from start -> target along a straight line
+    /// Transform move from start -> target along a straight line.
+    /// if ExpireWhenReach = true, the projectile expire when reach the position, else expire in general lifetime.
     /// </summary>
     /// <param name="StartPosition"></param>
     /// <param name="TargetPosition"></param>
     /// <param name="Speed"></param>
     /// <returns></returns>
-    public virtual IEnumerator MoveInStraightLine(Vector3 StartPosition, Vector3 TargetPosition, float Speed)
+    public virtual IEnumerator MoveInStraightLine(Vector3 StartPosition, Vector3 TargetPosition, float Speed, bool ExpireWhenReach)
     {
         Vector3 velocity = (TargetPosition - StartPosition).normalized * Speed;
-        float totalTime = (TargetPosition - StartPosition).magnitude / Speed;
+        float totalTime = ExpireWhenReach ? (TargetPosition - StartPosition).magnitude / Speed : this.LifeTime;
         transform.LookAt(TargetPosition);
         float starttime = Time.time;
         while ((Time.time - starttime) <= totalTime && HitSomething == false)
