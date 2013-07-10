@@ -501,7 +501,14 @@ public class TopDownCameraControlParameter
 	public LayerMask lineOfSightMask = 0;
 }
 
-
+/// <summary>
+/// A rectangle that self-adaptive to GUI screen.
+/// You can use AdaptiveRect to create:
+/// 1. A rectangle on a fixed point, in fixed size.
+/// 2. A rectangle on a fixed point, in screen size-relative size.
+/// 3. A rectangle on a screen-relative point, in a fixed size..
+/// ... etc.
+/// </summary>
 [System.Serializable]
 public class AdaptiveRect
 {
@@ -567,7 +574,7 @@ public class AdaptiveIcon {
 	public Color color = Color.white;
 	public AdaptiveRect adaptiveRect = new AdaptiveRect();
 	public Texture texture;
-	
+	public ScaleMode scaleMode = ScaleMode.StretchToFill;
 	[HideInInspector]
 	public Rect realtimeRect;
 }
