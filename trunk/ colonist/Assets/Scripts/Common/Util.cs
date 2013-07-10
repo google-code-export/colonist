@@ -648,12 +648,18 @@ public class Util : MonoBehaviour {
 
     public static Vector3 RandomVector(Vector3 min, Vector3 max)
     {
-        Random.seed = System.DateTime.Now.Millisecond;
         return new Vector3(
             Random.Range(min.x, max.x),
             Random.Range(min.y, max.y),
             Random.Range(min.z, max.z));
     }
+	
+	public static Vector2 RandomVector(Vector2 min, Vector2 max)
+	{
+        return new Vector2(
+            Random.Range(min.x, max.x),
+            Random.Range(min.y, max.y));
+	}
 
     public static T RandomFromArray<T>(T[] array)
     {
