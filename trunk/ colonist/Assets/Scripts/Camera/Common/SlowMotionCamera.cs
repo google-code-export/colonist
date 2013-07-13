@@ -16,11 +16,6 @@ public enum SlowMotionCameraFocusMode
 public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 {
 	SlowMotionCameraFocusMode slowMotionCameraMode = SlowMotionCameraFocusMode.FixedPoint;
-	/// <summary>
-	/// When slow motion camera starts, look at the LookAt transform
-	/// </summary>
-	public Vector3 LookAt = Vector3.zero;
-	public Transform LookAtTransfrom = null;
 	
 	/// <summary>
 	/// How long the slow motion last, in seconds
@@ -65,15 +60,15 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 		if (Working) {
 			switch (slowMotionCameraMode) {
 			case SlowMotionCameraFocusMode.FixedPoint:
-				ApplyCameraControlParameter (true, LookAt,CurrentTopDownCameraParameter);
+				ApplyCameraControlParameter (true, CurrentTopDownCameraParameter);
 				break;
 			case SlowMotionCameraFocusMode.OnTransform:
-				if(LookAtTransfrom != null)
+				//it's possible, that the focus gameobject is destroyed afterward, in runtime, so we avoid the error by checking cameraFocusOnTransform.
+				if(CurrentTopDownCameraParameter.cameraFocusOnTransform != null)
 				{
-				   ApplyCameraControlParameter (true, LookAtTransfrom.position,CurrentTopDownCameraParameter);
+				   ApplyCameraControlParameter (true, CurrentTopDownCameraParameter);
 				}
 				else 
-					//it's possible, that the focus gameobject is destroyed afterward, in runtime, so we avoid the error.
 				{
 					Working = false; //in this case, reset the working status.
 					Time.timeScale = 1;
@@ -94,7 +89,9 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 		switch (_e.type) {
 		case GameEventType.PlayerCameraSlowMotionOnFixedPoint:
 			Transform _target = _e.sender.transform;
-			this.LookAt = _target.collider != null ? _target.collider.bounds.center : _target.position;
+			this.CurrentTopDownCameraParameter.cameraFocusOnPosition = _target.collider != null ? _target.collider.bounds.center : _target.position;
+			//change camera mode:
+			CurrentTopDownCameraParameter.mode = TopDownCameraControlMode.ParameterControlPositionAndLookAtPosition;
 			StartSlowMotion_FixedPoint (TimeLength);
 			break;
 			
@@ -103,11 +100,12 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 			{
 				break;
 			} 
-			//do nothing, if the gameObjectParameter is missing.
+			//do nothing, if the gameObjectParameter is missing.(It can be destroyed in runtime)
 			else 
 			{
-			  GameObject focused = _e.GameObjectParameter;
-			  this.LookAtTransfrom = focused.transform;
+			  //change camera mode:
+			  CurrentTopDownCameraParameter.mode = TopDownCameraControlMode.ParameterControlPositionAndLookAtPosition;
+			  this.CurrentTopDownCameraParameter.cameraFocusOnTransform = _e.GameObjectParameter.transform;
 			  StartSlowMotion_MovableTransform (TimeLength);
 			}
 			break;
@@ -128,7 +126,7 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 			SlowMotionTimeLength_Overrided = this.SlowMotionDuration;
 		}
 		SlowMotionStartTime = Time.time;
-		ApplyCameraControlParameter (false, LookAt, CurrentTopDownCameraParameter);
+		ApplyCameraControlParameter (false, CurrentTopDownCameraParameter);
 		Time.timeScale = SlowMotionTimeScale;
 		Working = true;
 		//preserves the previous active runtime camera script
@@ -158,7 +156,7 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 			SlowMotionTimeLength_Overrided = this.SlowMotionDuration;
 		}
 		SlowMotionStartTime = Time.time;
-		ApplyCameraControlParameter (false, LookAtTransfrom.position,CurrentTopDownCameraParameter);
+		ApplyCameraControlParameter (false, CurrentTopDownCameraParameter);
 		Time.timeScale = SlowMotionTimeScale;
 		Working = true;
 		//preserves the previous active runtime camera script
