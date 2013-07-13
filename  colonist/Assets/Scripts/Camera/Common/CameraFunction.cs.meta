@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 401f01576ea49ba48b6a29da284ed655
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - WhiteInOutMaterial: {fileID: 2100000, guid: 73e64f38336d55747b30c984c5460a4f,
+      type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
