@@ -12,7 +12,10 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	/// If player not enter next combat within ComboCombatOperationTimeout, the current combo token will be erased.
 	/// </summary>
 	public float ComboCombatOperationTimeout = 1.5f;
-	
+	/// <summary>
+	/// This is an add-hoc adjustment, for the unit in the air, the predator should not be able to attack them :)
+	/// </summary>
+	public float AttackableHeightOffset = 3;
 	/// <summary>
 	/// The default combat - left claw
 	/// </summary>
@@ -249,7 +252,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 		float DistanceToEnemy = 0;
 		CurrentTarget = FindTarget (transform.forward, RushRadius, out DistanceToEnemy);
 		
-		Debug.Log(string.Format("Find the target:{0}, enemy distance:{1}, AttackableRange:{2}", CurrentTarget,DistanceToEnemy,attackData.AttackableRange) );
+//		Debug.Log(string.Format("Find the target:{0}, enemy distance:{1}, AttackableRange:{2}", CurrentTarget,DistanceToEnemy,attackData.AttackableRange) );
 		
 		if (CurrentTarget != null) {
 			Util.RotateToward (transform, CurrentTarget.transform.position, false, 0);
@@ -441,6 +444,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 			   //send applyDamage to target.
 			   DamageParameter damageParam = GetDamageParameter(attackData);
 			   enemy.SendMessage ("ApplyDamage", damageParam);
+//			   this.SendMessage("AddRage", damageParam);
 			   //send GameEvent to HUD to display the damage text.
 			   GameEvent _e = new GameEvent(GameEventType.DisplayDamageParameterOnNPC);
 			   _e.receiver = enemy;
@@ -458,6 +462,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 			       //send applyDamage to every object intersect with the hitTestCollider.
 			       DamageParameter damageParam = GetDamageParameter(attackData);
 			       collider.gameObject.SendMessage ("ApplyDamage", damageParam);
+//				   this.SendMessage("AddRage", damageParam);
 			       //send GameEvent to HUD to display the damage text.
 			       GameEvent _e = new GameEvent(GameEventType.DisplayDamageParameterOnNPC);
 			       _e.receiver = collider.gameObject;
@@ -555,8 +560,10 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	{
 		DamageParameter dp = new DamageParameter(this.gameObject, attackData.DamageForm, 0);
 		UnityEngine.Random.seed = DateTime.Now.Millisecond;
+		//calculate damage point = base point + random(min, max)
 		dp.damagePoint = attackData.DamagePointBase + UnityEngine.Random.Range(attackData.MinDamageBonus, attackData.MaxDamageBonus);
 		//if critical attack is enabled and random chance matches, multiple the bonus rate.
+		//Usually, designer can put the critical attack chance to the final combat of a combo-combat, this is like the great-final hit.
 		if(attackData.CanDoCriticalAttack && UnityEngine.Random.Range(0f,1f) <= attackData.CriticalAttackChance)
 		{
 			dp.damagePoint *= attackData.CriticalAttackBonusRate;
@@ -585,6 +592,11 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	{
 		bool isAttackable = true;
 		if(gameObject.GetComponent<UnitBase>() != null && gameObject.GetComponent<UnitBase>().IsUnitAttackable() == false)
+		{
+			isAttackable = false;
+		}
+		//don't attack the unit in the air :)
+		if(Mathf.Abs(transform.position.y - gameObject.transform.position.y) > this.AttackableHeightOffset)
 		{
 			isAttackable = false;
 		}

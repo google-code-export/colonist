@@ -31,16 +31,11 @@ public class JetpackSoldierLandingAI : AI {
 	public string[] ApplicableWaypointName = new string[] {};
 	WayPoint[] applicableWaypoints = new WayPoint[]{};
 	
-	void Start()
-	{
+    public override void StartAI()
+    {
 		MoveData_FlyingToLandingAirSpot = this.Unit.MoveDataDict[MoveDataName_FlyingToLandingAirSpot];
 		MoveData_LandingFromAirSpot = this.Unit.MoveDataDict[MoveDataName_LandingFromAirSpot];
 		applicableWaypoints = WayPoint.GetWaypoints(ApplicableWaypointName);
-	}
-	
-    public override void StartAI()
-    {
-		Debug.Log("JetpackSoldierLandingAI is called!");
 		Unit.CurrentAI = this;
 		StartCoroutine("Start_LandingBehavior");
 		this.enabled = true;
@@ -106,6 +101,10 @@ public class JetpackSoldierLandingAI : AI {
 		//play landing animation, and put to ground:
 		animation.CrossFade(Animation_Landing);
 		Util.PutToGround (transform, this.Unit.GroundLayer, 0.1f);
+		
+		yield return new WaitForSeconds(0.1f);
+		
+		this.Unit.SwitchAI(nextAI);
 	}
 	
 	public void SwitchToNextAI()

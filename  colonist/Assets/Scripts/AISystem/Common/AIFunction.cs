@@ -106,7 +106,12 @@ public class AIFunction : MonoBehaviour
 		forward = true;
 		stopForwardTime = Time.time + duration;
 	}
-	
+	/// <summary>
+	/// Move backward in time = duration.
+	/// </summary>
+	/// <param name='duration'>
+	/// Duration.
+	/// </param>
 	public void _Moveback (float duration)
 	{
 		backward = true;
@@ -229,6 +234,7 @@ public class AIFunction : MonoBehaviour
 	
 	/// <summary>
 	/// move to current target in %duration% seconds.
+	/// The less duration time, the faster it will move.
 	/// Note: this function is very simple, if you're looking for a more controllable one, you should use AStarNavigator._NavtigateToCurrentTarget
 	/// </summary>
 	IEnumerator _MoveToCurrentTarget (float _duration)

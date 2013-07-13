@@ -116,7 +116,13 @@ public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
 	/// the combat they have performed.
 	/// </summary>
 	public GameObject HUDObject;
-
+	
+	/// <summary>
+	/// The rage of the predator.
+	/// When rage reach maximum value, predator can do some special attacks.
+	/// Rage range : 0 to 100
+	/// </summary>
+	public float Rage = 0;
 	
 	void Awake ()
 	{

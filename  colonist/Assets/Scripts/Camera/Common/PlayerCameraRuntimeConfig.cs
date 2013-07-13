@@ -27,11 +27,25 @@ public class PlayerCameraRuntimeConfig : MonoBehaviour, I_GameEventReceiver {
 		switch(_event.type)
 		{
 		case GameEventType.ApplyTopdownCameraParameter:
-			
+			TopDownCameraControlParameter controlParameter = GetTopDownCameraControlParameter(_event.StringParameter);
+			playerTopdownCamera.SetCurrentTopdownCameraParameter(controlParameter);
 			break;
 		case GameEventType.ResetTopdownCameraParameter:
-			
+			playerTopdownCamera.ResetCurrentTopdownCameraParameter();
 			break;
 		}
+	}
+	
+	TopDownCameraControlParameter GetTopDownCameraControlParameter(string parameterName)
+	{
+		foreach(TopDownCameraControlParameter cameraParameter in this.topDownCameraControlParameters)
+		{
+			if(cameraParameter.Name == parameterName)
+			{
+				return cameraParameter;
+			}
+		}
+		Debug.LogError("Error ! Camera parameter name:" + parameterName + " is not found!");
+		return null;
 	}
 }

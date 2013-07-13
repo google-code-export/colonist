@@ -64,6 +64,16 @@ public class TopDownCamera : RuntimeCameraControl
 		return PlayerCharacter.transform.position + PlayerCharacter.center;
 	}
 	
+	public void SetCurrentTopdownCameraParameter(TopDownCameraControlParameter topdownCameraControlParameter)
+	{
+		this.CurrentTopDownCameraParameter = topdownCameraControlParameter;
+	}
+	
+	public void ResetCurrentTopdownCameraParameter()
+	{
+		this.CurrentTopDownCameraParameter = this.topDownCameraParameter;
+	}
+	
 	/// <summary>
 	/// Applies the camera control parameter to the current camera.
 	/// smoothDamp - if smoothly damp from current camera position ? if false, the camera control parameter takes effect immediately.
@@ -71,11 +81,9 @@ public class TopDownCamera : RuntimeCameraControl
 	/// topdownCameraControlParameter - the topDownCameraControlParameter.
 	/// </summary>
 	public virtual void ApplyCameraControlParameter (bool SmoothDamp,
-		                                             
 		                                             TopDownCameraControlParameter topdownCameraControlParameter)
 	{
 		AlignCameraPositionAndRotation (SmoothDamp, topdownCameraControlParameter);
-
 	}
 	
 	/// <summary>
@@ -115,16 +123,16 @@ public class TopDownCamera : RuntimeCameraControl
 		case TopDownCameraControlMode.Default:
 			ParameterCalculatePosition = CalculateParameterControlPosition (smoothDamp, topdownCameraControlParameter.DynamicHeight, 
 				                                                           topdownCameraControlParameter.DynamicDistance, 
-				                                                           topdownCameraControlParameter.smoothLag, 
+				                                                           topdownCameraControlParameter.smoothLag_Position, 
 				                                                           GetCharacterCenter ());
 			CameraPivotPosition = ParameterCalculatePosition.Value;
-			CameraLookAtPosition = null;
-			CameraPivotPosition = AdjustLineOfSight (CameraPivotPosition, GetCharacterCenter());
+			CameraLookAtPosition = GetCharacterCenter();
+//			CameraPivotPosition = AdjustLineOfSight (CameraPivotPosition, GetCharacterCenter());
 			break;
 		case TopDownCameraControlMode.ParameterControlPositionAndLookAtPosition:
 			ParameterCalculatePosition = CalculateParameterControlPosition (smoothDamp, topdownCameraControlParameter.DynamicHeight, 
 				                                                           topdownCameraControlParameter.DynamicDistance, 
-				                                                           topdownCameraControlParameter.smoothLag, 
+				                                                           topdownCameraControlParameter.smoothLag_Position, 
 				                                                           topdownCameraControlParameter.cameraFocusOnPosition);
 			CameraLookAtPosition = topdownCameraControlParameter.cameraFocusOnPosition;
 			CameraPivotPosition = ParameterCalculatePosition.Value;
@@ -132,7 +140,7 @@ public class TopDownCamera : RuntimeCameraControl
 		case TopDownCameraControlMode.ParameterControlPositionAndLookAtTransform:
 			ParameterCalculatePosition = CalculateParameterControlPosition (smoothDamp, topdownCameraControlParameter.DynamicHeight, 
 				                                                           topdownCameraControlParameter.DynamicDistance, 
-				                                                           topdownCameraControlParameter.smoothLag, 
+				                                                           topdownCameraControlParameter.smoothLag_Position, 
 				                                                           topdownCameraControlParameter.cameraFocusOnTransform.position);
 			CameraLookAtPosition = topdownCameraControlParameter.cameraFocusOnTransform.position;
 			CameraPivotPosition = ParameterCalculatePosition.Value;
@@ -156,7 +164,19 @@ public class TopDownCamera : RuntimeCameraControl
 		transform.position = CameraPivotPosition;
 		if(CameraLookAtPosition.HasValue)
 		{
-		   transform.LookAt (CameraLookAtPosition.Value);
+//		   transform.LookAt (CameraLookAtPosition.Value);
+		   if(smoothDamp)
+		   {
+		      Quaternion ToRotation = transform.rotation;
+		      ToRotation.SetLookRotation(CameraLookAtPosition.Value -transform.position, Vector3.up);
+		      transform.rotation = Quaternion.Lerp(transform.rotation, ToRotation, topdownCameraControlParameter.smoothLag_Rotation);
+			  transform.rotation = ToRotation;
+//				transform.LookAt (CameraLookAtPosition.Value);
+		   }
+		   else
+		   {
+			  transform.LookAt (CameraLookAtPosition.Value);
+		   }
 		   CameraPivotPosition = AdjustLineOfSight (CameraPivotPosition, CameraLookAtPosition.Value);
 		}
 	}

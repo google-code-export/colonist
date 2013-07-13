@@ -218,6 +218,14 @@ public class DeathData : UnitAnimationData
 	/// </summary>
 	public bool ReplaceOldObjectInSpawnedList = false;
 	
+	/// <summary>
+	/// If this flag = true, the Character Controller attach to this unit will be destoryed/deactivated
+	/// when the DeathData is applied.
+	/// This means, the movement of the unit is controlled by animation.
+	/// But if flag = false, then you can attach animation event to death animation to control the movement.
+	/// </summary>
+	public bool DestoryCharacterController = true;
+	
     public DeathData GetClone()
 	{
 		DeathData clone = new DeathData();
@@ -415,10 +423,6 @@ public class AttackData : UnitAnimationData
     /// DamageForm - the damage form in sending "ApplyDamage" interface
     /// </summary>
     public DamageForm DamageForm = DamageForm.Common;
-	/// <summary>
-	/// WeaponType - WeaponType + Target's armor type = audio to play
-	/// </summary>
-	public WeaponType WeaponType = WeaponType.Default;
 	
     /// <summary>
     /// The HitTestType. Used only when Type = Instant
@@ -508,7 +512,6 @@ public class AttackData : UnitAnimationData
 		clone.Type = this.Type;
 		clone.hitTriggerType = this.hitTriggerType;
 		clone.DamageForm = this.DamageForm;
-		clone.WeaponType = this.WeaponType;
 		clone.HitTestType = this.HitTestType;
 		clone.HitRate = this.HitRate;
 		clone.HitTestCollider = this.HitTestCollider;

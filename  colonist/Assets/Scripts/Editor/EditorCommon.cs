@@ -540,6 +540,7 @@ public class EditorCommon
 				}
 				DeathData.DieReplacement = (GameObject)EditorGUILayout.ObjectField (new GUIContent ("Die replacement:", ""), DeathData.DieReplacement, typeof(GameObject));
 				DeathData.ReplaceOldObjectInSpawnedList = EditorGUILayout.Toggle (new GUIContent ("Replace spawned list", " This is only available for runtime spawned units"), DeathData.ReplaceOldObjectInSpawnedList);
+				DeathData.DestoryCharacterController = EditorGUILayout.Toggle (new GUIContent ("Destory Character Controller when dying ?", ""), DeathData.DestoryCharacterController);
 				DeathData.CopyChildrenTransformToDieReplacement = EditorGUILayout.Toggle (new GUIContent ("Copy transform?", "是否把替代物的关节位置调整到和死亡单位一致?"), DeathData.CopyChildrenTransformToDieReplacement);
 			} else {
 				EditorGUILayout.BeginHorizontal ();

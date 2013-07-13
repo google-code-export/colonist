@@ -175,51 +175,17 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
 	/// </summary>
     public virtual IEnumerator DoDamage(DamageParameter damageParam)
     {
-		if(this.unit.receiveDamageStatus == UnitReceiveDamageStatus.vulnerableButNotReactToDamage || 
-			this.unit.receiveDamageStatus == UnitReceiveDamageStatus.invincible)
-			yield break;
-		
-#region if the unit is defined with ApplyDamageCondition, update the condition data.
-        if(this.ApplyDamagerConditionArray != null && ApplyDamagerConditionArray.Length > 0)
-		{
-			foreach(ApplyDamagerCondition applyDamageCondition in ApplyDamagerConditionArray)
-			{
-				applyDamageCondition.UpdateDamageInfo(damageParam);
-			}
-		}
-#endregion
-		
-#region check the ApplyDamageCondition
-		bool CanApplyDamage = false;
-        if(this.ApplyDamagerConditionArray != null && ApplyDamagerConditionArray.Length > 0)
-		{
-			foreach(ApplyDamagerCondition applyDamageCondition in ApplyDamagerConditionArray)
-			{
-				if(applyDamageCondition.IsApplyDamageConditionMatch())
-				{
-					CanApplyDamage = true;
-					continue;
-				}
-			}
-		}
-		else 
-		{
-			//if no applyDamageCondition is defined, we assume the unit can apply any damage by default.
-			CanApplyDamage = true;
-		}
-		
-		if(CanApplyDamage == false)
-		{
-			yield break;
-		}
-#endregion
-		
 		#region Look for the suitable ReceiveDamageData 
 		//if there is no receive damage defined, quit now!
 		if(this.unit.ReceiveDamageData.Length == 0)
 		{
 			yield break;
 		}
+		
+		foreach(ApplyDamagerCondition applyDamageCondition in ApplyDamagerConditionArray)
+		{
+		    applyDamageCondition.UpdateDamageInfo(damageParam);
+		}		
         //Get ReceiveDamageData
         ReceiveDamageData receiveDamageData = null;
         if (unit.ReceiveDamageDataDict.ContainsKey(damageParam.damageForm))
@@ -247,9 +213,35 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
 	
 	public virtual IEnumerator ProcessReceiveDamageData(ReceiveDamageData receiveDamageData)
 	{
+		bool CanHaltAI = false;
 		if(this.unit.receiveDamageStatus == UnitReceiveDamageStatus.vulnerableButNotReactToDamage || 
 			this.unit.receiveDamageStatus == UnitReceiveDamageStatus.invincible)
-			yield break;
+		{
+			CanHaltAI = false;
+		}
+		
+#region if the unit is defined with ApplyDamageCondition, update the condition data.
+        else 
+		{
+			if(this.ApplyDamagerConditionArray != null && ApplyDamagerConditionArray.Length > 0)
+			{
+			   foreach(ApplyDamagerCondition applyDamageCondition in ApplyDamagerConditionArray)
+			   {
+				   if(applyDamageCondition.IsApplyDamageConditionMatch())
+				   {
+					  CanHaltAI = true;
+					  continue;
+				   }
+			   }
+			}
+			else 
+			{
+				CanHaltAI = true;
+			}
+		}
+#endregion
+
+		
 		//Create effect data
         if (receiveDamageData.EffectDataName != null && receiveDamageData.EffectDataName.Length > 0)
         {
@@ -279,7 +271,7 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
 		}
 		
         //Halt AI if set true, stop all animation, and play the receive damage animation
-        if (receiveDamageData.HaltAI)
+        if (receiveDamageData.HaltAI && CanHaltAI)
         {
 			animation.Stop();
             animation.Rewind();
@@ -292,8 +284,6 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
     public virtual IEnumerator Die(DamageParameter DamageParameter)
 	{
         //Basic death processing.
-		if(controller != null)
-           controller.enabled = false;
         unit.IsDead = true;
 		//stop and remove AI
         foreach(AI _ai in GetComponents<AI>())
@@ -311,6 +301,7 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
            animation.Stop();
 
         //Handle DeathData:
+		//1. Find the suitable DeathData:
         DeathData deathData = null;
         if(unit.DeathDataDict.ContainsKey(DamageParameter.damageForm))
         {
@@ -322,7 +313,12 @@ public class AIApplyDamage : MonoBehaviour, I_ReceiveDamage {
 			//if no DeathData matched to the DamageForm in DamageParameter,use the DamageForm.Common
             deathData = Util.RandomFromList<DeathData>( unit.DeathDataDict[DamageForm.Common]);
         }
-
+		
+		if(deathData.DestoryCharacterController && controller != null)
+		{
+           controller.enabled = false;
+		}
+		
         //Create effect data 
         if (deathData.EffectDataName != null && deathData.EffectDataName.Length > 0)
         {
