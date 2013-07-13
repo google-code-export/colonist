@@ -1,22 +1,8 @@
 using UnityEngine;
 using System.Collections;
 
-public enum SlowMotionCameraFocusMode
-{
-	/// <summary>
-	/// Camera focus on a fixed point.
-	/// </summary>
-	FixedPoint = 0,
-	/// <summary>
-	/// Camera focus on a movable transform.
-	/// </summary>
-	OnTransform = 1,
-}
-
 public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
-{
-	SlowMotionCameraFocusMode slowMotionCameraMode = SlowMotionCameraFocusMode.FixedPoint;
-	
+{	
 	/// <summary>
 	/// How long the slow motion last, in seconds
 	/// </summary>
@@ -58,11 +44,11 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 	void LateUpdate ()
 	{
 		if (Working) {
-			switch (slowMotionCameraMode) {
-			case SlowMotionCameraFocusMode.FixedPoint:
+			switch (CurrentTopDownCameraParameter.mode) {
+			case TopDownCameraControlMode.ParameterControlPositionAndLookAtPosition:
 				ApplyCameraControlParameter (true, CurrentTopDownCameraParameter);
 				break;
-			case SlowMotionCameraFocusMode.OnTransform:
+			case TopDownCameraControlMode.ParameterControlPositionAndLookAtTransform:
 				//it's possible, that the focus gameobject is destroyed afterward, in runtime, so we avoid the error by checking cameraFocusOnTransform.
 				if(CurrentTopDownCameraParameter.cameraFocusOnTransform != null)
 				{
@@ -104,7 +90,7 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 			else 
 			{
 			  //change camera mode:
-			  CurrentTopDownCameraParameter.mode = TopDownCameraControlMode.ParameterControlPositionAndLookAtPosition;
+			  CurrentTopDownCameraParameter.mode = TopDownCameraControlMode.ParameterControlPositionAndLookAtTransform;
 			  this.CurrentTopDownCameraParameter.cameraFocusOnTransform = _e.GameObjectParameter.transform;
 			  StartSlowMotion_MovableTransform (TimeLength);
 			}
@@ -134,7 +120,7 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 		if (previousWorkingCameraScript != null) {
 			this.previousCameraScript = previousWorkingCameraScript;
 		}
-		this.slowMotionCameraMode = SlowMotionCameraFocusMode.FixedPoint;
+		
 	}
 	
 	
@@ -164,7 +150,6 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 		if (previousWorkingCameraScript != null) {
 			this.previousCameraScript = previousWorkingCameraScript;
 		}
-		this.slowMotionCameraMode = SlowMotionCameraFocusMode.OnTransform;
 	}
 	
 	/// <summary>

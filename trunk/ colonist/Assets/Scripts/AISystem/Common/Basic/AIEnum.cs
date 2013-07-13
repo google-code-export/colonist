@@ -368,26 +368,6 @@ public enum ArmorType
 }
 
 /// <summary>
-/// Weapon type.
-/// When playing hit audio, [weapon type + armor type] determines what audio should be played.
-/// </summary>
-public enum WeaponType
-{
-	Default = 0,
-	#region human 1~999
-	Bullet = 1,
-	ElectricalWeapon = 2,
-	Incendiator = 3,
-	#endregion
-	
-	#region xenz 1000~1999
-	Predator_Spine = 1000,
-	GiantAnt_Flame = 1001,
-	#endregion
-}
-
-
-/// <summary>
 /// Unit receive damage status.
 /// </summary>
 public enum UnitReceiveDamageStatus

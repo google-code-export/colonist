@@ -455,7 +455,10 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// </summary>
     public void StopNavigation()
     {
-        navigator.StopNavigation();
+		if(navigator != null)
+		{
+           navigator.StopNavigation();
+		}
     }
 
 #endregion

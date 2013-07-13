@@ -219,7 +219,6 @@ public class PredatorPlayerAttackData : AttackData
 		clone.Type = this.Type;
 		clone.hitTriggerType = this.hitTriggerType;
 		clone.DamageForm = this.DamageForm;
-		clone.WeaponType = this.WeaponType;
 		clone.HitTestType = this.HitTestType;
 		clone.HitRate = this.HitRate;
 		clone.HitTestCollider = this.HitTestCollider;
@@ -505,12 +504,16 @@ public class TopDownCameraControlParameter
 //	public GameObject LookAt = null;
 	public float DynamicDistance = 1;
 	public float DynamicHeight = 1.5f;
+	
 	/// <summary>
-	/// The target transform to look at. If this is null, than will pick DefaultViewPoint to look at.
+	/// The smooth lag time for positioning.
 	/// </summary>
-	//[HideInInspector]
-	//public Transform LookAtTarget = null;
-	public float smoothLag = 0.3f;
+	public float smoothLag_Position = 0.3f;
+	
+	/// <summary>
+	/// The smooth lag time for rotating.
+	/// </summary>
+	public float smoothLag_Rotation = 0.5f;
 
 	/// <summary>
 	/// Layer mask to check if the current view sight has been blocked.
@@ -533,6 +536,12 @@ public class TopDownCameraControlParameter
 	/// Differs to cameraFocusOnTransform, this is a static vector3 position.
 	/// </summary>
 	public Vector3 cameraFocusOnPosition = Vector3.zero;
+	
+	/// <summary>
+	/// By default, this flag is disabled.
+	/// If set true, the camera will look at the transform/target point per frame, which will shake the camera unconfortably.
+	/// </summary>
+	public bool keepLookingAtTarget =  false;
 	
 }
 

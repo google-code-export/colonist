@@ -8,7 +8,21 @@ using System.Collections.Generic;
 public class LevelManager : MonoBehaviour
 {
 	public string LevelName = "Level00";
-	public static LevelManager Instance;
+	
+	static LevelManager _instance = null;
+	
+	public static LevelManager Instance
+	{
+		get
+		{
+			if(_instance == null)
+			{
+				_instance = FindObjectOfType(typeof(LevelManager)) as LevelManager;
+			}
+			return _instance;
+		}
+	}
+	
 	public LayerMask GroundLayer;
 	public Transform ControlDirectionPivot;
 	public string PlayerTag = "Player";
@@ -27,15 +41,17 @@ public class LevelManager : MonoBehaviour
 	ScenarioControl scenarioControlObject = null;
 	BackgroundMusicPlayer backGroundMusicPlayer = null;
 	CheckPoint checkPointManager = null;
+	PlayerCameraRuntimeConfig playerRuntimeCameraConfig = null;
 	
 	void Awake ()
 	{
-		Instance = this;
+		_instance = this;
 		player = GameObject.FindGameObjectWithTag (PlayerTag);
 		gameDialogueObject = FindObjectOfType (typeof(GameDialogue)) as GameDialogue;
 		scenarioControlObject = FindObjectOfType (typeof(ScenarioControl)) as ScenarioControl;
 		backGroundMusicPlayer = FindObjectOfType (typeof(BackgroundMusicPlayer)) as BackgroundMusicPlayer;
 		checkPointManager = FindObjectOfType (typeof(CheckPoint)) as CheckPoint;
+		playerRuntimeCameraConfig = FindObjectOfType (typeof(PlayerCameraRuntimeConfig)) as PlayerCameraRuntimeConfig;
 	}
 
 	// Use this for initialization
@@ -48,7 +64,6 @@ public class LevelManager : MonoBehaviour
 		if (checkPointManager != null) {
 			if (checkPointManager.HasLastCheckPoint (this.LevelName, out level, out checkpoint)) {
 				Debug.Log ("Has check point:" + level + " " + checkpoint);
-			
 				checkPointManager.LoadCheckpoint (checkpoint);
 			} else {
 				Debug.Log ("No check point, load the first");
@@ -65,7 +80,7 @@ public class LevelManager : MonoBehaviour
 	
 	void OnEnable ()
 	{
-		Instance = this;
+		_instance = this;
 	}
 	
 	/// <summary>
@@ -122,6 +137,10 @@ public class LevelManager : MonoBehaviour
 		case GameEventType.ShiftToScenarioMode:
 			this.scenarioControlObject.OnGameEvent (gameEvent);
 			break;
+		case GameEventType.ApplyTopdownCameraParameter:
+		case GameEventType.ResetTopdownCameraParameter:	
+			playerRuntimeCameraConfig.OnGameEvent(gameEvent);
+		    break;
 		case GameEventType.PlayerSetToActive:
 			player.transform.root.gameObject.SetActiveRecursively (true);
 			break;
@@ -155,9 +174,6 @@ public class LevelManager : MonoBehaviour
 		case GameEventType.NPCStartDefaultAI:
 			gameEvent.receiver.SendMessage ("OnGameEvent", gameEvent);
 			break;
-//		    case GameEventType.LevelAreaStartSpawn:
-//			  LevelArea.GetArea(gameEvent.StringParameter).StartSpawn();
-//			  break;
 		case GameEventType.DeactivateGameObject:
 			Util.DeactivateRecurrsive (gameEvent.receiver);
 			break;

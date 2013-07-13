@@ -53,7 +53,7 @@ public class AudioController : MonoBehaviour
 		}
 		catch(System.Collections.Generic.KeyNotFoundException keyNotFoundExc)
 		{
-		   Debug.LogError("Key not found exception for Audio data name:" + AudioDataName);
+		   Debug.LogError("Key not found exception for Audio data name:" + AudioDataName + " \nstackTrace:" + keyNotFoundExc.StackTrace);
 		}
 	}
 	
