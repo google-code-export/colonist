@@ -472,6 +472,23 @@ public enum TopDownCameraControlMode
 	/// Always put the camera at a fixed position, and look at the given transform.
 	/// </summary>
 	PositionAtPivotAndLookAtTransform = 2,
+	
+	/// <summary>
+	/// Position at pivot and look at a fixed position.
+	/// </summary>
+	PositionAtPivotAndLookAtPosition = 3,
+	
+	/// <summary>
+	/// The position of the camera is dynamically control by topDown parameter,
+	/// and look at a transform
+	/// </summary>
+	ParameterControlPositionAndLookAtTransform = 4,
+	
+	/// <summary>
+	/// The position of the camera is dynamically control by topDown parameter,
+	/// and look at a fixed point
+	/// </summary>
+	ParameterControlPositionAndLookAtPosition = 5,
 }
 
 /// <summary>
@@ -499,6 +516,24 @@ public class TopDownCameraControlParameter
 	/// Layer mask to check if the current view sight has been blocked.
 	/// </summary>
 	public LayerMask lineOfSightMask = 0;
+	
+	/// <summary>
+	/// The transform pivot used when mode = PoisitonAtPivotAndLookAtPlayer.
+	/// Camera will be aligned to the position in runtime.
+	/// </summary>
+	public Transform CameraPositionPivot = null;
+	/// <summary>
+	/// The transform pivot used when mode = PositionAtPivotAndLookAtTransform.
+	/// Camera will look at the transform pivot in runtime.
+	/// </summary>
+	public Transform cameraFocusOnTransform = null;
+	
+	/// <summary>
+	/// The camera focus on position.
+	/// Differs to cameraFocusOnTransform, this is a static vector3 position.
+	/// </summary>
+	public Vector3 cameraFocusOnPosition = Vector3.zero;
+	
 }
 
 /// <summary>

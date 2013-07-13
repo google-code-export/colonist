@@ -266,6 +266,18 @@ public enum GameEventType
 	/// </summary>
 	ShiftToPlayerMode = 121,
 	
+	/// <summary>
+	/// Apply topdown camera parameter in runtime, the topdownCameraParameter will override the default one
+	/// in player prefab.
+	/// Use stringParameter = name of PlayerCameraRuntimeConfig.topDownCameraControlParameters
+	/// </summary>
+	ApplyTopdownCameraParameter = 122,
+	
+	/// <summary>
+	/// Reset topdown camera parameter to the define one in player prefab.
+	/// </summary>
+	ResetTopdownCameraParameter = 123,
+	
     //NPC Event
 //    NPCBirth = 200,
 //    NPCDie = 201,
