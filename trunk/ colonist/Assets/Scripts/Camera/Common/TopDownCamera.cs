@@ -48,13 +48,15 @@ public class TopDownCamera : RuntimeCameraControl
 
 	void LateUpdate ()
 	{
-		if (Working) {
+		
 			//avoid too frequent update
 			if (Time.time - CameraLastDampTime >= CameraDampInterval) {
-				ApplyCameraControlParameter (true, this.CurrentTopDownCameraParameter);
+                //for normal top-down camera, only align position 
+				//and assume the rotation is set following the top down camera activated.
+				AlignCameraPosition(true, this.CurrentTopDownCameraParameter);
 				CameraLastDampTime = Time.time;
 			}
-		}
+		
 	}
 
 	private Vector3 GetCharacterCenter ()
@@ -83,7 +85,8 @@ public class TopDownCamera : RuntimeCameraControl
 	public virtual void ApplyCameraControlParameter (bool SmoothDamp,
 		                                             TopDownCameraControlParameter topdownCameraControlParameter)
 	{
-		AlignCameraPositionAndRotation (SmoothDamp, topdownCameraControlParameter);
+		AlignCameraPosition (SmoothDamp, topdownCameraControlParameter);
+		AlignCameraRotation (SmoothDamp, topdownCameraControlParameter);
 	}
 	
 	/// <summary>
@@ -107,16 +110,15 @@ public class TopDownCamera : RuntimeCameraControl
 	}
 	
 	/// <summary>
-	/// Calculates the camera top parameter position and rotation
+	/// Calculates the camera top parameter position.
 	/// If the topdown mode = Default | ParameterControl , the position is runtime calculated.
 	/// If the topdown mode = PositionAtPivot, the position is directly set to the pivot transform's position.
 	/// </summary>	
-	void AlignCameraPositionAndRotation (bool smoothDamp, TopDownCameraControlParameter topdownCameraControlParameter)
+	void AlignCameraPosition (bool smoothDamp, TopDownCameraControlParameter topdownCameraControlParameter)
 	{
 		Vector3 CameraPivotPosition = Vector3.zero;
-		Vector3? CameraLookAtPosition = null;
 		Vector3? ParameterCalculatePosition = null;
-		
+		Vector3 CameraLookAtPosition = Vector3.zero;
 		switch (topdownCameraControlParameter.mode) {
 			
 			//note: for Default mode, CameraLookAtPosition IS NOT ASSIGNED ! Because in runtime, we can't focus camera on player, that will shake the camera too much!
@@ -127,27 +129,26 @@ public class TopDownCamera : RuntimeCameraControl
 				                                                           GetCharacterCenter ());
 			CameraPivotPosition = ParameterCalculatePosition.Value;
 			CameraLookAtPosition = GetCharacterCenter();
-//			CameraPivotPosition = AdjustLineOfSight (CameraPivotPosition, GetCharacterCenter());
 			break;
 		case TopDownCameraControlMode.ParameterControlPositionAndLookAtPosition:
 			ParameterCalculatePosition = CalculateParameterControlPosition (smoothDamp, topdownCameraControlParameter.DynamicHeight, 
 				                                                           topdownCameraControlParameter.DynamicDistance, 
 				                                                           topdownCameraControlParameter.smoothLag_Position, 
 				                                                           topdownCameraControlParameter.cameraFocusOnPosition);
-			CameraLookAtPosition = topdownCameraControlParameter.cameraFocusOnPosition;
 			CameraPivotPosition = ParameterCalculatePosition.Value;
+			CameraLookAtPosition = topdownCameraControlParameter.cameraFocusOnPosition;
 			break;
 		case TopDownCameraControlMode.ParameterControlPositionAndLookAtTransform:
 			ParameterCalculatePosition = CalculateParameterControlPosition (smoothDamp, topdownCameraControlParameter.DynamicHeight, 
 				                                                           topdownCameraControlParameter.DynamicDistance, 
 				                                                           topdownCameraControlParameter.smoothLag_Position, 
 				                                                           topdownCameraControlParameter.cameraFocusOnTransform.position);
-			CameraLookAtPosition = topdownCameraControlParameter.cameraFocusOnTransform.position;
 			CameraPivotPosition = ParameterCalculatePosition.Value;
+			CameraLookAtPosition = topdownCameraControlParameter.cameraFocusOnTransform.position;
 			break;
 		case TopDownCameraControlMode.PoisitonAtPivotAndLookAtPlayer:
 			CameraPivotPosition = topdownCameraControlParameter.CameraPositionPivot.position;
-			CameraLookAtPosition = GetCharacterCenter ();
+			CameraLookAtPosition = GetCharacterCenter();
 			break;
 		case TopDownCameraControlMode.PositionAtPivotAndLookAtPosition:
 			CameraPivotPosition = topdownCameraControlParameter.CameraPositionPivot.position;
@@ -160,24 +161,51 @@ public class TopDownCamera : RuntimeCameraControl
 		}
 		
 		//finally, asign the position and rotation of the camera.
-		
+		//handle position:
+		CameraPivotPosition = AdjustLineOfSight (CameraPivotPosition, CameraLookAtPosition);
 		transform.position = CameraPivotPosition;
+	}
+	
+	void AlignCameraRotation(bool smoothDamp, TopDownCameraControlParameter topdownCameraControlParameter)
+	{
+		Vector3? CameraLookAtPosition = null;
+		switch (topdownCameraControlParameter.mode) {
+			
+			//note: for Default mode, CameraLookAtPosition IS NOT ASSIGNED ! Because in runtime, we can't focus camera on player, that will shake the camera too much!
+		case TopDownCameraControlMode.Default:
+			CameraLookAtPosition = GetCharacterCenter();
+			break;
+		case TopDownCameraControlMode.ParameterControlPositionAndLookAtPosition:
+			CameraLookAtPosition = topdownCameraControlParameter.cameraFocusOnPosition;
+			break;
+		case TopDownCameraControlMode.ParameterControlPositionAndLookAtTransform:
+			CameraLookAtPosition = topdownCameraControlParameter.cameraFocusOnTransform.position;
+			break;
+		case TopDownCameraControlMode.PoisitonAtPivotAndLookAtPlayer:
+			CameraLookAtPosition = GetCharacterCenter ();
+			break;
+		case TopDownCameraControlMode.PositionAtPivotAndLookAtPosition:
+			CameraLookAtPosition = topdownCameraControlParameter.cameraFocusOnPosition;
+			break;
+		case TopDownCameraControlMode.PositionAtPivotAndLookAtTransform:
+			CameraLookAtPosition = topdownCameraControlParameter.cameraFocusOnTransform.position;
+			break;
+		}
+		//handle rotation:
 		if(CameraLookAtPosition.HasValue)
 		{
-//		   transform.LookAt (CameraLookAtPosition.Value);
 		   if(smoothDamp)
 		   {
 		      Quaternion ToRotation = transform.rotation;
-		      ToRotation.SetLookRotation(CameraLookAtPosition.Value -transform.position, Vector3.up);
-		      transform.rotation = Quaternion.Lerp(transform.rotation, ToRotation, topdownCameraControlParameter.smoothLag_Rotation);
+		      ToRotation.SetLookRotation(CameraLookAtPosition.Value - transform.position, Vector3.up);
+		      transform.rotation = Quaternion.Lerp(transform.rotation, ToRotation, topdownCameraControlParameter.smoothLag_Rotation * Time.deltaTime);
 			  transform.rotation = ToRotation;
-//				transform.LookAt (CameraLookAtPosition.Value);
 		   }
 		   else
 		   {
 			  transform.LookAt (CameraLookAtPosition.Value);
+			  Debug.Log("Instant damp1!!!");
 		   }
-		   CameraPivotPosition = AdjustLineOfSight (CameraPivotPosition, CameraLookAtPosition.Value);
 		}
 	}
 
@@ -199,7 +227,7 @@ public class TopDownCamera : RuntimeCameraControl
 
 	void OnEnable ()
 	{
-		//Debug.Log ("Position damp immediately!");
+		Debug.Log ("On enable ! Position damp immediately!");
 		ApplyCameraControlParameter (false, this.CurrentTopDownCameraParameter);
 		transform.LookAt (PlayerCharacter.transform);
 	}

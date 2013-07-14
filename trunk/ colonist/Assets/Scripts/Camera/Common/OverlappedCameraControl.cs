@@ -41,7 +41,7 @@ public class OverlappedCameraControl : RuntimeCameraControl
 			this.camera.enabled = true;
 		}
 		camera.depth = CameraWorkingDepth;
-		Working = true;
+		this.enabled = true;
 		startWorkingTime = Time.time;
 		while (true) {
 			float durationTime = Mathf.Clamp (Time.time - startWorkingTime, 0, FadeInRectCurve.MaxTime);
@@ -54,28 +54,28 @@ public class OverlappedCameraControl : RuntimeCameraControl
 				Debug.LogError("Error camera rect:" + this.camera.rect + "\r\n" + exc.Message);
 			}
 			if (durationTime > FadeInRectCurve.MaxTime) {
-				Working = false;
+				this.enabled = false;
 				break;
 			}
 			yield return null;
 		}
-		Working = false;
+		this.enabled = false;
 	}
 	
 	IEnumerator FadeOutOverlappedCamera ()
 	{
-		Working = true;
+		this.enabled = true;
 		startWorkingTime = Time.time;
 		while (true) {
 			float durationTime = Mathf.Clamp (Time.time - startWorkingTime, 0, FadeOutRectCurve.MaxTime);
 			this.camera.rect = FadeOutRectCurve.Evaluate (durationTime);
 			if (durationTime > FadeOutRectCurve.MaxTime) {
-				Working = false;
+				this.enabled = false;
 				break;
 			}
 			yield return null;
 		}
-		Working = false;
+		this.enabled = false;
 		camera.depth = cameraInitalDepth;
 		camera.enabled = false;
 	}
