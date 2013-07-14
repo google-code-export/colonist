@@ -24,26 +24,26 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 	
 	void Update ()
 	{
-		if (Working) {
-			//if slow motion time out, 
-			//1. set false the flag, 
-			//2. change the timescale to 1.
-			//3. activate the previous camera script.
-			if ((Time.time - SlowMotionStartTime) >= SlowMotionTimeLength_Overrided) {
-				Working = false;
+		//if slow motion time out, 
+		//1. set false the flag, 
+		//2. change the timescale to 1.
+		//3. activate the previous camera script.
+		if ((Time.time - SlowMotionStartTime) >= SlowMotionTimeLength_Overrided) {
+				this.enabled = false;
 				Time.timeScale = 1;
-				previousCameraScript.Working = true;
-			} else {
-				//incresing the time scale.
-				float percentage = (Time.time - SlowMotionStartTime) / SlowMotionTimeLength_Overrided;
-				Time.timeScale = Mathf.Lerp (SlowMotionTimeScale, 1, percentage);
-			}
+				previousCameraScript.enabled = true;
+		} 
+		else 
+		{
+			//incresing the time scale.
+			float percentage = (Time.time - SlowMotionStartTime) / SlowMotionTimeLength_Overrided;
+			Time.timeScale = Mathf.Lerp (SlowMotionTimeScale, 1, percentage);
 		}
 	}
 	
 	void LateUpdate ()
 	{
-		if (Working) {
+		
 			switch (CurrentTopDownCameraParameter.mode) {
 			case TopDownCameraControlMode.ParameterControlPositionAndLookAtPosition:
 				ApplyCameraControlParameter (true, CurrentTopDownCameraParameter);
@@ -56,13 +56,13 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 				}
 				else 
 				{
-					Working = false; //in this case, reset the working status.
+					this.enabled = false; //in this case, reset the working status.
 					Time.timeScale = 1;
-					previousCameraScript.Working = true;
+					previousCameraScript.enabled = true;
 				}
 				break;
 			}
-		}
+		
 	}
 	
 	public void OnGameEvent (GameEvent _e)
@@ -114,7 +114,7 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 		SlowMotionStartTime = Time.time;
 		ApplyCameraControlParameter (false, CurrentTopDownCameraParameter);
 		Time.timeScale = SlowMotionTimeScale;
-		Working = true;
+		enabled = true;
 		//preserves the previous active runtime camera script
 		RuntimeCameraControl previousWorkingCameraScript = DisableCurrentCameraScript ();
 		if (previousWorkingCameraScript != null) {
@@ -144,7 +144,7 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 		SlowMotionStartTime = Time.time;
 		ApplyCameraControlParameter (false, CurrentTopDownCameraParameter);
 		Time.timeScale = SlowMotionTimeScale;
-		Working = true;
+		enabled = true;
 		//preserves the previous active runtime camera script
 		RuntimeCameraControl previousWorkingCameraScript = DisableCurrentCameraScript ();
 		if (previousWorkingCameraScript != null) {
@@ -159,9 +159,9 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 	{
 		RuntimeCameraControl _previousCameraScript = null;
 		foreach (RuntimeCameraControl cameraScript in transform.GetComponents<RuntimeCameraControl>()) {
-			if (cameraScript != this && cameraScript.Working == true) {
+			if (cameraScript != this && cameraScript.enabled == true) {
 				_previousCameraScript = cameraScript;
-				cameraScript.Working = false;
+				cameraScript.enabled = false;
 			}
 		}
 		return _previousCameraScript;
@@ -174,10 +174,10 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 	{
 		Time.timeScale = 1;
 		if (previousCameraScript != null) {
-			previousCameraScript.Working = true;
+			previousCameraScript.enabled = true;
 		}
-		if (this.Working == true) {
-			this.Working = false;
+		if (this.enabled == true) {
+			this.enabled = false;
 		}
 	}
 }
