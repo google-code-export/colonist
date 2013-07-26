@@ -64,7 +64,10 @@ public class LevelManager : MonoBehaviour
 		if (checkPointManager != null) {
 			if (checkPointManager.HasLastCheckPoint (this.LevelName, out level, out checkpoint)) {
 				Debug.Log ("Has check point:" + level + " " + checkpoint);
-				checkPointManager.LoadCheckpoint (checkpoint);
+				if(checkPointManager.LoadCheckpoint (checkpoint))
+				{
+				   checkPointManager.LoadFirstCheckpoint ();
+				}
 			} else {
 				Debug.Log ("No check point, load the first");
 				checkPointManager.LoadFirstCheckpoint ();
@@ -157,7 +160,8 @@ public class LevelManager : MonoBehaviour
 			Util.PutToGround (gameEvent.receiver.transform, this.GroundLayer, 0.1f);
 			break;
 		case GameEventType.NPCPlayAnimation:
-			gameEvent.receiver.animation.CrossFade (gameEvent.StringParameter);
+			gameEvent.receiver.animation.Rewind(gameEvent.StringParameter);
+			gameEvent.receiver.animation.Play (gameEvent.StringParameter);
 			break;
 		case GameEventType.NPCPlayQueueAnimation:
 			foreach (string ani in gameEvent.StringParameter.Split(new char[] { ';' })) {
@@ -165,7 +169,7 @@ public class LevelManager : MonoBehaviour
 			}
 			break;
 		case GameEventType.NPCFaceToPlayer:
-			gameEvent.sender.transform.LookAt (new Vector3 (player.transform.position.x, gameEvent.sender.transform.position.y, player.transform.position.z));
+			gameEvent.receiver.transform.LookAt (new Vector3 (player.transform.position.x, gameEvent.receiver.transform.position.y, player.transform.position.z));
 			break;
 		case GameEventType.NPCStopPlayingAnimation:
 			gameEvent.receiver.animation.Stop (gameEvent.StringParameter);
@@ -249,6 +253,10 @@ public class LevelManager : MonoBehaviour
 			break;
 		case GameEventType.SetPlayerControlDirectionPivot:
 			this.ControlDirectionPivot = gameEvent.GameObjectParameter.transform;
+			break;
+		case GameEventType.AlignObjectToSpecifiedParent:
+			gameEvent.receiver.transform.position = gameEvent.GameObjectParameter.transform.position;
+			gameEvent.receiver.transform.rotation = gameEvent.GameObjectParameter.transform.rotation;
 			break;
 		}
 	}

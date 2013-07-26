@@ -204,7 +204,6 @@ public class TopDownCamera : RuntimeCameraControl
 		   else
 		   {
 			  transform.LookAt (CameraLookAtPosition.Value);
-			  Debug.Log("Instant damp1!!!");
 		   }
 		}
 	}
@@ -227,9 +226,9 @@ public class TopDownCamera : RuntimeCameraControl
 
 	void OnEnable ()
 	{
-		Debug.Log ("On enable ! Position damp immediately!");
+//		Debug.Log ("On enable ! Position damp immediately!");
 		ApplyCameraControlParameter (false, this.CurrentTopDownCameraParameter);
-		transform.LookAt (PlayerCharacter.transform);
+		transform.LookAt (GetCharacterCenter());
 	}
 	
 	/// <summary>

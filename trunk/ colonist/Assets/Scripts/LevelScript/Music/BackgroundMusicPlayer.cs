@@ -127,7 +127,10 @@ public class BackgroundMusicPlayer : MonoBehaviour, I_GameEventReceiver
 				StartCoroutine("StopMusic", mu.Name);
 			}
 		}
-		
+		if(musicData.audioSource.enabled)
+		{
+		   musicData.audioSource.enabled = true;
+		}
 		musicData.audioSource.Play();
 		if (musicData.FadeInLength > 0) {
 			while ((Time.time - startTime) <= musicData.FadeInLength) {
@@ -158,6 +161,7 @@ public class BackgroundMusicPlayer : MonoBehaviour, I_GameEventReceiver
 			}
 		}
 		musicData.audioSource.Stop();
+		musicData.audioSource.enabled = false;
 	}
 	
 	void StopAllMusic()
