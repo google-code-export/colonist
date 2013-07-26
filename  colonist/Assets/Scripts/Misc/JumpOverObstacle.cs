@@ -52,7 +52,7 @@ public class JumpOverObstacle : MonoBehaviour {
     public bool GetJumpOverTrack(Transform transfromJumpOver,out Vector3 HeightPosition, out Vector3 GroundPosition)
     {
         RaycastHit hitInfo;
-        bool isHit = BoxCollider.Raycast(new Ray(transfromJumpOver.position, transfromJumpOver.forward), out hitInfo, 999);
+        bool isHit = this.BoxCollider.Raycast(new Ray(transfromJumpOver.position, transfromJumpOver.forward), out hitInfo, 999);
         if (isHit)
         {
             //Calculate height point :

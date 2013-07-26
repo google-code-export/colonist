@@ -140,6 +140,7 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
 //		Debug.Log("Jump at frame:" + Time.frameCount + " isJumping:" + IsJumping + " at time:" + Time.time + "at jump power:" + Power);
         JumpOverObstacle obstacle = null;
         bool HasObstacle = CheckJumpOverObstacle(out obstacle);
+		Debug.Log("Check obstacle:" + HasObstacle);
         //If there is obstacle, jump over it
         if (HasObstacle)
         {
@@ -167,7 +168,7 @@ public class Predator3rdPersonalJumpController : MonoBehaviour {
 		
 		//rising time = 1/2 of ForwardJumpTime
 		float _jumpTime = ForwardJumpTime * power;
-		Debug.Log("Jump time:" + _jumpTime + " max jump forward time:" + ForwardJumpTime);
+//		Debug.Log("Jump time:" + _jumpTime + " max jump forward time:" + ForwardJumpTime);
 		float RisingTime = _jumpTime * 0.5f;
 		float gravity = (float)(this.JumpForwardMaxHeight / (1.5f * RisingTime * RisingTime));
 		float upwardInitalSpeed = gravity * RisingTime;

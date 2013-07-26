@@ -109,6 +109,10 @@ public class SpawnNPC : MonoBehaviour, I_GameEventReceiver
 	/// </summary>
 	public GameEvent[] Event_At_All_Spawned_DieOut = new GameEvent[]{};
 	/// <summary>
+	/// The events_fired when all entity has finished spawning.
+	/// </summary>
+	public GameEvent[] Event_At_All_Spawned_Complete = new GameEvent[]{};
+	/// <summary>
 	/// The spawn entity array.
 	/// SpawnEntity will be spawned one by one. 
 	/// </summary>
@@ -156,7 +160,28 @@ public class SpawnNPC : MonoBehaviour, I_GameEventReceiver
 			Debug.Log ("SpawnEntity:" + spawnEntity.Name + " has die out!");
 		}
 		
-		if (Event_At_All_Spawned_DieOut != null && Event_At_All_Spawned_DieOut.Length > 0) {
+		//all entity has completed spawning, if there're events for spawning complete, fire the events.
+		if(Event_At_All_Spawned_Complete != null && Event_At_All_Spawned_Complete.Length > 0){
+			foreach (GameEvent e in Event_At_All_Spawned_Complete) {
+				LevelManager.OnGameEvent (e, this);
+			}
+		}
+		
+		//if there're evented for spawn die out, while until all unit die out then fire the event
+		if(this.Event_At_All_Spawned_DieOut != null && this.Event_At_All_Spawned_DieOut.Length > 0)
+		{
+			//wait for all spawn eneity die oout
+			while(true)
+			{
+			   if(this.spawnEntityArray.Count(x=>x.IsSpawnedDieOut() == false) > 0)
+			   {
+				  yield return new WaitForSeconds(0.33333f);
+			   }
+			   else 
+			   {
+				  break;
+			   }
+			}
 			foreach (GameEvent e in Event_At_All_Spawned_DieOut) {
 				LevelManager.OnGameEvent (e, this);
 			}

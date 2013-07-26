@@ -52,17 +52,18 @@ public class CheckPoint : MonoBehaviour
 	
 	/// <summary>
 	/// Loads the checkpoint of name.
-	public void LoadCheckpoint (string Name)
+	public bool LoadCheckpoint (string Name)
 	{
 		foreach (CheckpointData chkData in CheckpointDataArray) {
 			if (chkData.Name == Name) {
 				foreach (GameEvent eve in chkData.EventsForLoadingCheckpoint) {
 					LevelManager.OnGameEvent (eve , this);
 				}
-				return;
+				return true;
 			}
 		}
-		Debug.LogError("Checkpoint:" + name + " does not exist!!!");
+		Debug.LogError("Checkpoint:" + Name + " does not exist!!!");
+		return false;
 	}
 	
 	public void CheckPointReach (string Name)

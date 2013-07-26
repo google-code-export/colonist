@@ -43,6 +43,7 @@ public class GameEventLifeCycle : MonoBehaviour {
 	
 	// Use this for initialization
 	void Start () {
+		Debug.Log("In start, gameObject:" + this.name);
 		foreach(GameEvent _e in eventOnBirth)
 		{
 			_e.sender = this.gameObject;

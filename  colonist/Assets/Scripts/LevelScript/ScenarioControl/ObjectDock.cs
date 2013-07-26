@@ -87,6 +87,9 @@ public class ObjectDockData
 /// </summary>
 public class ObjectDock : MonoBehaviour
 {
+	/// <summary>
+	/// The name of the object dock, must be unique in the scene.
+	/// </summary>
 	public string Name = "";
 	public Transform objectToDock = null;
 	public bool PlayOnAwake = false;
@@ -110,13 +113,17 @@ public class ObjectDock : MonoBehaviour
 	void Start ()
 	{
 		if(PlayOnAwake)
+		{
 	       StartCoroutine("StartDocking", objectToDock);
+		}
+		//register this object dock at start.
+		ScenarioControl.RegisterObjectDock(this);
 	}
 	
 	// Update is called once per frame
-	void Update ()
-	{
-	}
+//	void Update ()
+//	{
+//	}
 	
 	public void Dock()
 	{
@@ -276,6 +283,8 @@ public class ObjectDock : MonoBehaviour
 				    case GameEventType.AttachObjectToSpecifiedParent:
 				    case GameEventType.NPCPutToGround:
 				    case GameEventType.DetachObjectFromParent:
+				    case GameEventType.AlignObjectToSpecifiedParent:
+				    case GameEventType.NPCFaceToPlayer:
 					  //for these receiver-must-not-be-null events, override the receiver field to the dockingObject, if the event's receiver field is empty.
 					  if(_e.receiver == null && dockingObject != null)
 				         _e.receiver = dockingObject.gameObject;

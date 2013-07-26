@@ -64,6 +64,7 @@ public class ScenarioControl : MonoBehaviour {
 	}
 	// Use this for initialization
 	void Start () {
+		
 	}
 	
 	// Update is called once per frame
@@ -173,6 +174,14 @@ public class ScenarioControl : MonoBehaviour {
 			this.ScenarioCamera.enabled = true;
 			this.ScenarioAudioListener.enabled = true;
 			break;
+		}
+	}
+	
+	public static void RegisterObjectDock(ObjectDock dock)
+	{
+		if(Instance.ObjectDockMonoDict.Keys.Contains(dock.Name) == false)
+		{
+		   Instance.ObjectDockMonoDict.Add(dock.Name, dock);
 		}
 	}
 }

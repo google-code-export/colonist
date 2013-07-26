@@ -392,6 +392,11 @@ public enum GameEventType
 	/// </summary>
 	DetachObjectFromParent = 418,
 	
+	/// <summary>
+	/// Align receiver to GameObjectParameter.
+	/// </summary>
+	AlignObjectToSpecifiedParent = 419,
+	
 	//Game setting event
 	/// <summary>
 	/// Set language to a given value in StringParameter
