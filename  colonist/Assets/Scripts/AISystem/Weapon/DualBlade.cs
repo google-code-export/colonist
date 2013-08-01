@@ -5,7 +5,17 @@ public class DualBlade : MonoBehaviour, WeaponControl  {
 	
 	public GameObject FrontBlade = null;
 	public GameObject BackBlade = null;
-
+	
+	/// <summary>
+	/// The name of the weapon on sound effect. Which will be played in _WeaponOn routine.
+	/// </summary>
+	public string WeaponOnSoundEffectName = "";
+	
+    /// <summary>
+	/// The name of the weapon off sound effect. Which will be played in _WeaponOff routine.
+	/// </summary>
+	public string WeaponOffSoundEffectName = "";
+	
 	public WeaponTrail frontTrail;
 	public WeaponTrail backTrail;
 	
@@ -13,15 +23,17 @@ public class DualBlade : MonoBehaviour, WeaponControl  {
 	public float UpdateTrailLag = 0.1f;
 	public bool InitOn = false;
 	
-	// Use this for initialization
-	void Awake () {
-		FrontBlade.active = InitOn;
-		BackBlade.active = InitOn;
+	Unit unit = null;
+	
+	void Awake()
+	{
+		unit = GetComponent<Unit>();
 	}
 	
 	void Start()
 	{
-
+		FrontBlade.active = InitOn;
+		BackBlade.active = InitOn;
 	}
 	
 	// Update is called once per frame
@@ -48,6 +60,8 @@ public class DualBlade : MonoBehaviour, WeaponControl  {
 		BackBlade.active = true;
 		frontTrail.StartTrail(0.5f, 0.4f);
 		backTrail.StartTrail(0.5f, 0.4f);
+		
+		GlobalAudioSystem.PlayAudioData( unit.AudioDataDict[WeaponOnSoundEffectName] );
 	}
 	
 	public virtual void _WeaponOff()
@@ -56,6 +70,8 @@ public class DualBlade : MonoBehaviour, WeaponControl  {
 		BackBlade.active = false;
 		frontTrail.ClearTrail();
 		backTrail.ClearTrail();
+		
+		GlobalAudioSystem.PlayAudioData( unit.AudioDataDict[WeaponOffSoundEffectName] );
 	}
 	
 	public virtual void CreateHitEffect(GameObject hitObject)
