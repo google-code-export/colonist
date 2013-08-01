@@ -13,15 +13,8 @@ using Pathfinding;
 /// </summary>
 //[RequireComponent(typeof(Unit))]
 [RequireComponent(typeof(CharacterController))]
-public class AI : MonoBehaviour, I_AIBehaviorHandler {
-	/// <summary>
-	/// The name of this AI.
-	/// </summary>
-	public string Name = ""; 
-	/// <summary>
-	/// Designer can put description of the AI at here.
-	/// </summary>
-	public string Description = "";
+public class AI : AbstractAI {
+
     [HideInInspector]
     public Unit Unit;
     /// <summary>
@@ -147,7 +140,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// 
     /// Offspring should call InitAI() at Awake() 
     /// </summary>
-    public virtual void InitAI()
+    public override void InitAI()
     {
         this.Unit = GetComponent<Unit>();
         controller = GetComponent<CharacterController>();
@@ -165,7 +158,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 	/// 1. Start A* pathfind daemon routines.
 	/// 2. Start the first (default) AIBehavior.
 	/// </summary>
-    public virtual void StartAI()
+    public override void StartAI()
     {
 		Unit.CurrentAI = this;
 		AIBehavior firstBehavior = this.behaviorDict[FirstBehavior];
@@ -179,7 +172,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// <summary>
     /// Stop AI.
     /// </summary>
-    public virtual void StopAI()
+    public override void StopAI()
     {
 		StopAllCoroutines();
 		StopNavigation();
@@ -719,7 +712,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// </summary>
     /// <param name="behavior"></param>
     /// <returns></returns>
-    public virtual void StartBehavior(AIBehavior behavior)
+    public override void StartBehavior(AIBehavior behavior)
     {
 		if(PrintDebugMessage)
 		{
@@ -752,7 +745,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
     /// <param name="behavior"></param>
     /// <returns></returns>
     /// 
-    public virtual void StopBehavior(AIBehavior behavior)
+    public override void StopBehavior(AIBehavior behavior)
     {
 	    //preserve the last start time
         behavior.LastExecutionTime = Time.time;
@@ -1068,7 +1061,7 @@ public class AI : MonoBehaviour, I_AIBehaviorHandler {
 				}
 				animation.CrossFade(attackData.AnimationName);
 				yield return new WaitForSeconds(animation[attackData.AnimationName].length);
-				//If AttackInterrupt = true, means wait for a while 
+				//If AttackInterrupt = true, means wait for a while, so execute the IdleData 
 				if(behavior.AttackInterrupt)
 				{
 					IdleData idleData = this.Unit.IdleDataDict[behavior.IdleDataName];

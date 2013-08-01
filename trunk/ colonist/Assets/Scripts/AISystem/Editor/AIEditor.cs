@@ -50,7 +50,7 @@ public class AIEditor
 			//EditBasicUnitProperty ();
 			AI.Unit = (Unit)EditorCommon.EditBasicUnitProperty (AI.Unit);
 			//Edit Start AI
-			AI[] AllAI = AI.gameObject.GetComponents<AI> ();
+			AbstractAI[] AllAI = AI.gameObject.GetComponents<AbstractAI> ();
 			AI.Unit.StartAIName = EditorCommon.EditPopup ("Unit Start AI:", AI.Unit.StartAIName, AllAI.Select (x => x.Name).ToArray ());
 			//Edit Idle Data 
 			if (EnableEditIdleData = EditorGUILayout.BeginToggleGroup ("---Edit Idle Data", EnableEditIdleData)) {
@@ -312,8 +312,8 @@ public class AIEditor
 			}
 			break;
 		case AIBehaviorType.SwitchToAI:
-			AI[] ai = this.AI.Unit.GetComponents<AI> (); 
-			behavior.SwitchToAIName = EditorCommon.EditStringArray ("Switch to next AI:", behavior.SwitchToAIName, ai.Select (x => x.Name).ToArray ());
+			AbstractAI[] AllAI = this.AI.Unit.GetComponents<AbstractAI> (); 
+			behavior.SwitchToAIName = EditorCommon.EditStringArray ("Switch to next AI:", behavior.SwitchToAIName, AllAI.Select (x => x.Name).ToArray ());
 			break;
 		}
 	}

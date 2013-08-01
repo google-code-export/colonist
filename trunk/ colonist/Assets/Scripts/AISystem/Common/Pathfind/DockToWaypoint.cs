@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
 
@@ -43,6 +44,18 @@ public class DockToWaypoint : MonoBehaviour {
 	void _SelectNearestWaypoint()
 	{
 		_currentWaypoint = Util.findFarest(transform.position, waypoints.Select(x=>x.transform).ToArray()).GetComponent<WayPoint>();
+	}
+	
+	/// <summary>
+	/// Randomly select a waypoint from top N far waypoint of the current waypoint list.
+	/// For example, there are 10 waypoints, if you call the method with N=5, it ramdonly select top 5 far waypoints
+	/// among all of the waypoints.
+	/// </summary>
+	void _SelectRandomTopFarWaypoint(int N)
+	{
+		IList<WayPoint> waypointOrderList = waypoints.OrderByDescending(x=>Util.DistanceOfCharacters(this.gameObject, x.gameObject)).ToList();
+		WayPoint wp = Util.RandomFromList<WayPoint>(waypointOrderList.Take(N).ToList<WayPoint>());
+		this._currentWaypoint = wp;
 	}
 	
 	/// <summary>

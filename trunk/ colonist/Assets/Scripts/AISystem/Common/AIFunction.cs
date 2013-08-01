@@ -270,11 +270,11 @@ public class AIFunction : MonoBehaviour
 	}
 	
 	/// <summary>
-	/// rotate smoothly to face to current target.
+	/// rotate smoothly to face to current target in future rotateTimeLength time.
 	/// </summary>
 	void _RotateToCurrentTarget(float rotateTimeLength)
 	{
-		RotateToCurrentTarget= true;
+		RotateToCurrentTarget = true;
 		StopRotationTime = Time.time + rotateTimeLength;
 	}
 	
