@@ -72,7 +72,7 @@ public class Unit : UnitBase , I_GameEventReceiver
 	public AudioData[] AudioData = new AudioData[] { };
 	public IDictionary<string,AudioData> AudioDataDict = new Dictionary<string,AudioData>();
 	
-	public IDictionary<string,AI> AIDict = new Dictionary<string,AI> ();
+	public IDictionary<string,AbstractAI> AIDict = new Dictionary<string,AbstractAI> ();
 	
 	/// <summary>
 	/// The attack counter indicates how many times the Unit has attacked.
@@ -117,7 +117,7 @@ public class Unit : UnitBase , I_GameEventReceiver
 	/// The current running AI.
 	/// </summary>
 	[HideInInspector]
-	public AI CurrentAI = null;
+	public AbstractAI CurrentAI = null;
 	
 	/// <summary>
 	/// The current target variable, which will be updated by the current running AI component.
@@ -155,7 +155,7 @@ public class Unit : UnitBase , I_GameEventReceiver
 	
 	public void Start ()
 	{
-		foreach (AI _AI in GetComponents<AI>()) {
+		foreach (AbstractAI _AI in GetComponents<AbstractAI>()) {
 			if (_AI.Name == StartAIName && StartAIAtAwake) {
 				_AI.StartAI();
 			} else {
@@ -314,7 +314,7 @@ public class Unit : UnitBase , I_GameEventReceiver
 	/// </summary>
 	public void InitUnitAI ()
 	{
-		foreach (AI _AI in GetComponents<AI>()) {
+		foreach (AbstractAI _AI in GetComponents<AbstractAI>()) {
 			AIDict.Add (_AI.Name, _AI);
 		}
 		controller = GetComponent<CharacterController> ();
@@ -343,14 +343,14 @@ public class Unit : UnitBase , I_GameEventReceiver
 			{
 			   CurrentAI.enabled = false;
 			   CurrentAI.StopAI();
-			   AI newAI = AIDict [SwitchToAIName];
+			   AbstractAI newAI = AIDict [SwitchToAIName];
 		       newAI.StartAI();
 		       CurrentAI = newAI;
 			}
 		}
 		else
 		{
-			AI newAI = AIDict [SwitchToAIName];
+			AbstractAI newAI = AIDict [SwitchToAIName];
 		    newAI.StartAI();
 		    this.CurrentAI = newAI;
 		}
