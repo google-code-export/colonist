@@ -15,7 +15,7 @@ using System.Linq;
 /// 3. Move to LandingAirSpot, with MoveData = MoveData_FlyingToLandingAirSpot.
 /// 4. Move to LandingSpot, with MoveData = MoveData_LandingFromAirSpot.
 /// </summary>
-public class JetpackSoldierLandingAI : AI {
+public class JetpackSoldierLandingAI : AbstractAI {
 	
 	public string MoveDataName_FlyingToLandingAirSpot = "";
 	public string MoveDataName_LandingFromAirSpot = "";
@@ -30,13 +30,24 @@ public class JetpackSoldierLandingAI : AI {
 	/// </summary>
 	public string[] ApplicableWaypointName = new string[] {};
 	WayPoint[] applicableWaypoints = new WayPoint[]{};
+	Unit unit;
+	
+	void Awake()
+	{
+		InitAI();
+	}
+	
+	public override void InitAI()
+	{
+		unit = this.GetComponent<Unit>();
+	}
 	
     public override void StartAI()
     {
-		MoveData_FlyingToLandingAirSpot = this.Unit.MoveDataDict[MoveDataName_FlyingToLandingAirSpot];
-		MoveData_LandingFromAirSpot = this.Unit.MoveDataDict[MoveDataName_LandingFromAirSpot];
+		MoveData_FlyingToLandingAirSpot = this.unit.MoveDataDict[MoveDataName_FlyingToLandingAirSpot];
+		MoveData_LandingFromAirSpot = this.unit.MoveDataDict[MoveDataName_LandingFromAirSpot];
 		applicableWaypoints = WayPoint.GetWaypoints(ApplicableWaypointName);
-		Unit.CurrentAI = this;
+		unit.CurrentAI = this;
 		StartCoroutine("Start_LandingBehavior");
 		this.enabled = true;
     }
@@ -100,17 +111,25 @@ public class JetpackSoldierLandingAI : AI {
 		
 		//play landing animation, and put to ground:
 		animation.CrossFade(Animation_Landing);
-		Util.PutToGround (transform, this.Unit.GroundLayer, 0.1f);
+		Util.PutToGround (transform, this.unit.GroundLayer, 0.1f);
 		
 		yield return new WaitForSeconds(0.1f);
 		
-		this.Unit.SwitchAI(nextAI);
+		this.unit.SwitchAI(nextAI);
 	}
 	
 	public void SwitchToNextAI()
 	{
-		Unit.AIDict[nextAI].StartAI();
+		unit.AIDict[nextAI].StartAI();
 		StopAllCoroutines();
 		this.enabled = false;
+	}
+	
+	public override void StartBehavior(AIBehavior behavior)
+	{
+	}
+	
+    public override void StopBehavior(AIBehavior behavior)
+	{
 	}
 }
