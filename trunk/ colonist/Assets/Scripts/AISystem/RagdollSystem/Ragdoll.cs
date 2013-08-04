@@ -159,7 +159,7 @@ public class Ragdoll : MonoBehaviour
 				Destroy (joint);
 			}
 			if (JointData.JointGameObjectInitialActive == false) {
-				JointData.Joint.gameObject.active = false;
+				JointData.Joint.gameObject.SetActive(false);
 			}
 			if (JointData.RandomRotation) {
 				JointData.Joint.gameObject.transform.rotation = Random.rotation;
@@ -178,8 +178,8 @@ public class Ragdoll : MonoBehaviour
 			yield return new WaitForSeconds(JointData.CreateForceDelay);
 		}
 		//Activate the game object (if not)
-		if (JointData.Joint.gameObject.active == false) {
-			JointData.Joint.gameObject.active = true;
+		if (JointData.Joint.gameObject.activeInHierarchy == false) {
+			JointData.Joint.gameObject.SetActive(true);
 		}
 		Vector3 ForceDirection = JointData.ForceRandomDirection ?
             Util.RandomVector (JointData.ForceRandomDirectionFrom, JointData.ForceRandomDirectionTo) :

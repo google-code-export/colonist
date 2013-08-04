@@ -5,7 +5,7 @@ public class DualBlade : MonoBehaviour, WeaponControl  {
 	
 	public GameObject FrontBlade = null;
 	public GameObject BackBlade = null;
-	
+	public GameObject[] HitEffectObjects = new GameObject[]{};
 	/// <summary>
 	/// The name of the weapon on sound effect. Which will be played in _WeaponOn routine.
 	/// </summary>
@@ -24,16 +24,17 @@ public class DualBlade : MonoBehaviour, WeaponControl  {
 	public bool InitOn = false;
 	
 	Unit unit = null;
-	
+	CharacterController characterController = null;
 	void Awake()
 	{
 		unit = GetComponent<Unit>();
+		characterController = GetComponent<CharacterController>();
 	}
 	
 	void Start()
 	{
-		FrontBlade.active = InitOn;
-		BackBlade.active = InitOn;
+		FrontBlade.SetActive(InitOn);
+		BackBlade.SetActive(InitOn);
 	}
 	
 	// Update is called once per frame
@@ -76,5 +77,13 @@ public class DualBlade : MonoBehaviour, WeaponControl  {
 	
 	public virtual void CreateHitEffect(GameObject hitObject)
 	{
+		//get the closest point and create the hit effect object:
+		Vector3 center = characterController.center + transform.position;
+		Vector3 hitPoint = hitObject.collider.ClosestPointOnBounds(center);
+		foreach(GameObject hitEffect in HitEffectObjects)
+		{
+		   Object hitEffectObject = Object.Instantiate(hitEffect, hitPoint, Quaternion.identity);
+		   Destroy(hitEffectObject, 3);
+		}
 	}
 }

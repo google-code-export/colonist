@@ -23,6 +23,8 @@ public class GameMenu : MonoBehaviour
     private bool quitEnabled = true;
     private bool directKeyQuit = true;
 	
+	private bool IsPausedIconClick = false;
+	
     public int Level = 0;
 	
 	public void Restart ()
@@ -132,11 +134,12 @@ public class GameMenu : MonoBehaviour
 				{
 					FlipPause ();
 					Event.current.Use ();
+				    IsPausedIconClick = true;
 				}
 			break;
 		}
 		
-		if (Time.timeScale != 0.0f)
+		if (IsPausedIconClick == false)
 		{
 			return;
 		}
@@ -158,6 +161,7 @@ public class GameMenu : MonoBehaviour
 			if (MenuButton (resumeButton))
 			{
 				Time.timeScale = 1.0f;
+			    IsPausedIconClick = false;
 			}
 			
 			if (fullScreenAvailable)
@@ -197,9 +201,9 @@ public class GameMenu : MonoBehaviour
 		GUILayout.EndArea ();
 	}
 	
-	
 	bool MenuButton (Texture2D icon)
 	{
+		
 		bool wasPressed = false;
 		
 		GUILayout.BeginHorizontal ();

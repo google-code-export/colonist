@@ -219,7 +219,10 @@ public abstract class JoyButton : MonoBehaviour
     /// The finger id on this button
     /// </summary>
     protected int fingerID = -1;
-
+	
+	public bool PlayInterfaceAudio = false;
+	public AudioClip InterfaceAudioClip = null;
+	
     /// <summary>
     /// Check if a touch should be processed by the Joybutton.
     /// Basically, for a touch at Began phase, check if the touch is in the Button bound area
@@ -240,6 +243,7 @@ public abstract class JoyButton : MonoBehaviour
             case TouchPhase.Moved:
                 return this.fingerID == t.fingerId;
             default:
+			    Debug.Log("We find a abnormal touch !" + t.phase);
                 return false;
         }
     }
@@ -316,6 +320,10 @@ public abstract class JoyButton : MonoBehaviour
         this.fingerID = -1;
         Joybutton_Up_Value = 0;
         Joybutton_Right_Value = 0;
+		if(this.PlayInterfaceAudio = true && this.InterfaceAudioClip != null)
+		{
+			AudioSource.PlayClipAtPoint(InterfaceAudioClip, this.transform.position);
+		}
     }
 	
 	/// <summary>

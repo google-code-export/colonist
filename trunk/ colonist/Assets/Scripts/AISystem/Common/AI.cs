@@ -686,6 +686,10 @@ public class AI : AbstractAI {
 			    ShouldCompare = true;
 			    LeftValue = Time.time - AIBehaviorCondition.PreviousConditionTrueTime;
 			    break;
+		    case AIValueComparisionCondition.WaypointDistance:
+			    ShouldCompare = behavior.selectedWaypoint != null;
+			    LeftValue = Util.DistanceOfCharacters(this.gameObject, behavior.selectedWaypoint.gameObject);
+			    break;
             default:
                 Debug.LogError("GameObject:" + this.gameObject.name + " - unsupported value comparision condition:" + AIBehaviorCondition.ValueComparisionCondition.ToString());
                 break;
@@ -764,7 +768,10 @@ public class AI : AbstractAI {
 		
 		//Start next behavior
 	    string NextBehavior = behavior.NextBehaviorName;
-//		Debug.Log("Stop behavior:" + behavior.Name + " and start next behavior:" + behavior.NextBehaviorName);
+		if(NextBehavior == string.Empty)
+		{
+			Debug.LogError("NextBehavior of behavior: " + behavior.Name + " is empty !");
+		}
 		StartBehavior(this.behaviorDict[behavior.NextBehaviorName]);
     }
 
@@ -843,6 +850,43 @@ public class AI : AbstractAI {
         StopCoroutine("Start_Idle");
         string IdleAnimationName = Unit.IdleDataDict[behavior.IdleDataName].AnimationName;
         animation.Stop(IdleAnimationName);
+        yield return null;
+    }
+	
+	public virtual IEnumerator Start_MoveToWaypoint(AIBehavior behavior)
+	{
+		MoveData MoveData = Unit.MoveDataDict[behavior.MoveDataName];
+		WayPoint[] wpArray = WayPoint.GetWaypoints(behavior.WaypointNames);
+		WayPoint wp = Util.RandomFromArray<WayPoint>(wpArray);
+		behavior.selectedWaypoint = wp;
+		StartNavigation(behavior.selectedWaypoint.transform, true, MoveData);
+		float lastScanEndConditionTime = Time.time;
+		while (true)
+        {
+            if (Halt)
+            {
+                yield return null;
+                continue;
+            }
+			
+			//if this behavior's end condition matches, end this behavior
+			if((Time.time - lastScanEndConditionTime) >= behavior.AlterBehaviorInterval)
+			{
+			  lastScanEndConditionTime = Time.time;
+			  if(CheckAlternateBehaviorCondition(behavior))
+			  {
+			     break;
+			  }
+			}
+            yield return null;
+        }
+		StopBehavior(behavior);
+	}
+	
+	public virtual IEnumerator Stop_MoveToWaypoint(AIBehavior behavior)
+    {
+        StopCoroutine("Start_MoveToWaypoint");
+        behavior.selectedWaypoint = null;
         yield return null;
     }
 

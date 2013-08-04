@@ -64,7 +64,8 @@ public class LevelManager : MonoBehaviour
 		if (checkPointManager != null) {
 			if (checkPointManager.HasLastCheckPoint (this.LevelName, out level, out checkpoint)) {
 				Debug.Log ("Has check point:" + level + " " + checkpoint);
-				if(checkPointManager.LoadCheckpoint (checkpoint))
+				//if load previous checkpoint fails, load the first one by default
+				if(checkPointManager.LoadCheckpoint (checkpoint) == false)
 				{
 				   checkPointManager.LoadFirstCheckpoint ();
 				}
@@ -114,7 +115,7 @@ public class LevelManager : MonoBehaviour
 	{
 		switch (gameEvent.type) {
 		case GameEventType.LevelPause:
-			Time.timeScale = 0;
+			PauseGame();
 			break;
 		//GameDialogue object display dialogue text by dialog id.
 		case GameEventType.ShowGameDialogue:
@@ -303,5 +304,15 @@ public class LevelManager : MonoBehaviour
 				unit.SendMessage (message, parameter);
 			}
 		}
+	}
+	
+	public static void PauseGame()
+	{
+		Time.timeScale = 0;
+	}
+	
+	public static void ResumeGame()
+	{
+		Time.timeScale = 1;
 	}
 }

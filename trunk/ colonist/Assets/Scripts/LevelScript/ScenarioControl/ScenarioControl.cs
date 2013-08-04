@@ -38,7 +38,7 @@ public class ScenarioControl : MonoBehaviour {
 		{
 			if(c.tag.ToLower().Contains("player"))
 			{
-				PlayerCamera = c;
+				PlayerCamera = c; 
 			}
 			if(c.tag.ToLower().Contains("scenario"))
 			{

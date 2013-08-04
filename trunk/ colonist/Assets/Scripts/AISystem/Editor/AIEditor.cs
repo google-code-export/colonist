@@ -223,6 +223,9 @@ public class AIEditor
 		string[] IdleDataNameArray = this.AI.Unit.IdleData.Select (x => x.Name).ToArray<string> ();
 		string[] AttackDataNameArray = this.AI.Unit.AttackData.Select (x => x.Name).ToArray<string> ();
 		string[] MoveDataNameArray = this.AI.Unit.MoveData.Select (x => x.Name).ToArray<string> ();
+		string[] SceneWaypointNameArray = Object.FindObjectsOfType(typeof(WayPoint)).Select(x=>x.name).ToArray();
+		SceneWaypointNameArray.OrderBy(x=>x.ToString());
+		
 		int idx = 0;
 		switch (behavior.Type) {
 		case AIBehaviorType.Idle:
@@ -314,6 +317,13 @@ public class AIEditor
 		case AIBehaviorType.SwitchToAI:
 			AbstractAI[] AllAI = this.AI.Unit.GetComponents<AbstractAI> (); 
 			behavior.SwitchToAIName = EditorCommon.EditStringArray ("Switch to next AI:", behavior.SwitchToAIName, AllAI.Select (x => x.Name).ToArray ());
+			break;
+		case AIBehaviorType.MoveToWaypoint:
+		    // Move data:
+			idx = IndexOfArray<string> (MoveDataNameArray, behavior.MoveDataName);
+			idx = EditorGUILayout.Popup ("Move data:", idx, MoveDataNameArray);
+			behavior.MoveDataName = MoveDataNameArray [idx];
+			behavior.WaypointNames = EditorCommon.EditStringArray("Select scene waypoint:", behavior.WaypointNames, SceneWaypointNameArray);
 			break;
 		}
 	}
@@ -491,6 +501,7 @@ public class AIEditor
 		case AIValueComparisionCondition.FarestEnemyDistance:
 		case AIValueComparisionCondition.NearestEnemyDistance:
 		case AIValueComparisionCondition.LastConditionMatchTimeInterval:
+		case AIValueComparisionCondition.WaypointDistance:
 			ConditionData.RightValueForComparision = EditorGUILayout.FloatField (ConditionData.RightValueForComparision);
 			break;
 		case AIValueComparisionCondition.RandomValue:

@@ -80,7 +80,6 @@ public class JoyButtonManager : MonoBehaviour {
     {
         foreach (Touch t in Input.touches)
         {
-		
             foreach (JoyButton joyButton in joyButtons)
             {
                 if (joyButton.CheckTouch(t))
