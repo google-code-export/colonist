@@ -156,11 +156,15 @@ public class AIBehavior
 	public string NextBehaviorName = "";
 	
 	/// <summary>
-	/// The waypoint names. It's used in type = MoveToTransform behavior.
+	/// The waypoint names. It's used in type = MoveToWaypoint behavior.
 	/// </summary>
 	public string[] WaypointNames = new string[]{};
-	public bool MoveToWaypoint = false;
 	
+	/// <summary>
+	/// Runtime variables, cache the selected waypoint.
+	/// </summary>
+	[HideInInspector]
+	public WayPoint selectedWaypoint = null;
 	
 	public AIBehavior GetClone ()
 	{

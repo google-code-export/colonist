@@ -1111,7 +1111,7 @@ public class Util : MonoBehaviour {
 
     public static void ActivateRecurrsive(GameObject o)
     {
-        o.active = true;
+        o.SetActive(true);
         foreach (Transform child in o.transform)
         {
             ActivateRecurrsive(child.gameObject);

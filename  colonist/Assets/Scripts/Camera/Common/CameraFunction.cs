@@ -1,6 +1,9 @@
 using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// Controls normal camera functionalities.
+/// </summary>
 public class CameraFunction : MonoBehaviour,I_GameEventReceiver {
 
     public Material WhiteInOutMaterial;

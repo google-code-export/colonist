@@ -86,7 +86,12 @@ public enum AIBehaviorType
 	/// This AI will be set off , another AI will be set active.
 	/// </summary>
 	SwitchToAI = 8,
-
+	
+	/// <summary>
+	/// Move to a waypoint in scene.
+	/// Waypoint is defined in AIBehavior.WaypointName array.
+	/// </summary>
+	MoveToWaypoint = 9,
     #endregion
 }
 
@@ -342,7 +347,12 @@ public enum AIValueComparisionCondition
 	/// For example, a condition, last time it matchs at 01:22. And later, the time is 01:55, so the LastConditionMatchTimeInterval = 33s
 	/// </summary>
 	LastConditionMatchTimeInterval = 11,
-
+	
+	/// <summary>
+	/// Distance to the AIBehavior.selectedWaypoint.
+	/// </summary>
+	WaypointDistance = 12,
+	
 #endregion
 }
 

@@ -13,13 +13,11 @@ public class PlayerCameraRuntimeConfig : MonoBehaviour, I_GameEventReceiver {
 	/// </summary>
 	public TopDownCameraControlParameter[] topDownCameraControlParameters = new TopDownCameraControlParameter[]{};
 	
-	ScenarioControl scenarioControlInstance = null;
-	TopDownCamera playerTopdownCamera = null;
-	
-	void Start()
+	TopDownCamera PlayerTopdownCamera
 	{
-		scenarioControlInstance = (ScenarioControl)FindObjectOfType(typeof(ScenarioControl));
-		playerTopdownCamera = scenarioControlInstance.PlayerCamera.GetComponent<TopDownCamera>();
+		get{
+			return ScenarioControl.Instance.PlayerCamera.GetComponent<TopDownCamera>();;
+		}
 	}
 	
 	public void OnGameEvent(GameEvent _event)
@@ -28,10 +26,10 @@ public class PlayerCameraRuntimeConfig : MonoBehaviour, I_GameEventReceiver {
 		{
 		case GameEventType.ApplyTopdownCameraParameter:
 			TopDownCameraControlParameter controlParameter = GetTopDownCameraControlParameter(_event.StringParameter);
-			playerTopdownCamera.SetCurrentTopdownCameraParameter(controlParameter);
+			PlayerTopdownCamera.SetCurrentTopdownCameraParameter(controlParameter);
 			break;
 		case GameEventType.ResetTopdownCameraParameter:
-			playerTopdownCamera.ResetCurrentTopdownCameraParameter();
+			PlayerTopdownCamera.ResetCurrentTopdownCameraParameter();
 			break;
 		}
 	}

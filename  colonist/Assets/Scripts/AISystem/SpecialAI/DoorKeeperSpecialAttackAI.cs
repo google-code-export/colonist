@@ -2,6 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 
+
+/// <summary>
+/// Special AI script to implement DoorKeeper drilling attack.
+/// </summary>
 public class DoorKeeperSpecialAttackAI : AbstractAI
 {
 	
@@ -11,6 +15,7 @@ public class DoorKeeperSpecialAttackAI : AbstractAI
 	public string PreRollAnimation = "PreRoll";
 	public string RollingAnimation = "Rolling";
 	public string RollEndAnimation = "RollEnd";
+	public string DrillingAttackDataName = "";
 	
 	/// <summary>
 	/// The drilling move speed curve.
@@ -25,7 +30,9 @@ public class DoorKeeperSpecialAttackAI : AbstractAI
 	Unit unit = null;
 	bool HasHitWall = false;
 	CharacterController characterController = null;
-
+	bool IsDrilling = false;
+	bool canCastDrillingAttack = false;
+	
 	void Awake ()
 	{
 		unit = this.GetComponent<Unit> ();
@@ -54,6 +61,19 @@ public class DoorKeeperSpecialAttackAI : AbstractAI
 	{
 	}
 	
+	void FixedUpdate()
+	{
+		if(IsDrilling && canCastDrillingAttack)
+		{
+		   int PreviousDoDamageCounter = this.unit.DoDamageCounter;
+		   SendMessage("_Attack", DrillingAttackDataName);
+		   if(PreviousDoDamageCounter !=  this.unit.DoDamageCounter)
+		   {
+		      canCastDrillingAttack = false;
+		   }
+		}
+	}
+	
 	/// <summary>
 	/// Execute special attack behavior - Drilling Attack.
 	/// </summary>
@@ -63,6 +83,7 @@ public class DoorKeeperSpecialAttackAI : AbstractAI
 			//Play PreDrill animation:
 			animation.CrossFade (PreDrillAniamtion);
 			yield return new WaitForSeconds(animation[PreDrillAniamtion].length);
+			canCastDrillingAttack = true;
 			//face to current target:
 			GameObject Player = unit.CurrentTarget.gameObject;
 			Vector3 currentTargetPosition = new Vector3 (Player.transform.position.x, this.transform.position.y, Player.transform.position.z);
@@ -77,7 +98,7 @@ public class DoorKeeperSpecialAttackAI : AbstractAI
 			
 			//Ignore collision between transform and player. Let transform pass through player without collision.
 			Physics.IgnoreCollision(this.characterController, Player.collider, true);
-			
+			IsDrilling = true;
 			float _startTime = Time.time;
 			while (HasHitWall == false) {
 				float _t = Time.time - _startTime;
@@ -90,8 +111,8 @@ public class DoorKeeperSpecialAttackAI : AbstractAI
 			}
 			//after, set on the collision detection between play and transform.
 			Physics.IgnoreCollision(this.characterController, Player.collider, false);
-			
-			//hit wall, and bounce back
+		    IsDrilling = false;	
+		 	//hit wall, and bounce back
 			animation.CrossFade (BounceWallAnimation);
 		
 			yield return new WaitForSeconds(animation[BounceWallAnimation].length + 0.5f);
@@ -107,11 +128,11 @@ public class DoorKeeperSpecialAttackAI : AbstractAI
 			HasHitWall = true;
 //			Debug.Log("I hit wall!");
 		}
-		Debug.Log("I hit something:" + hit.collider.gameObject.name);
+//		Debug.Log("I hit something:" + hit.collider.gameObject.name);
 	}
 	
-	void OnCollisionEnter(Collision c)
-	{
-		Debug.Log("I collide something:" + c.collider.gameObject.name);
-	}
+//	void OnCollisionEnter(Collision c)
+//	{
+////		Debug.Log("I collide something:" + c.collider.gameObject.name);
+//	}
 }

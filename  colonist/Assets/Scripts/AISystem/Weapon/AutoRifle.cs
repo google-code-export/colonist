@@ -2,13 +2,11 @@ using UnityEngine;
 using System.Collections;
 
 public class AutoRifle : WeaponControlBase {
-
+	
+	public GameObject[] effectHitObjects = new GameObject[]{};
+	
 	public override void CreateHitEffect(GameObject hitObject)
 	{
-		if(this.HasHitEffect == false)
-		{
-			return;
-		}
 		//can't work without collider
 		if(hitObject.collider == null)
 		{

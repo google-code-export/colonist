@@ -170,6 +170,10 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 			// UnprocessGestureList.Add(gestureInfo);
 			UnprocessCombatList.Add (combat);
 		}
+		else 
+		{
+			Debug.Log("Input was dropped at frame:" + Time.frameCount);
+		}
 	}
 	
 	void ClearUnprocessCombatList()
@@ -244,7 +248,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 		currentProcessCombat = combat;
 		//If combat.BlockUserInput = TRUE, user gesture input will be dropped during combat processing
 		if (combat.BlockPlayerInput == true) {
-			ReleaseUserInputBlockTime = Time.time + animation[attackData.AnimationName].length;
+			ReleaseUserInputBlockTime = Time.time + animation[attackData.AnimationName].length * 0.5f;
 			BlockUserGestureInput = true;
 		}
         

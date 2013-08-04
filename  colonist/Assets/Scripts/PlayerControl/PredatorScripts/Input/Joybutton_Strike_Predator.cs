@@ -15,15 +15,10 @@ public class Joybutton_Strike_Predator : JoyButton
 {
 	
 	/// <summary>
-	/// The Input type triggered bywhenplayer tap on the button.
+	/// The Input type triggered when player tap on the button.
 	/// </summary>
 	public UserInputType Tap = UserInputType.Button_Left_Claw_Tap;
-	/// <summary>
-	/// The Input type triggered when player hold on the button.
-	/// If Hold == UserInputType.None, the hold message will not be sent.
-	/// </summary>
-	public UserInputType Hold = UserInputType.Button_Left_Claw_Hold;
-	
+
 	public Texture HintTexture;
 	public float HintRotateAngluarSpeed = 150;
 	
@@ -34,11 +29,7 @@ public class Joybutton_Strike_Predator : JoyButton
 	private float HoldDetectionSeconds = 0.3333f;
 	private Predator3rdPersonalAttackController attackController = null;
 	private float holdStart = -1;
-	/// <summary>
-	/// messageSent flag is used for tap/hold , when hold, message is sent at stationary phase.
-	/// when tap, message is sent at touch end phase.
-	/// </summary>
-	private bool messageSent = false;
+
 	private bool showHint = true;
 	private float stopHintTime = 0;
 
@@ -71,7 +62,7 @@ public class Joybutton_Strike_Predator : JoyButton
 		yield return new WaitForEndOfFrame();
 		foreach(UserInputType t in hintTypes)
 		{
-			if(t == this.Tap || t == this.Hold)
+			if(t == this.Tap)
 			{
 				showHint = true;
 				stopHintTime = Time.time + 3;
@@ -86,8 +77,6 @@ public class Joybutton_Strike_Predator : JoyButton
 	public override void onTouchBegin (Touch touch)
 	{
 		base.onTouchBegin (touch);
-		messageSent = false;
-		holdStart = -1;
 	}
 	/// <summary>
 	/// Call when touch.phase = Move
@@ -103,17 +92,8 @@ public class Joybutton_Strike_Predator : JoyButton
 	/// <param name="touch"></param>
 	public override void onTouchStationary (Touch touch)
 	{
-		if (holdStart == -1) {
-			holdStart = Time.time;
-		}
-		if (messageSent==false && Hold != UserInputType.None && ((Time.time - holdStart) >= HoldDetectionSeconds))
-		{
-			UserInputData gestInfo = new UserInputData( Hold, null, holdStart, Time.time);
-			attackController.NewUserGesture(gestInfo);
-			SendMessage("DontHint");
-			messageSent = true;
-		}
 	}
+	
 	/// <summary>
 	/// Call when touch.phase = End
 	/// </summary>
@@ -121,20 +101,15 @@ public class Joybutton_Strike_Predator : JoyButton
 	public override void onTouchEnd (Touch touch)
 	{
 		base.onTouchEnd (touch);
-        if(messageSent == false)
-		{
-			UserInputData gestInfo = new UserInputData( Tap, null, this.TouchStartTime, Time.time);
-			attackController.NewUserGesture(gestInfo);		
-			SendMessage("DontHint");
-		}
+
+	    UserInputData gestInfo = new UserInputData( Tap, null, this.TouchStartTime, Time.time);
+	    attackController.NewUserGesture(gestInfo);		
+		Debug.Log("Input was send to controller at frame:" + Time.frameCount);
+	    SendMessage("DontHint");
 	}
 
 	void OnGUI ()
 	{
-//		if(Application.platform == RuntimePlatform.WindowsEditor)
-//		{
-//			JoyButtonBound = this.GetAdaptiveBound();
-//		}
 		GUI.DrawTexture (GUIBound, ButtonTexture);
 		if(this.JoyButtonName == "LeftClaw" && Input.GetKeyDown(KeyCode.T))
 		{
