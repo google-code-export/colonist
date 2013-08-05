@@ -82,6 +82,15 @@ public enum AdaptivePointMode
 	/// The offset unit is defined in AdaptiveLength.
 	/// </summary>
 	RelativeToReferrenceButtonTop = 4,
+	
+	/// <summary>
+	/// Final value = Screen width - Value
+	/// </summary>
+	ScreenWidthMinusFixedValue = 5,
+	/// <summary>
+	/// Final value = Screen height - Value
+	/// </summary>
+	ScreenHeightMinusFixedValue = 6,
 }
 
 /// <summary>
@@ -119,6 +128,12 @@ public class AdaptiveAnchor
 		case AdaptivePointMode.RelativeToReferrenceButtonTop:
 		case AdaptivePointMode.RelativeToReferrenceButtonLeft:
 		    throw new System.Exception("Call GetValue(ReferrencePoint) instead!");
+			break;
+		case AdaptivePointMode.ScreenWidthMinusFixedValue:
+			return Screen.width - FixedValue;
+			break;
+		case AdaptivePointMode.ScreenHeightMinusFixedValue:
+			return Screen.height - FixedValue;
 			break;
 		case AdaptivePointMode.Fixed:
 		default:
