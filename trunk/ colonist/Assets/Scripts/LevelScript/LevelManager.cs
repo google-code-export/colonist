@@ -40,7 +40,7 @@ public class LevelManager : MonoBehaviour
 	/// </summary>
 	ScenarioControl scenarioControlObject = null;
 	BackgroundMusicPlayer backGroundMusicPlayer = null;
-	CheckPoint checkPointManager = null;
+	CheckPointManager checkPointManager = null;
 	PlayerCameraRuntimeConfig playerRuntimeCameraConfig = null;
 	
 	void Awake ()
@@ -50,7 +50,7 @@ public class LevelManager : MonoBehaviour
 		gameDialogueObject = FindObjectOfType (typeof(GameDialogue)) as GameDialogue;
 		scenarioControlObject = FindObjectOfType (typeof(ScenarioControl)) as ScenarioControl;
 		backGroundMusicPlayer = FindObjectOfType (typeof(BackgroundMusicPlayer)) as BackgroundMusicPlayer;
-		checkPointManager = FindObjectOfType (typeof(CheckPoint)) as CheckPoint;
+		checkPointManager = FindObjectOfType (typeof(CheckPointManager)) as CheckPointManager;
 		playerRuntimeCameraConfig = FindObjectOfType (typeof(PlayerCameraRuntimeConfig)) as PlayerCameraRuntimeConfig;
 	}
 
@@ -62,17 +62,7 @@ public class LevelManager : MonoBehaviour
 		
 		//try to load checkpoint, if checkpointManager exists in scene.
 		if (checkPointManager != null) {
-			if (checkPointManager.HasLastCheckPoint (this.LevelName, out level, out checkpoint)) {
-				Debug.Log ("Has check point:" + level + " " + checkpoint);
-				//if load previous checkpoint fails, load the first one by default
-				if(checkPointManager.LoadCheckpoint (checkpoint) == false)
-				{
-				   checkPointManager.LoadFirstCheckpoint ();
-				}
-			} else {
-				Debug.Log ("No check point, load the first");
-				checkPointManager.LoadFirstCheckpoint ();
-			}
+			checkPointManager.StartGame();
 		}
 	}
 	
@@ -227,8 +217,11 @@ public class LevelManager : MonoBehaviour
 		case GameEventType.LoadLevel:
 			LoadLevel (gameEvent);
 			break;
-		case GameEventType.LoadCheckPoint:
-			LoadLevelWithCheckPoint (gameEvent);
+		case GameEventType.LoadNextLevel:
+			LoadNextLevel();
+			break;
+		case GameEventType.ContinueLastCheckPoint:
+			ContinueLastCheckpoint();
 			break;
 		case GameEventType.Mute:
 			Persistence.Mute ();
@@ -262,37 +255,82 @@ public class LevelManager : MonoBehaviour
 		}
 	}
 	
+	void LoadNextLevel()
+	{
+		int currentLevel = Application.loadedLevel;
+		LoadLevelByNumber(currentLevel + 1);
+	}
+	
 	/// <summary>
-	/// Loads the level.The checkpoint is cleared. 
-	/// Call this method when user dedicated to play a level from the begin point.
+	/// Loads the level completely, ignores the previous played checkpoint.
 	/// </summary>
 	void LoadLevel (GameEvent gameEvent)
 	{
-		if (checkPointManager != null) {
-			checkPointManager.ClearCheckpoint ();
-		}
+
 		switch (gameEvent.parameterType) {
-		case ParameterType.Int:
-			Application.LoadLevel (gameEvent.IntParameter);
-			break;
-		case ParameterType.String:
-			Application.LoadLevel (gameEvent.StringParameter);
-			break;
+		    case ParameterType.Int:
+			  LoadLevelByNumber(gameEvent.IntParameter);
+			  break;
+		    case ParameterType.String:
+			  LoadLevelByName(gameEvent.StringParameter);
+			  break;
 		}
 	}
 	
 	/// <summary>
-	/// Loads the level with check point.
-	/// Call this method when user want to play the last checkpoint .
+	/// Passes the checkpoint object to next level.
+	/// loadLastCheckPoint - true of false to indicate if the previous checkpoint is loaded 
+	/// checkPointName - only used when loadLastCheckPoint == true
 	/// </summary>
-	void LoadLevelWithCheckPoint (GameEvent gameEvent)
+	void PassCheckpointObjectToNextLevel(bool loadLastCheckPoint, string checkPointName)
 	{
-		string levelname = "";
-		string checkpointName = "";
-		if (checkPointManager.HasLastCheckPoint (this.LevelName, out levelname, out checkpointName)) {
-			Application.LoadLevel (levelname);
+		GameObject checkPointObject = new GameObject("CheckPoint");
+		CheckPoint checkPoint = checkPointObject.AddComponent<CheckPoint>();
+		checkPoint.loadCheckPointType = loadLastCheckPoint ? CheckPoint.LoadCheckPointType.LoadLastCheckpoint : CheckPoint.LoadCheckPointType.NewLevelStart;
+		if(checkPoint.loadCheckPointType == CheckPoint.LoadCheckPointType.LoadLastCheckpoint)
+		{
+			checkPoint.LoadCheckPointName = checkPointName;
+		}
+		//leave the checkPointObject undestroyed to next scene.
+		Object.DontDestroyOnLoad(checkPointObject);
+	}
+	
+	/// <summary>
+	/// Loads the level by name, and start the level completely new.
+	/// </summary>
+	void LoadLevelByName(string levelName)
+	{
+		PassCheckpointObjectToNextLevel(false, "");
+		Application.LoadLevel (levelName);
+	}
+	/// <summary>
+	/// Loads the level by number, and start the level completely new.
+	/// </summary>
+	void LoadLevelByNumber(int number)
+	{
+		PassCheckpointObjectToNextLevel(false, "");
+		Application.LoadLevel (number);
+	}
+	/// <summary>
+	/// Loads the last played level and continue with last played checkpoint.
+	/// </summary>
+	void ContinueLastCheckpoint()
+	{
+		string lastCheckPointLevel = "";
+		string lastCheckPointName = "";
+		bool hasCheckPoint = checkPointManager.GetLastCheckpoint(out lastCheckPointLevel, out lastCheckPointName);
+		if(hasCheckPoint)
+		{
+			PassCheckpointObjectToNextLevel(true, lastCheckPointName);
+			Application.LoadLevel (lastCheckPointLevel);
+		}
+		//if no last checkpoint, start the new game
+		else 
+		{
+			LoadLevelByName("Level00");//yes, this is hardcode ...
 		}
 	}
+	
 	
 	public static void SendAIMessage (string message, object parameter)
 	{

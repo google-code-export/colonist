@@ -176,8 +176,12 @@ public class EditorUtilityWindow : EditorWindow
 		
 #region edit level checkpoint
 		if (EnableEditLevelCheckpoint = EditorGUILayout.BeginToggleGroup ("Edit level checkpoint", EnableEditLevelCheckpoint)) {
-			bool hasCheckPoint = Persistence.GetLastCheckPoint (out checkPointLevel, out checkPointName);
+			string _level = "";
+			string _checkpoint = "";
+			bool hasCheckPoint = Persistence.GetLastCheckPoint (out _level, out _checkpoint);
 			if (hasCheckPoint) {
+				checkPointLevel = _level;
+				checkPointName = _checkpoint;
 				checkPointLevel = EditorGUILayout.TextField ("check point level", checkPointLevel);
 				checkPointName = EditorGUILayout.TextField ("check point name", checkPointName);
 				if (GUILayout.Button ("Delete checkpoint")) {
