@@ -203,12 +203,17 @@ public enum GameEventType
 	/// <summary>
 	/// Load last check point.
 	/// </summary>
-	LoadCheckPoint = 12,
+	ContinueLastCheckPoint = 12,
 	
 	/// <summary>
 	/// Set the controll pivot object to a new object in LevelManager.ControlDirectionPivot.
 	/// </summary>
 	SetPlayerControlDirectionPivot = 13,
+	
+	/// <summary>
+	/// Load next level (level counter + 1)
+	/// </summary>
+	LoadNextLevel = 14,
 	
     //Player Character Event
 //    PlayerBirth = 100,

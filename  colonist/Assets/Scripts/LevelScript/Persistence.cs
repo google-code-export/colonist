@@ -103,6 +103,10 @@ public class Persistence : MonoBehaviour {
 		return isMute;
 	}
 	
+	/// <summary>
+	/// Saves the current progress in the form of LevelName + CheckPointName
+	/// You should call this method in game, when the player reach a milestone of the level.
+	/// </summary>
 	public static void SaveCheckPoint(string LevelName, string CheckPointName)
 	{
 		PlayerPrefs.SetString(Persistence.CheckPointLevel, LevelName);
