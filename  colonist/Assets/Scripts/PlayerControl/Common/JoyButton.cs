@@ -6,18 +6,28 @@ using System.Collections;
 /// </summary>
 public enum AdaptiveLengthMode
 {
-	/// <summary>
-	/// Length value is a fixed value.
-	/// </summary>
-	Fixed = 0,
-	/// <summary>
-	/// Length is relative to screen width.
-	/// </summary>
-	RelativeToScreenWidth = 1,
-	/// <summary>
-	/// Length is relative to screen height.
-	/// </summary>
-	RelativeToScreenHeight = 2,
+    /// <summary>
+    /// Length value is a fixed value.
+    /// </summary>
+    Fixed = 0,
+    /// <summary>
+    /// Length is relative to screen width.
+    /// </summary>
+    RelativeToScreenWidth = 1,
+    /// <summary>
+    /// Length is relative to screen height.
+    /// </summary>
+    RelativeToScreenHeight = 2,
+
+    /// <summary>
+    /// Relative to referrence button's width.
+    /// </summary>
+    RelativeToReferrenceButtonWidth = 3,
+
+    /// <summary>
+    /// Relative to referrence button's height.
+    /// </summary>
+    RelativeToReferrenceButtonHeight = 4,
 }
 
 /// <summary>
@@ -26,30 +36,34 @@ public enum AdaptiveLengthMode
 [System.Serializable]
 public class AdaptiveLength
 {
-	public AdaptiveLengthMode adaptiveLengthMode = AdaptiveLengthMode.Fixed;
-	/// <summary>
-	/// FixedSize when mode = fixed.
-	/// </summary>
-	public float FixedValue = 1;
-	/// <summary>
-	/// Aspect to screen width (when mode = relative to screen width) or aspect to screen height (when mode = relative to screen height).
-	/// Note: the lengthAspect should between 0 and 1.
-	/// </summary>
-	public float Aspect = 0.1f;
-	
-	public float GetValue()
-	{
-		switch(adaptiveLengthMode)
-		{
-        case AdaptiveLengthMode.RelativeToScreenHeight:
-			return Screen.height * Aspect;
-	    case AdaptiveLengthMode.RelativeToScreenWidth:
-			return Screen.width * Aspect;
-		case  AdaptiveLengthMode.Fixed:
-		default:
-			return FixedValue;
-		}
-	}
+    public AdaptiveLengthMode adaptiveLengthMode = AdaptiveLengthMode.Fixed;
+    /// <summary>
+    /// FixedSize when mode = fixed.
+    /// </summary>
+    public float FixedValue = 1;
+    /// <summary>
+    /// Aspect to screen width (when mode = relative to screen width) or aspect to screen height (when mode = relative to screen height).
+    /// Note: the lengthAspect should between 0 and 1.
+    /// </summary>
+    public float Aspect = 0.1f;
+
+    public float GetValue(Vector2 referrenceGUISize = new Vector2())
+    {
+        switch (adaptiveLengthMode)
+        {
+            case AdaptiveLengthMode.RelativeToReferrenceButtonWidth:
+                return referrenceGUISize.x * Aspect;
+            case AdaptiveLengthMode.RelativeToReferrenceButtonHeight:
+                return referrenceGUISize.y * Aspect;
+            case AdaptiveLengthMode.RelativeToScreenHeight:
+                return Screen.height * Aspect;
+            case AdaptiveLengthMode.RelativeToScreenWidth:
+                return Screen.width * Aspect;
+            case AdaptiveLengthMode.Fixed:
+            default:
+                return FixedValue;
+        }
+    }
 }
 
 /// <summary>
@@ -57,31 +71,31 @@ public class AdaptiveLength
 /// </summary>
 public enum AdaptivePointMode
 {
-	/// <summary>
-	/// Point is fixed.
-	/// </summary>
-	Fixed = 0,
-	/// <summary>
-	/// Relative to screen left border.
-	/// </summary>
-	RelativeToScreenLeft = 1,
-	
-	/// <summary>
-	/// Relative to screen top border.
-	/// </summary>
-	RelativeToScreenTop = 2,
-	
-	/// <summary>
-	/// Relative to referrence button anchor point's left.
-	/// The offset unit is defined in AdaptiveLength.
-	/// </summary>
-	RelativeToReferrenceButtonLeft = 3,
-	
-	/// <summary>
-	/// Relative to referrence button anchor point's top.
-	/// The offset unit is defined in AdaptiveLength.
-	/// </summary>
-	RelativeToReferrenceButtonTop = 4,
+    /// <summary>
+    /// Point is fixed.
+    /// </summary>
+    Fixed = 0,
+    /// <summary>
+    /// Relative to screen left border.
+    /// </summary>
+    RelativeToScreenLeft = 1,
+
+    /// <summary>
+    /// Relative to screen top border.
+    /// </summary>
+    RelativeToScreenTop = 2,
+
+    /// <summary>
+    /// Relative to referrence button anchor point's left.
+    /// The offset unit is defined in AdaptiveLength.
+    /// </summary>
+    RelativeToReferrenceButtonLeft = 3,
+
+    /// <summary>
+    /// Relative to referrence button anchor point's top.
+    /// The offset unit is defined in AdaptiveLength.
+    /// </summary>
+    RelativeToReferrenceButtonTop = 4,
 	
 	/// <summary>
 	/// Final value = Screen width - Value
@@ -99,62 +113,68 @@ public enum AdaptivePointMode
 [System.Serializable]
 public class AdaptiveAnchor
 {
-	public AdaptivePointMode adaptivePointMode = AdaptivePointMode.Fixed;
-	/// <summary>
-	/// The fixed value, when mode = fixed.
-	/// </summary>
-	public float FixedValue = 1;
-	/// <summary>
-	/// When mode = relative to RelativeToScreenLeft or RelativeToScreenTop.
-	/// The aspect to screen left border or top border
-	/// Note: aspect should between 0 and 1.
-	/// </summary>
-	public float Aspect = 0.1f;
-	
-	/// <summary>
-	/// When mode = RelativeToReferrenceButtonLeft or RelativeToReferrenceButtonTop, 
-	/// assign the adaptiveLength the variables.
-	/// </summary>
-	public AdaptiveLength RelativeReferrenceLength = null;
-	
-	public float GetValue()
-	{
-		switch(adaptivePointMode)
-		{
-		case AdaptivePointMode.RelativeToScreenLeft:
-			return Screen.width * Aspect;
-		case AdaptivePointMode.RelativeToScreenTop:
-			return Screen.height * Aspect;
-		case AdaptivePointMode.RelativeToReferrenceButtonTop:
-		case AdaptivePointMode.RelativeToReferrenceButtonLeft:
-		    throw new System.Exception("Call GetValue(ReferrencePoint) instead!");
-			break;
+    public AdaptivePointMode adaptivePointMode = AdaptivePointMode.Fixed;
+    /// <summary>
+    /// The fixed value, when mode = fixed.
+    /// </summary>
+    public float FixedValue = 1;
+    /// <summary>
+    /// When mode = relative to RelativeToScreenLeft or RelativeToScreenTop.
+    /// The aspect to screen left border or top border
+    /// Note: aspect should between 0 and 1.
+    /// </summary>
+    public float Aspect = 0.1f;
+
+    /// <summary>
+    /// When mode = RelativeToReferrenceButtonLeft or RelativeToReferrenceButtonTop, 
+    /// assign the adaptiveLength the variables.
+    /// </summary>
+    public AdaptiveLength RelativeReferrenceLength = null;
+
+    public float GetValue()
+    {
+        switch (adaptivePointMode)
+        {
+            case AdaptivePointMode.RelativeToScreenLeft:
+                return Screen.width * Aspect;
+            case AdaptivePointMode.RelativeToScreenTop:
+                return Screen.height * Aspect;
+            case AdaptivePointMode.RelativeToReferrenceButtonTop:
+            case AdaptivePointMode.RelativeToReferrenceButtonLeft:
+                throw new System.Exception("Call GetValue(ReferrencePoint) instead!");
 		case AdaptivePointMode.ScreenWidthMinusFixedValue:
 			return Screen.width - FixedValue;
 			break;
 		case AdaptivePointMode.ScreenHeightMinusFixedValue:
 			return Screen.height - FixedValue;
 			break;
-		case AdaptivePointMode.Fixed:
-		default:
-			return FixedValue;
-		}
-	}
-	
-	public float GetValue(Vector2 referrenceGUIPoint)
-	{
-		float ret = 0;
-		switch(adaptivePointMode)
-		{
-		case AdaptivePointMode.RelativeToReferrenceButtonTop:
-			ret = referrenceGUIPoint.y + this.RelativeReferrenceLength.GetValue();
-			break;
-		case AdaptivePointMode.RelativeToReferrenceButtonLeft:
-		    ret = referrenceGUIPoint.x + this.RelativeReferrenceLength.GetValue();
-			break;
-		}
-		return ret;
-	}
+            case AdaptivePointMode.Fixed:
+            default:
+                return FixedValue;
+        }
+    }
+
+    public float GetValue(AdaptiveRect referrenceGUI)
+    {
+        float ret = 0;
+        switch (adaptivePointMode)
+        {
+            case AdaptivePointMode.RelativeToScreenLeft:
+                return Screen.width * Aspect;
+            case AdaptivePointMode.RelativeToScreenTop:
+                return Screen.height * Aspect;
+            case AdaptivePointMode.RelativeToReferrenceButtonTop:
+                return referrenceGUI.GetAnchor().y + this.RelativeReferrenceLength.GetValue(referrenceGUI.GetSize());
+                break;
+            case AdaptivePointMode.RelativeToReferrenceButtonLeft:
+                return referrenceGUI.GetAnchor().x + this.RelativeReferrenceLength.GetValue(referrenceGUI.GetSize());
+                break;
+            case AdaptivePointMode.Fixed:
+            default:
+                return FixedValue;
+        }
+        return ret;
+    }
 }
 
 /// <summary>
@@ -166,21 +186,21 @@ public class AdaptiveAnchor
 /// </summary>
 public abstract class JoyButton : MonoBehaviour
 {
-	    /// <summary>
+    /// <summary>
     /// Name of the JoyButton
     /// </summary>
     public string JoyButtonName;
-		
+
     /// <summary>
     /// Use this feature to control, when there're two joybuttons overlapped on screen, 
     /// which one can get touch check first.
     /// </summary>
     public int Priority = 0;
-	
-	/// <summary>
-	/// The adaptive bound of this button.
-	/// </summary>
-	public AdaptiveRect adaptiveBound = new AdaptiveRect();
+
+    /// <summary>
+    /// The adaptive bound of this button.
+    /// </summary>
+    public AdaptiveRect adaptiveBound = new AdaptiveRect();
 
     /// <summary>
     /// Texture of the JoyButton
@@ -200,9 +220,9 @@ public abstract class JoyButton : MonoBehaviour
     /// </summary>
     [HideInInspector]
     public float Joybutton_Right_Value = 0;
-	
-	[HideInInspector]
-	public Rect GUIBound;
+
+    [HideInInspector]
+    public Rect GUIBound;
 
     public virtual void PlayerControlOn()
     {
@@ -212,7 +232,7 @@ public abstract class JoyButton : MonoBehaviour
     public virtual void PlayerControlOff()
     {
         this.enabled = false;
-	}
+    }
 
     /// <summary>
     /// The button's bound offset , the actual display position on screen = JoyButtonBound + JoyButtonBoundOffset
@@ -234,10 +254,10 @@ public abstract class JoyButton : MonoBehaviour
     /// The finger id on this button
     /// </summary>
     protected int fingerID = -1;
-	
-	public bool PlayInterfaceAudio = false;
-	public AudioClip InterfaceAudioClip = null;
-	
+
+    public bool PlayInterfaceAudio = false;
+    public AudioClip InterfaceAudioClip = null;
+
     /// <summary>
     /// Check if a touch should be processed by the Joybutton.
     /// Basically, for a touch at Began phase, check if the touch is in the Button bound area
@@ -258,7 +278,7 @@ public abstract class JoyButton : MonoBehaviour
             case TouchPhase.Moved:
                 return this.fingerID == t.fingerId;
             default:
-			    Debug.Log("We find a abnormal touch !" + t.phase);
+                Debug.Log("We find a abnormal touch !" + t.phase);
                 return false;
         }
     }
@@ -294,7 +314,7 @@ public abstract class JoyButton : MonoBehaviour
     {
         Vector2 guiCoord = GameGUIHelper.ConvertScreenTouchCoordToGUICoord(touchScreenCoord);
         bool ret = GUIBound.Contains(guiCoord);
-		
+
         return ret;
     }
     public bool isTouchInsideBound(Touch t)
@@ -322,7 +342,7 @@ public abstract class JoyButton : MonoBehaviour
     /// </summary>
     /// <param name="touch"></param>
     public abstract void onTouchStationary(Touch touch);
-	
+
     /// <summary>
     /// Call when touch.phase = End.
     /// Do common things to every JoyButton.
@@ -335,35 +355,35 @@ public abstract class JoyButton : MonoBehaviour
         this.fingerID = -1;
         Joybutton_Up_Value = 0;
         Joybutton_Right_Value = 0;
-		if(this.PlayInterfaceAudio = true && this.InterfaceAudioClip != null)
-		{
-			AudioSource.PlayClipAtPoint(InterfaceAudioClip, this.transform.position);
-		}
+        if (this.PlayInterfaceAudio = true && this.InterfaceAudioClip != null)
+        {
+            AudioSource.PlayClipAtPoint(InterfaceAudioClip, this.transform.position);
+        }
     }
-	
-	/// <summary>
-	/// Gets the self-adaptive bound to current screen resolution.
-	/// </summary>
-	public virtual Rect GetAdaptiveBound()
-	{
-		//if HasReference flag is true, initialize the ReferrenceJoyButton variable.
-		if(adaptiveBound.HasReference && adaptiveBound.ReferrenceJoyButton == null)
-		{
-			foreach(JoyButton b in GetComponents<JoyButton>())
-			{
-			   if(b != this && b.JoyButtonName == adaptiveBound.ReferrenceJoyButtonNanme)
-			   {
-				  adaptiveBound.ReferrenceJoyButton = b;
-				  break;
-			   }
-			}
-			if(adaptiveBound.ReferrenceJoyButton == null)
-			{
-				return new Rect(0,0,0,0);
-				Debug.LogError("Not find reference button!");
-			}
-		}
-		return this.adaptiveBound.GetBound();
-	}
+
+    /// <summary>
+    /// Gets the self-adaptive bound to current screen resolution.
+    /// </summary>
+    public virtual Rect GetAdaptiveBound()
+    {
+        //if HasReference flag is true, initialize the ReferrenceJoyButton variable.
+        if (adaptiveBound.HasReference && adaptiveBound.ReferrenceJoyButton == null)
+        {
+            foreach (JoyButton b in GetComponents<JoyButton>())
+            {
+                if (b != this && b.JoyButtonName == adaptiveBound.ReferrenceJoyButtonNanme)
+                {
+                    adaptiveBound.ReferrenceJoyButton = b;
+                    break;
+                }
+            }
+            if (adaptiveBound.ReferrenceJoyButton == null)
+            {
+                Debug.LogError("Not find reference button!");
+                return new Rect(0, 0, 0, 0);
+            }
+        }
+        return this.adaptiveBound.GetBound();
+    }
 
 }

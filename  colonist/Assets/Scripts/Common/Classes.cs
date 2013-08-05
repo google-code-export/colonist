@@ -600,27 +600,28 @@ public class AdaptiveRect
 	
 	public Vector2 GetAnchor()
 	{
-		Vector2 anchor = HasReference ? new Vector2(AdaptiveAnchor_Left.GetValue(ReferrenceJoyButton.adaptiveBound.GetAnchor()),
-			                                     AdaptiveAnchor_Top.GetValue(ReferrenceJoyButton.adaptiveBound.GetAnchor()))
+		Vector2 anchor = HasReference ? new Vector2(AdaptiveAnchor_Left.GetValue(ReferrenceJoyButton.adaptiveBound),
+			                                     AdaptiveAnchor_Top.GetValue(ReferrenceJoyButton.adaptiveBound))
 			                       : new Vector2(AdaptiveAnchor_Left.GetValue(), AdaptiveAnchor_Top.GetValue());
 		return anchor;
 	}
 	
 	public Vector2 GetSize()
 	{
-		Vector2 size = new Vector2(AdaptiveWidth.GetValue(), AdaptiveHeight.GetValue());
-		return size;
+        Vector2 size = HasReference ? new Vector2(AdaptiveWidth.GetValue(ReferrenceJoyButton.adaptiveBound.GetSize()),
+                                                 AdaptiveHeight.GetValue(ReferrenceJoyButton.adaptiveBound.GetSize())) : new Vector2(AdaptiveWidth.GetValue(), AdaptiveHeight.GetValue());
+        if (HasUpLimitedSize)
+        {
+            size.x = Mathf.Clamp(size.x, 0, UpLimitedSize.x);
+            size.y = Mathf.Clamp(size.y, 0, UpLimitedSize.y);
+        }
+        return size;
 	}
 	
 	public Rect GetBound()
 	{
 		Vector2 anchor = GetAnchor();
 		Vector2 size = GetSize();
-		if(HasUpLimitedSize)
-		{
-			size.x = Mathf.Clamp(size.x, 0, UpLimitedSize.x);
-			size.y = Mathf.Clamp(size.y, 0, UpLimitedSize.y);
-		}
 		return new Rect(anchor.x, anchor.y, size.x, size.y);
 	}
 }

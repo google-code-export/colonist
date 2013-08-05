@@ -38,5 +38,10 @@ public class WayPoint : MonoBehaviour {
 	{
 		WayDict.Add(this.name, this);
 	}
+
+    void OnDestroy()
+    {
+        WayDict.Remove(this.name);
+    }
 	
 }
