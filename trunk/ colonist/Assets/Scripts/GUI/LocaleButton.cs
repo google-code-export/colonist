@@ -24,6 +24,7 @@ public class LocaleButton : JoyButton
 	public LocaleButtonParameter[] LocaleButtonParameterArray = new LocaleButtonParameter[]{};
 	public GameEvent[] event_on_touch = new GameEvent[]{};
 	LocaleButtonParameter CurrentLocale = null;
+	public ScaleMode _scaleMode;
 	
 	void Awake ()
 	{
@@ -33,12 +34,15 @@ public class LocaleButton : JoyButton
 	// Use this for initialization
 	void Start ()
 	{
+		//try to find the suitable locale setting to the current language
 		foreach (LocaleButtonParameter locale in LocaleButtonParameterArray) {
 			if (locale.Language == Persistence.GetPlayerLanguage ()) {
 				CurrentLocale = locale;
 				break;
 			}
 		}
+		//if not matched locale setting to current language, use English by default.
+		//So make sure YOU ALWAYS DEFINE ENGLISH in the array !!!
 		if (CurrentLocale == null) {
 			foreach (LocaleButtonParameter locale in LocaleButtonParameterArray) {
 				if (locale.Language == SystemLanguage.English) {
@@ -81,13 +85,13 @@ public class LocaleButton : JoyButton
 			LevelManager.OnGameEvent (e , this);
 		}
 	}
-	public ScaleMode _scaleMode;
+	
 	void OnGUI ()
 	{
 		GUIBound = base.GetAdaptiveBound();
 		if (CurrentLocale != null) {
 			if (CurrentLocale.texture != null) {
-				GUI.DrawTexture (GUIBound, CurrentLocale.texture);
+				GUI.DrawTexture (GUIBound, CurrentLocale.texture, this._scaleMode);
 			}
 			if (CurrentLocale.text != null && CurrentLocale.text != string.Empty) {
 				GUI.Label (GUIBound, CurrentLocale.text, CurrentLocale.style);

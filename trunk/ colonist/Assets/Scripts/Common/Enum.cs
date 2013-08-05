@@ -202,6 +202,8 @@ public enum GameEventType
 	SaveCheckPoint = 11,
 	/// <summary>
 	/// Load last check point.
+	/// This is usually called in start menu.
+	/// It will load a new level.
 	/// </summary>
 	ContinueLastCheckPoint = 12,
 	
@@ -214,6 +216,21 @@ public enum GameEventType
 	/// Load next level (level counter + 1)
 	/// </summary>
 	LoadNextLevel = 14,
+	
+	/// <summary>
+	/// Set time scale to 1 to resume the game.
+	/// </summary>
+	ResumeLevel = 15,
+	
+	/// <summary>
+	/// Reload the current level.
+	/// </summary>
+	ReloadLevel = 16,
+	
+	/// <summary>
+	/// Reload the current level, and if there is a previous checkpoint in the level, load the checkpoint.
+	/// </summary>
+    ReloadLevelWithCheckpoint = 17,
 	
     //Player Character Event
 //    PlayerBirth = 100,

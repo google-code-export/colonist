@@ -107,6 +107,9 @@ public class LevelManager : MonoBehaviour
 		case GameEventType.LevelPause:
 			PauseGame();
 			break;
+		case GameEventType.ResumeLevel:
+			ResumeGame();
+			break;
 		//GameDialogue object display dialogue text by dialog id.
 		case GameEventType.ShowGameDialogue:
 			this.gameDialogueObject.OnGameEvent (gameEvent);
@@ -223,6 +226,15 @@ public class LevelManager : MonoBehaviour
 		case GameEventType.ContinueLastCheckPoint:
 			ContinueLastCheckpoint();
 			break;
+		case GameEventType.ReloadLevelWithCheckpoint:
+			//Reload the current level with checkpoint
+			ReloadCurrentLevel(true);
+			break;
+		case GameEventType.ReloadLevel:
+			//Reload the current level
+			ReloadCurrentLevel(false);
+			break;
+			
 		case GameEventType.Mute:
 			Persistence.Mute ();
 			break;
@@ -293,6 +305,36 @@ public class LevelManager : MonoBehaviour
 		}
 		//leave the checkPointObject undestroyed to next scene.
 		Object.DontDestroyOnLoad(checkPointObject);
+	}
+	
+	/// <summary>
+	/// Reloads the current level.
+	/// withLastCheckpoint indicates If any checkpoint exists in previous part of current level, should we load the checkpoint ?
+	/// </summary>
+	void ReloadCurrentLevel(bool withLastCheckpoint)
+	{
+		//if withLastCheckpoint = true, load current level with checkpoint
+		if(withLastCheckpoint)
+		{
+			//check if there's checkpoint , and if the checkpoint level = current level
+			string lastCheckPointLevel = "";
+		    string lastCheckPointName = "";
+			bool hasCheckPoint = checkPointManager.GetLastCheckpoint(out lastCheckPointLevel, out lastCheckPointName);
+			//if has checkpoint and the checkpoint level = this level
+			if(hasCheckPoint && lastCheckPointLevel == Application.loadedLevelName)
+			{
+				ContinueLastCheckpoint();
+			}
+			else 
+			{
+				LoadLevelByNumber(Application.loadedLevel);
+			}
+		}
+		else 
+		//simply reload the current level
+		{
+			LoadLevelByNumber(Application.loadedLevel);
+		}
 	}
 	
 	/// <summary>
