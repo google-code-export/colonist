@@ -1,0 +1,10 @@
+﻿<Characters>
+	<character id="Dr.William" English="Dr.William" Chinese="威廉博士" imagepath="Portrait/William"/>
+	<character id="Dr.William(NoName)" English="" Chinese="" imagepath="Portrait/William"/>
+	<character id="SuitMan" English="" Chinese="" imagepath="Portrait/Unknown(Croddy)"/>
+	<character id="SuitMan(Croddy)" English="Mr.Croddy" Chinese="科迪先生" imagepath="Portrait/Croddy"/>
+	<character id="Beria" English="Beria" Chinese="貝利亞" imagepath="Portrait/Beria"/>
+	<character id="Beria(HideName)" English="" Chinese="" imagepath="Portrait/Beria"/>
+	<character id="NamelessGuardA" English="Guard A" Chinese="守衛A" />
+	<character id="NamelessGuardB" English="Guard B" Chinese="守衛B" />
+</Characters>
