@@ -574,6 +574,16 @@ public class AdaptiveRect
 	public AdaptiveLength AdaptiveHeight;
 	
 	/// <summary>
+	/// The flag of size has up limit.
+	/// </summary>
+	public bool HasUpLimitedSize = false;
+	
+	/// <summary>
+	/// The size of the up limited.
+	/// </summary>
+	public Vector2 UpLimitedSize = new Vector2(300,300);
+	
+	/// <summary>
 	/// If the JoyButton need to refer to other joyButton, assign true and ReferrenceJoyButtonName.
 	/// </summary>
 	public bool HasReference = false;
@@ -606,6 +616,11 @@ public class AdaptiveRect
 	{
 		Vector2 anchor = GetAnchor();
 		Vector2 size = GetSize();
+		if(HasUpLimitedSize)
+		{
+			size.x = Mathf.Clamp(size.x, 0, UpLimitedSize.x);
+			size.y = Mathf.Clamp(size.y, 0, UpLimitedSize.y);
+		}
 		return new Rect(anchor.x, anchor.y, size.x, size.y);
 	}
 }
