@@ -1,47 +1,25 @@
 <Dialogs>
 	<dialog id="0">
-	   <dialogitem text="My honor to see you, sir." character="Dr.William" pend="0.85" showtime="3"/>
-	   <dialogitem text="I bet you have good enough reason to ask me coming to this hell place, William." character="SuitMan" pend="1.5" showtime="2"/>
-	   <dialogitem text="Yes, I am glad to let you know we have finished Alpha subject on X-1 project, you will be the first one who ..."  pend="1" character="Dr.William" showtime="4"/>
-	   <dialogitem text="You know I dislike meaningless pomp, William. Show me your work." character="SuitMan" pend="2" showtime="3"/>
-	   <dialogitem text="...Yes, Sir." character="Dr.William" speed="20" pend="1" showtime="3"/>
+	   <dialogitem character="NamelessGuardA" pend="5" showtime="1.5" image="0">
+		  <![CDATA[<span style="color:White;">Damn it, I have to watch on this ugly damn thing the whole night, REALLY !?!?</span>]]>
+	   </dialogitem>
+	   <dialogitem character="NamelessGuardB" pend="5.5" showtime="3.5" image="1">
+		  <![CDATA[<span style="color:White;">It's said that this thing take out a whole clone team on its own, we'd better be cautious, not sure how smart it can be.</span>]]>	
+	   </dialogitem>
+	   <dialogitem character="NamelessGuardA" pend="5" showtime="3.5" image="2">
+		  <![CDATA[<span style="color:White;">Huhh... Biological weapon again, the old bone is planning a new war most likely.</span>]]>	
+	   </dialogitem>
+	   <dialogitem character="NamelessGuardB" pend="5" showtime="2" image="3">
+		  <![CDATA[<span style="color:White;">I just want to BBQ the limb.</span><span style="color:Yellow;">Ha ha ha。</span>]]>	
+	   </dialogitem>
 	</dialog>
-	<dialog id="1">
-       <dialogitem text="Are you trying to tell me, this big,slobbery,ugly giant slug is the next generation biological weapon we deliver to Military?" character="SuitMan" pend="3" showtime="3"/>
-	   <dialogitem text="Sir, we get this gene by more than one million caluation simulating the nature evolution. I personally would call it the perfect organics." character="Dr.William" pend="3" showtime="3.3"/>
-	   <dialogitem text="Its powerful forelimb can generate more than two thousand Its powerful forelimb muscles can generate more than two thousand pounds of instant tension, serrated double clamp can even tear down iron plate. " character="Dr.William" pend="2.4" showtime="2"/>
-	   <dialogitem text="And you will see how great jumping ability it has, the super powerful rear leg muscles make it the most far jumper in the world. " character="Dr.William" pend="2" showtime="1.7"/>
-	   <dialogitem text="Showtime. " character="Dr.William" pend="3" showtime="0.8"/>
-	</dialog>
-	<dialog id="2">
-		<dialogitem text="Tear down a couple of toy droids, I am not surprised. " character="SuitMan" pend="1.3" showtime="1.2"/>
-		<dialogitem text="Toy droid?? That was defenser-I ! We sold many of these droid to Defenser Department last year, and that was not a couple of, there was fourteen! " character="Dr.William" pend="2" showtime="0.9"/>
-		<dialogitem text="Send in troopers, I want to see how it act against human intelligence." character="SuitMan" pend="1.3" showtime="1"/>
-		<dialogitem text="Tr..Troopers? Mr Croddy, I don't want to see people dying in this experiement. " character="Dr.William" pend="2" showtime="1.1"/>
-		<dialogitem text="So what? Then we just clone more. " character="SuitMan(Croddy)" pend="2" showtime="1.2"/>
-		<dialogitem text=".... So be it, Mr Croddy. " character="Dr.William" pend="2" showtime="0.9"/>
-	</dialog>
-	<dialog id="3">
-		<dialogitem text=".... Well,Well,Well, I have to admit, your monster friend do impress me." character="SuitMan(Croddy)" pend="2" showtime="1.2"/>
-		<dialogitem text="Execuse me, gentlemen. " character="Beria(HideName)" pend="1.5" showtime="0.8"/>
-		<dialogitem text="Yes, Beria? " character="SuitMan(Croddy)" pend="1.5" showtime="0.8"/>
-		<dialogitem text="It was really a good fighting.If professor agree, I'd like to play around with the creature." character="Beria" pend="2" showtime="2.5"/>
-		<dialogitem text="But...Mr Beria, it's still under testing, I am afraid it will not be able to sustain your hit. " character="Dr.William" pend="2" showtime="2.5"/>
-		<dialogitem text="Jeje, don't worry, professor, your pet will survive. " character="Beria" pend="2" showtime="1.5"/>
-		<dialogitem text="Let us see where is its limitation,William." character="SuitMan(Croddy)" pend="2" showtime="1.5"/>
-		<dialogitem text="Ok, good luck to you, Bakk. " character="Dr.William" pend="2" showtime="1.2"/>
-		<dialogitem text="Bakk? " character="SuitMan(Croddy)" pend="1.5" showtime="0.25"/>
-		<dialogitem text="His name, I name it Bakk." character="Dr.William" pend="2" showtime="1.2"/>
-		<dialogitem text="His?? What the hell of a freak you are, William. " character="SuitMan(Croddy)" pend="2" showtime="1.55"/>
-	</dialog>
-	<dialog id="4">
-		<dialogitem text="Enough ! ! " character="SuitMan(Croddy)" pend="1.5" showtime="0.3"/>
-	</dialog>
-		<dialog id="5">
-		<dialogitem text="Wonderful job you have done, Professor. " character="SuitMan(Croddy)" pend="1" showtime="1"/>
-		<dialogitem text="I'd like to introduce this weapon to Department of Defense, I believe the generals will like it. A killing machine that has no collateral damage to the city." character="SuitMan(Croddy)" pend="1.5" showtime="3.3"/>
-		<dialogitem text="And I will introduce you as our chief scientist, you deserve it. " character="SuitMan(Croddy)" pend="1.5" showtime="2"/>
-		<dialogitem text="I can't tell how much thanks to you, Mr Croddy. " character="Dr.William" pend="2" showtime="1.8"/>
-		<dialogitem text="Next time, I wish can have more fun with you, Bakk. Je je je ... " character="Beria" pend="2" showtime="1.5"/>
+	
+    <dialog id="1">
+	   <dialogitem character="NamelessGuardA" pend="4.5" showtime="1" image="4">
+			<![CDATA[<body style="filter: alpha (opacity=0)"><span style="color:Red;">!!!WHAT THE FUCK??? </span><span style="color:Blue;">The shield</span><span style="color:Red;">is gone!?!?</span></body>]]>	
+	   </dialogitem>
+	   <dialogitem character="NamelessGuardB" pend="4" showtime="2" image="5">
+		    <![CDATA[<body style="filter: alpha (opacity=0)"><span style="color:White;"><span style="color:Red;">RED ALERT!!!</span></body>]]>	
+	   </dialogitem>
 	</dialog>
 </Dialogs>
