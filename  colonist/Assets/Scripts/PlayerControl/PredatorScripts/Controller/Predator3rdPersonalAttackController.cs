@@ -356,7 +356,14 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 			return GetDefaultCombat (gestureType);
 		} else {
 			tokenMatched = true;
-			return comboCombat.combat [playerComboToken.Length - 1];
+			try{
+			   return comboCombat.combat [playerComboToken.Length - 1];
+			}
+			catch(Exception exc)
+			{
+				Debug.LogError(exc);
+				return null;
+			}
 		}
 	}
 #endregion

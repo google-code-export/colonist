@@ -272,6 +272,9 @@ public class LevelManager : MonoBehaviour
 		case GameEventType.ActivateAllScriptsInObject:
 			Util.ActivateMonoRecurrsive(gameEvent.receiver);
 			break;
+		case GameEventType.ActivateScriptByName:
+			Util.ActivateMonobehaviorByName(gameEvent.receiver, gameEvent.StringParameter);
+			break;
 		}
 	}
 	

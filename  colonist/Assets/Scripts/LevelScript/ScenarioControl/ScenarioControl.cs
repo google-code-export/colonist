@@ -147,7 +147,8 @@ public class ScenarioControl : MonoBehaviour {
 			//to shift to Player mode:
 			//1. activate player
 			//2. deactivate scenario camera + audio listener
-			LevelManager.Instance.player.transform.root.gameObject.SetActiveRecursively(true);
+			LevelManager.Instance.player.SetActive (true);
+			LevelManager.Instance.player.transform.root.gameObject.SetActive(true);
 			GameEvent event_player_control_on = new GameEvent(GameEventType.PlayerControlOn);
 			LevelManager.OnGameEvent(event_player_control_on, this);
 			PlayerCamera.enabled = true;
@@ -169,7 +170,7 @@ public class ScenarioControl : MonoBehaviour {
 			}
 			else 
 			{
-			   LevelManager.Instance.player.transform.root.gameObject.SetActiveRecursively(false);
+			   LevelManager.Instance.player.transform.root.gameObject.SetActive(false);
 			}
 			this.ScenarioCamera.enabled = true;
 			this.ScenarioAudioListener.enabled = true;
