@@ -80,7 +80,7 @@ public class SpawnNPCEditor : Editor {
 			}
 			if(GUILayout.Button("Remove this SpawnEntity"))
 			{
-				Util.CloneExcept<SpawnEntity>(spawnEntityArray, spawnEntityArray[i]);
+				spawnEntityArray = Util.CloneExcept<SpawnEntity>(spawnEntityArray, spawnEntityArray[i]);
 				
 			}
 			EditorGUILayout.Space();
