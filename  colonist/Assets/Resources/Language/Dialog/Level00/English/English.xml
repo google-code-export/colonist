@@ -81,11 +81,11 @@
 		  <![CDATA[<span style="color:White;">Execuse me, gentlemen.</span> ]]>
 	    </dialogitem>
 					
-		<dialogitem text="什麼事,貝利亞? " character="SuitMan(Croddy)" pend="1.5" showtime="0.8" image="18">
+		<dialogitem character="SuitMan(Croddy)" pend="1.5" showtime="0.8" image="18">
 			<![CDATA[<span style="color:White;">Yes, </span><span style="color:Red;">Beria? </span> ]]>
 		 </dialogitem>
 		
-		<dialogitem text="這真是一場非常精彩的打鬥。 " character="Beria" pend="0.8" showtime="1" image="19">
+		<dialogitem character="Beria" pend="0.8" showtime="1" image="19">
 			<![CDATA[<span style="color:White;">It's really a fantastic game.</span> ]]>
 		</dialogitem>
 		
