@@ -424,6 +424,11 @@ public enum GameEventType
 	/// </summary>
 	ActivateAllScriptsInObject = 420,
 	
+	/// <summary>
+	/// Activate a script in the receiver object, by name.
+	/// </summary>
+	ActivateScriptByName = 421,
+	
 	//Game setting event
 	/// <summary>
 	/// Set language to a given value in StringParameter

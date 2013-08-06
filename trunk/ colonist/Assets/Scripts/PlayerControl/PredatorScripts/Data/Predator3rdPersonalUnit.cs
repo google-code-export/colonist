@@ -134,10 +134,7 @@ public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
         animation[JumpData.JumpingAnimation].layer = JumpData.AnimationLayer;
         animation[JumpData.PreJumpAnimation].layer = JumpData.AnimationLayer;
         //animation[JumpData.GroundingAnimation].layer = JumpData.AnimationLayer;		
-        foreach (PredatorComboCombat comboCombat in this.ComboCombat)
-		{
-            comboCombat.Init();
-        }
+
 		
 		foreach(PlayerEffectData effectData in EffectData)
 		{

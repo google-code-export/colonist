@@ -1108,7 +1108,18 @@ public class Util : MonoBehaviour {
 			}
         }
      }
-
+	
+	public static void ActivateMonobehaviorByName(GameObject o, string MonoBehaviorName)
+	{
+		foreach(MonoBehaviour script in o.GetComponents<MonoBehaviour>())
+		{
+			if(script.GetType().Name == MonoBehaviorName)
+			{
+				script.enabled = true;
+			}
+		}
+	}
+	
     public static void ActivateRecurrsive(GameObject o)
     {
         o.SetActive(true);

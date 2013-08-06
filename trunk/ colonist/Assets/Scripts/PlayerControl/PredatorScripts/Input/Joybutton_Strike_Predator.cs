@@ -104,7 +104,7 @@ public class Joybutton_Strike_Predator : JoyButton
 
 	    UserInputData gestInfo = new UserInputData( Tap, null, this.TouchStartTime, Time.time);
 	    attackController.NewUserGesture(gestInfo);		
-		Debug.Log("Input was send to controller at frame:" + Time.frameCount);
+//		Debug.Log("Input was send to controller at frame:" + Time.frameCount);
 	    SendMessage("DontHint");
 	}
 
