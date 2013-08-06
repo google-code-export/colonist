@@ -369,7 +369,8 @@ public abstract class JoyButton : MonoBehaviour
         //if HasReference flag is true, initialize the ReferrenceJoyButton variable.
         if (adaptiveBound.HasReference && adaptiveBound.ReferrenceJoyButton == null)
         {
-            foreach (JoyButton b in GetComponents<JoyButton>())
+			JoyButton[] joyButtons = GetComponents<JoyButton>();
+            foreach (JoyButton b in joyButtons)
             {
                 if (b != this && b.JoyButtonName == adaptiveBound.ReferrenceJoyButtonNanme)
                 {

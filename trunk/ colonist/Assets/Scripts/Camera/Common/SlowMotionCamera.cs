@@ -24,20 +24,26 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 	
 	void Update ()
 	{
-		//if slow motion time out, 
-		//1. set false the flag, 
-		//2. change the timescale to 1.
-		//3. activate the previous camera script.
-		if ((Time.time - SlowMotionStartTime) >= SlowMotionTimeLength_Overrided) {
+		if(LevelManager.IsPause() == true)
+		{
+			return;
+		}
+		else {
+		   //if slow motion time out, 
+		   //1. set false the flag, 
+		   //2. change the timescale to 1.
+		   //3. activate the previous camera script.
+		   if ((Time.time - SlowMotionStartTime) >= SlowMotionTimeLength_Overrided) {
 				this.enabled = false;
 				Time.timeScale = 1;
 				previousCameraScript.enabled = true;
-		} 
-		else 
-		{
+		   } 
+		   else 
+		   {
 			//incresing the time scale.
 			float percentage = (Time.time - SlowMotionStartTime) / SlowMotionTimeLength_Overrided;
 			Time.timeScale = Mathf.Lerp (SlowMotionTimeScale, 1, percentage);
+		   }
 		}
 	}
 	

@@ -1117,6 +1117,14 @@ public class Util : MonoBehaviour {
             ActivateRecurrsive(child.gameObject);
         }
     }
+	
+	public static void ActivateMonoRecurrsive(GameObject o)
+	{
+		foreach(MonoBehaviour behavior in o.GetComponentsInChildren<MonoBehaviour>())
+		{
+			behavior.enabled = true;
+		}
+	}
 
     public static void DeactivateRecurrsive(GameObject o)
     {
