@@ -1,9 +1,10 @@
 using UnityEngine;
 using System.Collections;
-using UnityEditor;
 using System.Collections.Generic;
 using System;
 using System.Linq;
+#if UNITY_EDITOR
+using UnityEditor;
 
 public class RecordAnimation : MonoBehaviour
 {
@@ -135,3 +136,6 @@ public class RecordAnimation : MonoBehaviour
 		curve [CurvePropertyType.Local_ScaleZ].AddKey (Time.time, target.localScale.z);
 	}
 }
+
+
+#endif
