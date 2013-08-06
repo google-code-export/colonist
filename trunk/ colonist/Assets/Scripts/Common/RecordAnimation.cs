@@ -16,9 +16,9 @@ public class RecordAnimation : MonoBehaviour
 	/// The sample interval.
 	/// In the fixed time, a key frame is generated.
 	/// </summary>
-	public float SampleInterval = 30;
+	public float SampleInterval = 0.002f;
 	bool saved;
-
+	public string clipName = "";
 	private static Dictionary<CurvePropertyType, AnimationCurve> NewCurve ()
 	{
 		var curve = new Dictionary<CurvePropertyType, AnimationCurve> ();
@@ -83,7 +83,7 @@ public class RecordAnimation : MonoBehaviour
 				clip.SetCurve (path, typeof(Transform), propName, kv.Value);
 			}
 		}
-		clip.name = "newClip.anim";
+		clip.name = this.clipName + ".anim";
 		AssetDatabase.CreateAsset (clip, "Assets/" + clip.name);
 		saved = true;
 	}

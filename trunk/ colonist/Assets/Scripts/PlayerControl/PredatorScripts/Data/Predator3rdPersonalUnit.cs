@@ -124,6 +124,8 @@ public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
 	/// </summary>
 	public float Rage = 0;
 	
+	public float HPRecoverRate = 10;
+	
 	void Awake ()
 	{
 		HP = MaxHP;
@@ -224,6 +226,15 @@ public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
 		foreach(HUD _HUD in this.transform.root.GetComponentsInChildren<HUD>())
 		{
 			_HUD.enabled = isOn;
+		}
+	}
+	
+	void Update()
+	{
+		if(this.HP < this.MaxHP)
+		{
+			this.HP += HPRecoverRate * Time.deltaTime;
+			this.HP = Mathf.Clamp(HP, 0, MaxHP);
 		}
 	}
 }
