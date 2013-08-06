@@ -419,6 +419,11 @@ public enum GameEventType
 	/// </summary>
 	AlignObjectToSpecifiedParent = 419,
 	
+	/// <summary>
+	/// Activate every monobehavior and attached to the game object (in event.receiver), and also the scripts to the children of the object.
+	/// </summary>
+	ActivateAllScriptsInObject = 420,
+	
 	//Game setting event
 	/// <summary>
 	/// Set language to a given value in StringParameter

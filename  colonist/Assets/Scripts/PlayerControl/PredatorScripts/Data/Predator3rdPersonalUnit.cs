@@ -218,11 +218,11 @@ public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
 	void SetPlayerControlOnOff(bool isOn)
 	{
 		//Turn on-off JoyButton & JoyButtonManager
-		foreach(JoyButton button in this.transform.root.GetComponentsInChildren<JoyButton>())
+		foreach(JoyButton button in this.GetComponentsInChildren<JoyButton>())
 		{
 			button.enabled = isOn;
 		}
-		this.transform.root.GetComponentInChildren<JoyButtonManager>().enabled = isOn;
+		this.GetComponent<JoyButtonManager>().enabled = isOn;
 		//Turn on-off HUD
 		foreach(HUD _HUD in this.transform.root.GetComponentsInChildren<HUD>())
 		{

@@ -111,10 +111,6 @@ public class Joybutton_Strike_Predator : JoyButton
 	void OnGUI ()
 	{
 		GUI.DrawTexture (GUIBound, ButtonTexture);
-		if(this.JoyButtonName == "LeftClaw" && Input.GetKeyDown(KeyCode.T))
-		{
-			Debug.Log(GUIBound);
-		}
 		if(showHint)
 		{
 			GUIUtility.RotateAroundPivot(Time.time % 360 * HintRotateAngluarSpeed, GUIBound.center);

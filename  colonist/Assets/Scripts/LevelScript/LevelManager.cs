@@ -31,6 +31,9 @@ public class LevelManager : MonoBehaviour
 	[HideInInspector]
 	public GameObject player = null;
 	
+	[HideInInspector]
+	public bool IsGamePaused = false;
+	
 	/// <summary>
 	/// The GameDialogue object which controls the dialogue show/hide.
 	/// </summary>
@@ -139,10 +142,10 @@ public class LevelManager : MonoBehaviour
 			playerRuntimeCameraConfig.OnGameEvent(gameEvent);
 		    break;
 		case GameEventType.PlayerSetToActive:
-			player.transform.root.gameObject.SetActiveRecursively (true);
+			player.SetActive(true);
 			break;
 		case GameEventType.PlayerSetToInactive:
-			player.transform.root.gameObject.SetActiveRecursively (false);
+			player.SetActive(false);
 			break;
 		case GameEventType.PlayerControlOn:
 		case GameEventType.PlayerControlOff:
@@ -174,18 +177,20 @@ public class LevelManager : MonoBehaviour
 			break;
 		case GameEventType.DeactivateGameObject:
 			Util.DeactivateRecurrsive (gameEvent.receiver);
+//			gameEvent.receiver.SetActive(false);
 			break;
 		case GameEventType.DestroyGameObject:
 			Destroy (gameEvent.receiver, gameEvent.FloatParameter);
 			break;
 		case GameEventType.ActivateGameObject:
 			Util.ActivateRecurrsive (gameEvent.receiver);
+//			gameEvent.receiver.SetActive(true);
 			break;
 		case GameEventType.ActivateGameObjectIgnoreChildren:
-			gameEvent.receiver.active = true;
+			gameEvent.receiver.SetActive(true);
 			break;
 		case GameEventType.DeactivateGameObjectIgnoreChildren:
-			gameEvent.receiver.active = false;
+			gameEvent.receiver.SetActive(false);
 			break;
 		case GameEventType.SpecifiedSpawn:
 			gameEvent.receiver.SendMessage ("OnGameEvent", gameEvent);
@@ -263,6 +268,9 @@ public class LevelManager : MonoBehaviour
 		case GameEventType.AlignObjectToSpecifiedParent:
 			gameEvent.receiver.transform.position = gameEvent.GameObjectParameter.transform.position;
 			gameEvent.receiver.transform.rotation = gameEvent.GameObjectParameter.transform.rotation;
+			break;
+		case GameEventType.ActivateAllScriptsInObject:
+			Util.ActivateMonoRecurrsive(gameEvent.receiver);
 			break;
 		}
 	}
@@ -388,11 +396,20 @@ public class LevelManager : MonoBehaviour
 	
 	public static void PauseGame()
 	{
+		Instance.IsGamePaused = true;
 		Time.timeScale = 0;
 	}
 	
 	public static void ResumeGame()
 	{
+		Instance.IsGamePaused = false;
 		Time.timeScale = 1;
 	}
+	
+	public static bool IsPause()
+	{
+		return Instance.IsGamePaused;
+	}
+	
+	
 }
