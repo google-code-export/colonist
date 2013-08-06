@@ -5,7 +5,11 @@ public class Predator3rdPersonalApplyDamage : MonoBehaviour {
     
     Predator3rdPersonalUnit predatorPlayerUnit = null;   
     public ParticleSystem electricityHitEffect = null;
-
+	
+	public string DieAnimation = "PredatorDie";
+	public GameEvent[] DieEvents = new GameEvent[]{};
+	
+	public bool canDie = true;
     void Awake()
     {
        predatorPlayerUnit = GetComponent<Predator3rdPersonalUnit>();
@@ -31,14 +35,31 @@ public class Predator3rdPersonalApplyDamage : MonoBehaviour {
                 electricityHitEffect.Play();
                 break;
         }
-        yield return null;
+		if(predatorPlayerUnit.HP <= 0)
+		{
+			yield return StartCoroutine("Die", param);
+		}
+        
     }
 
 
     public virtual IEnumerator Die(DamageParameter param)
     {
-        Destroy(this.transform.root.gameObject);
-        yield return null;
+		if(canDie == false)
+			yield break;
+//        Destroy(this.transform.root.gameObject);
+//        yield return null;
+		foreach(GameEvent e in DieEvents)
+		{
+			LevelManager.OnGameEvent(e, this);
+		}
+		animation.Play(this.DieAnimation);
+		this.GetComponent<CharacterController>().enabled = false;
+		foreach(MonoBehaviour mono in this.GetComponents<MonoBehaviour>())
+		{
+			mono.enabled = false;
+		}
+		yield break;
     }
 
 
