@@ -455,7 +455,10 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 			   //send applyDamage to target.
 			   DamageParameter damageParam = GetDamageParameter(attackData);
 			   enemy.SendMessage ("ApplyDamage", damageParam);
-//			   this.SendMessage("AddRage", damageParam);
+               
+			   //at each hit, plus the rage
+			   this.PredatorPlayerUnit.Rage = Mathf.Clamp(this.PredatorPlayerUnit.Rage + this.PredatorPlayerUnit.RageEarnPerHit, 0, this.PredatorPlayerUnit.MaxRage);
+				
 			   //send GameEvent to HUD to display the damage text.
 			   GameEvent _e = new GameEvent(GameEventType.DisplayDamageParameterOnNPC);
 			   _e.receiver = enemy;
