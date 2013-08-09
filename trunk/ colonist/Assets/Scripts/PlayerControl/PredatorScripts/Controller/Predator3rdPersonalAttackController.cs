@@ -375,7 +375,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	/// <param name="target"></param>
 	/// <param name="time"></param>
 	/// <returns></returns>
-	private IEnumerator RushTo (Transform target, float time)
+	public IEnumerator RushTo (Transform target, float time)
 	{
 		Vector3 direction = target.position - transform.position;
 		Vector3 position = target.position;
@@ -433,7 +433,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
 	/// <summary>
 	/// Sends the ApplyDamage message to enemy.
 	/// </summary>
-	private IEnumerator SendHitMessage (PredatorPlayerAttackData attackData, GameObject enemy)
+	public IEnumerator SendHitMessage (PredatorPlayerAttackData attackData, GameObject enemy)
 	{
 		if (enemy == null) {
 			yield break;
@@ -535,7 +535,7 @@ public class Predator3rdPersonalAttackController : MonoBehaviour
     /// <returns>
     /// The target.
     /// </returns>
-	GameObject FindTarget (Vector3 DetectDirection, float RushToRadius, out float distance)
+	public GameObject FindTarget (Vector3 DetectDirection, float RushToRadius, out float distance)
 	{
 		GameObject NextTarget = null;
 		//#1 - capsule cast at DetectDirection

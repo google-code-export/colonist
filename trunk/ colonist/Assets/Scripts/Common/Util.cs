@@ -921,6 +921,17 @@ public class Util : MonoBehaviour {
         return comparePos && compareRot;
     }
 	
+	/// <summary>
+	/// This method align the child's position to the %childAlignToPosition%, it not only move the child transform only, but move the parentRoot object.
+	/// Child must be a child transform of the parentRoot.
+	/// Note: this method only set the position.
+	/// </summary>
+	public static void AlignChildTransformPosition(Transform parentRoot, Transform child, Vector3 childAlignToPosition)
+	{
+		Vector3 childDistance = childAlignToPosition - child.transform.position;
+		parentRoot.position += childDistance;
+	}
+	
 	public static void AlignParentToChild(Transform parent, Transform child)
 	{
 		//first detach the child

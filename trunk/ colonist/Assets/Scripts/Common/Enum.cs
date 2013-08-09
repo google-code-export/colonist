@@ -300,12 +300,21 @@ public enum GameEventType
 	/// </summary>
 	ResetTopdownCameraParameter = 123,
 	
-    //NPC Event
-//    NPCBirth = 200,
-//    NPCDie = 201,
-//    NPCEnterArea = 202,
-//    NPCLeaveArea = 203,
+	/// <summary>
+	/// Similiar to PlayerCameraSlowMotionOnFixedPoint(118),
+	/// start slow motion, but the the camera position is set to the predefined transform of SlowMotionCamera script, 
+	/// and the camera is looking on the event's sender.
+	/// </summary>
+	PlayerCameraSlowMotionOnPredefinedViewPointAndLookOnFixedPoint = 124,
 	
+	/// <summary>
+	/// Similiar to PlayerCameraSlowMotionOnTransform(119), 
+	/// start slow motion, but the the camera position is set to the predefined transform of SlowMotionCamera script, 
+	/// and the camera is keep looking on the Given transform(At GameEvent.ObjectParameter).
+	/// </summary>
+	PlayerCameraSlowMotionOnPredefinedViewPointAndLookOnTransform = 125,
+	
+    //NPC Event
 	/// <summary>
 	/// Place a NPC vertically on Ground.
 	/// </summary>

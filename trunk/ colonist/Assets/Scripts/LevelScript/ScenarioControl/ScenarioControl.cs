@@ -141,6 +141,8 @@ public class ScenarioControl : MonoBehaviour {
 			break;
 		case GameEventType.PlayerCameraSlowMotionOnFixedPoint:
 		case GameEventType.PlayerCameraSlowMotionOnTransform:
+		case GameEventType.PlayerCameraSlowMotionOnPredefinedViewPointAndLookOnFixedPoint:
+		case GameEventType.PlayerCameraSlowMotionOnPredefinedViewPointAndLookOnTransform:
 			this.PlayerCamera.SendMessage("OnGameEvent", gameEvent);
 			break;
 		case GameEventType.ShiftToPlayerMode:

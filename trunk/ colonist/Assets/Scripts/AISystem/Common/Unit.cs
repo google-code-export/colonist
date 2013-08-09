@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// The class represents a basic Unit in the game.
@@ -73,6 +74,17 @@ public class Unit : UnitBase , I_GameEventReceiver
 	public IDictionary<string,AudioData> AudioDataDict = new Dictionary<string,AudioData>();
 	
 	public IDictionary<string,AbstractAI> AIDict = new Dictionary<string,AbstractAI> ();
+	
+	/// <summary>
+	/// The applicable predator player special attack types.
+	/// </summary>
+	public PredatorPlayerSpecialAttackType[] ApplicablePredatorPlayerSpecialAttackTypes = new PredatorPlayerSpecialAttackType[]{ };
+	
+	/// <summary>
+	/// ReplaceObjectDataArray is used for interaction of special attack between player and unit. 
+	/// For example, when predator player trigger a special attack - split body attack.
+	/// </summary>
+	public ReplaceObjectData[] ReplaceObjectDataArray = new ReplaceObjectData[]{};
 	
 	/// <summary>
 	/// The attack counter indicates how many times the Unit has attacked.
@@ -417,6 +429,36 @@ public class Unit : UnitBase , I_GameEventReceiver
 	{
 		Halt = true;
 		ResetHaltTime = Time.time + duration;
+	}
+#endregion
+	
+	#region special attack skill handling
+	
+	/// <summary>
+	/// Determines whether this instance is speecial attack applicable the specified acceptedAttackType.
+	/// </summary>
+	public bool IsSpeecialAttackApplicable(PredatorPlayerSpecialAttackType specialAttackType)
+	{
+		return this.ApplicablePredatorPlayerSpecialAttackTypes.Contains(specialAttackType);
+	}
+	
+	/// <summary>
+	/// Replaces to object by replace request type
+	/// </summary>
+	public GameObject ReplaceToObject(ReplaceObjectData.ReplaceObjectType ReplaceType)
+	{
+		IEnumerable<ReplaceObjectData> replaceEnum = this.ReplaceObjectDataArray.Where(x=>x.replaceType == ReplaceType);
+		Destroy(this.gameObject);
+		if(replaceEnum.Count() == 0)
+		{
+			Debug.LogError("Error: replaceType:" + ReplaceType + " does not exists!");
+			return null;
+		}
+		else 
+		{
+			GameObject replacement = Object.Instantiate(replaceEnum.First().replacement) as GameObject;
+			return replacement;
+		}
 	}
 #endregion
 	

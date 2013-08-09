@@ -133,6 +133,8 @@ public class LevelManager : MonoBehaviour
 		case GameEventType.StartDockingOnRuntimeTarget:
 		case GameEventType.PlayerCameraSlowMotionOnFixedPoint:
 		case GameEventType.PlayerCameraSlowMotionOnTransform:
+		case GameEventType.PlayerCameraSlowMotionOnPredefinedViewPointAndLookOnFixedPoint:
+		case GameEventType.PlayerCameraSlowMotionOnPredefinedViewPointAndLookOnTransform:
 		case GameEventType.ShiftToPlayerMode:
 		case GameEventType.ShiftToScenarioMode:
 			this.scenarioControlObject.OnGameEvent (gameEvent);

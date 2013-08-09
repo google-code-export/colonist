@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 2a998008b425a1246ba49b0ed54b8ec6
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - pauseIcon: {fileID: 2800000, guid: e25a96add94c1c0499b94cdf8879fd5b, type: 1}
+  - menuBackground: {fileID: 2800000, guid: ea8277a733f20274691b19d9a247f9c9, type: 1}
+  - resumeButton: {fileID: 2800000, guid: ddbbb919c4f4fbc43812ecc67f5d4f03, type: 1}
+  - restartButton: {fileID: 2800000, guid: 7431a018d2d7f95489e5b5945a3b259d, type: 1}
+  - fullscreenButton: {fileID: 2800000, guid: b8f166bc0d638cb4ba91a66006279e42, type: 1}
+  - muteButton: {fileID: 2800000, guid: 13561ff7a4d825d4d9d03bfddeb9fbb7, type: 1}
+  - quitButton: {fileID: 2800000, guid: 089592197a5de8a4eaade22af81811bb, type: 1}
+  executionOrder: 0
+  icon: {instanceID: 0}

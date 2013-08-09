@@ -67,6 +67,11 @@ public class RagdollJointData
 	public bool RandomRotation = false;
 	
 	/// <summary>
+	/// If this flag = true, the rigibody will be set IsKinmatic = false and UseGravity = true
+	/// </summary>
+	public bool TurnOnRigibody = false;
+	
+	/// <summary>
 	/// Gets a clone of this RagdollJointData. The Joint object is null and need to be assigned other way.
 	/// </summary>
 	public RagdollJointData GetClone ()
@@ -87,6 +92,7 @@ public class RagdollJointData
 		ragdollJointData.SelfcontrolDestruction = this.SelfcontrolDestruction;
 		ragdollJointData.SelfDestructionTime = this.SelfDestructionTime;
 		ragdollJointData.JointGameObjectInitialActive = this.JointGameObjectInitialActive;
+		ragdollJointData.TurnOnRigibody = this.TurnOnRigibody;
 		return ragdollJointData;
 	}
 }
@@ -103,6 +109,10 @@ public class Ragdoll : MonoBehaviour
 	/// If AutoDestory = true, destory in %LifeTime% seconds
 	/// </summary>
 	public bool AutoDestory = true;
+	/// <summary>
+	/// If this flag = true, the gameObjet will be destroyed in StartRagdoll routine.
+	/// </summary>
+	public bool DestroyAfterStartRagdoll = false;
 	public float LifeTime = 5;
 	/// <summary>
 	/// Assign the center for this ragdoll (because ragdoll has NO character controller.)
@@ -122,7 +132,8 @@ public class Ragdoll : MonoBehaviour
 	/// </summary>
 	public DecalData[] DecalData = new DecalData[] { };
 	public RagdollJointData[] RagdollJointDataArray = new RagdollJointData[] { };
-
+	
+	
 	void Awake ()
 	{
 	}
@@ -132,7 +143,7 @@ public class Ragdoll : MonoBehaviour
 		if (StartAtAwake) {
 			Invoke ("StartRagdoll", CreateRagdollDelay);
 		}
-		if (AutoDestory) {
+		if (AutoDestory && DestroyAfterStartRagdoll == false) {
 			Invoke ("DestoryRagdoll", LifeTime);
 		}
 	}
@@ -164,11 +175,20 @@ public class Ragdoll : MonoBehaviour
 			if (JointData.RandomRotation) {
 				JointData.Joint.gameObject.transform.rotation = Random.rotation;
 			}
+			if(JointData.TurnOnRigibody)
+			{
+				JointData.Joint.isKinematic = false;
+				JointData.Joint.useGravity = true;
+			}
 			if (JointData.CreateForce == false)
 				continue;
 			else {
 				StartCoroutine ("AddForce", JointData);
 			}
+		}
+		if(DestroyAfterStartRagdoll == true && AutoDestory == true)
+		{
+			Invoke ("DestoryRagdoll", LifeTime);
 		}
 	}
 

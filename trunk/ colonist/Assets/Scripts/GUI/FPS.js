@@ -15,6 +15,8 @@ var updateInterval = 0.5;
 
 var recordTime = true;
 
+var displayOnScreen = false;
+
 private var accum = 0.0; // FPS accumulated over the interval
 private var frames = 0; // Frames drawn over the interval
 private var timeleft : float; // Left time for current interval
@@ -58,10 +60,13 @@ function Update()
 
 function OnGUI()
 {
-    GUI.Label(Rect(textPos.x, textPos.y, 80,30), fps);
-    if(recordTime)
+    if(displayOnScreen)
     {
-        GUI.Label(Rect(Screen.width/2 , 10, 80, 30), Time.time.ToString());
+      GUI.Label(Rect(textPos.x, textPos.y, 80,30), fps);
+      if(recordTime)
+      {
+         GUI.Label(Rect(Screen.width/2 , 10, 80, 30), Time.time.ToString());
+      }
     }
 }
 
