@@ -28,6 +28,7 @@ public class Predator3rdPersonalApplyDamage : MonoBehaviour {
     {
         predatorPlayerUnit.HP -= param.damagePoint;
 		predatorPlayerUnit.HUDObject.SendMessage("ApplyDamage", param);
+		predatorPlayerUnit.Rage = Mathf.Clamp(this.predatorPlayerUnit.Rage + this.predatorPlayerUnit.RageEarnPerBeingHit, 0, this.predatorPlayerUnit.MaxRage);
 //        Debug.Log("ApplyDamage at PredatorPlayer, current HP:" + predatorPlayerUnit.HP);
         switch (param.damageForm)
         {

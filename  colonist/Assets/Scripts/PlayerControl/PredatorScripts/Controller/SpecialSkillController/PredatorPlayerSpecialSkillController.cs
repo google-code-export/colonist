@@ -25,4 +25,9 @@ public abstract class PredatorPlayerSpecialSkillController : MonoBehaviour {
 	/// If the target unit it not applicable to the special attack type, DoNormalAttack() method is called.
 	/// </summary>
 	public abstract IEnumerator DoNormalAttack();
+	
+	/// <summary>
+	/// Determines whether this instance can do special attack in the moment.
+	/// </summary>
+	public abstract bool CanDoSpecialAttackInTheMoment();
 }

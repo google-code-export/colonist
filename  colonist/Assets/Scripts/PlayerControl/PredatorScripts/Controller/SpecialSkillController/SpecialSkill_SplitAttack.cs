@@ -10,15 +10,19 @@ public class SpecialSkill_SplitAttack : PredatorPlayerSpecialSkillController {
 	public float RushDistance = 5;
 	public float AttackableDistance = 1;
 	public Transform Pivot = null;
+	public float RaggRequired = 20;
 	
+	PredatorPlayerStatus playerStatus = null;
 	Predator3rdPersonalAttackController attackController = null;
 	GameObject CurrentSplitTarget = null;
 	Predator3rdPersonalUnit predatorPlayerUnit = null;
-	
+	bool IsCurrentlyDoingSpecialAttack = false;
+		
 	// Use this for initialization
 	void Awake () {
-	     attackController = GetComponent<Predator3rdPersonalAttackController>();
-		 predatorPlayerUnit = GetComponent<Predator3rdPersonalUnit>();
+	    attackController = GetComponent<Predator3rdPersonalAttackController>();
+		predatorPlayerUnit = GetComponent<Predator3rdPersonalUnit>();
+		playerStatus = GetComponent<PredatorPlayerStatus>();
 	}
 	
 	// Update is called once per frame
@@ -29,18 +33,45 @@ public class SpecialSkill_SplitAttack : PredatorPlayerSpecialSkillController {
 		}
 	}
 	
+	
+	/// <summary>
+	/// Determines whether this instance can do special attack in the moment.
+	/// </summary>
+	public override bool CanDoSpecialAttackInTheMoment()
+	{
+		if(predatorPlayerUnit!= null)
+		{
+		  bool CanDo = predatorPlayerUnit.Rage  >= RaggRequired;
+	      return CanDo;
+		}
+		else 
+		{
+			return false;
+		}
+	}
+	
 	public override IEnumerator DoSpecialAttack()
 	{
+		//Un-repeatable
+		if(IsCurrentlyDoingSpecialAttack)
+		{
+			yield break;
+		}
 		//find target
 		float DistanceToEnemy = 0;
 		CurrentSplitTarget = attackController.FindTarget (transform.forward, RushDistance, out DistanceToEnemy);
 		//if target exists, play special attack animation
 		if(CurrentSplitTarget != null)
 		{
+			IsCurrentlyDoingSpecialAttack = true;
 			if (DistanceToEnemy > AttackableDistance) {
 			  yield return StartCoroutine(attackController.RushTo (CurrentSplitTarget.transform,0.3f));
 			}
 			animation.CrossFade("attack_dual_spike_and_split");
+			yield return new WaitForSeconds(animation["attack_dual_spike_and_split"].length * 0.9f);
+			IsCurrentlyDoingSpecialAttack = false;
+			//Minus rage:
+			this.predatorPlayerUnit.Rage -= this.RaggRequired;
 		}
 	}
 	

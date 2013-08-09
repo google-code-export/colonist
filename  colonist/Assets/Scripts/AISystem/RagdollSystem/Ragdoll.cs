@@ -71,6 +71,7 @@ public class RagdollJointData
 	/// </summary>
 	public bool TurnOnRigibody = false;
 	
+
 	/// <summary>
 	/// Gets a clone of this RagdollJointData. The Joint object is null and need to be assigned other way.
 	/// </summary>
@@ -133,6 +134,7 @@ public class Ragdoll : MonoBehaviour
 	public DecalData[] DecalData = new DecalData[] { };
 	public RagdollJointData[] RagdollJointDataArray = new RagdollJointData[] { };
 	
+	public GameEvent[] StartRagdollEvents = new GameEvent[]{};
 	
 	void Awake ()
 	{
@@ -189,6 +191,11 @@ public class Ragdoll : MonoBehaviour
 		if(DestroyAfterStartRagdoll == true && AutoDestory == true)
 		{
 			Invoke ("DestoryRagdoll", LifeTime);
+		}
+		
+		foreach(GameEvent e in StartRagdollEvents)
+		{
+			LevelManager.OnGameEvent(e, this);
 		}
 	}
 

@@ -12,6 +12,7 @@ public class Predator3rdPersonalStealthController : MonoBehaviour
     public float FadeTime = 0.2f;
     public string NormalLayer = "xenz-player";
     public string CloakLayer = "xenz-cloak";
+	public float InitialSkinMaterialOutlineWidth = 0.00765f;
     const float OutlineWidth = 0.0085f;
     private bool stealth = false;
     private float singleAnimation;
@@ -26,6 +27,9 @@ public class Predator3rdPersonalStealthController : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+		//Set the normal colored texture by default:
+		this.SkinMaterial.SetFloat("_Outline", InitialSkinMaterialOutlineWidth);
+		
     }
 
 

@@ -124,7 +124,22 @@ public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
 	/// </summary>
 	public float Rage = 0;
 	
+	/// <summary>
+	/// The max rage.
+	/// </summary>
+	public float MaxRage = 100;
+	
 	public float HPRecoverRate = 10;
+	
+	/// <summary>
+	/// The rage earn per hit.
+	/// </summary>
+	public float RageEarnPerHit = 6;
+	
+	/// <summary>
+	/// The rage earn per kill.
+	/// </summary>
+	public float RageEarnPerBeingHit = 4;
 	
 	void Awake ()
 	{
@@ -237,4 +252,5 @@ public class Predator3rdPersonalUnit : UnitBase, I_GameEventReceiver
 			this.HP = Mathf.Clamp(HP, 0, MaxHP);
 		}
 	}
+	
 }
