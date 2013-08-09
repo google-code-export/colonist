@@ -12,6 +12,12 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 	/// When slow motioning, the time scale.
 	/// </summary>
 	public float SlowMotionTimeScale = 0.2f;
+	
+	/// <summary>
+	/// Inspector predefined camera position pivots.
+	/// </summary>
+	public Transform[] SlowMotionPivots = new Transform[]{};
+	
 	float SlowMotionStartTime = 0;
 	RuntimeCameraControl previousCameraScript = null;
 	float SlowMotionTimeLength_Overrided;
@@ -49,12 +55,13 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 	
 	void LateUpdate ()
 	{
-		
-			switch (CurrentTopDownCameraParameter.mode) {
+		switch (CurrentTopDownCameraParameter.mode) {
 			case TopDownCameraControlMode.ParameterControlPositionAndLookAtPosition:
+			case TopDownCameraControlMode.PositionAtPivotAndLookAtPosition:
 				ApplyCameraControlParameter (true, CurrentTopDownCameraParameter);
 				break;
 			case TopDownCameraControlMode.ParameterControlPositionAndLookAtTransform:
+		    case TopDownCameraControlMode.PositionAtPivotAndLookAtTransform:
 				//it's possible, that the focus gameobject is destroyed afterward, in runtime, so we avoid the error by checking cameraFocusOnTransform.
 				if(CurrentTopDownCameraParameter.cameraFocusOnTransform != null)
 				{
@@ -67,8 +74,8 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 					previousCameraScript.enabled = true;
 				}
 				break;
-			}
-		
+
+		}
 	}
 	
 	public void OnGameEvent (GameEvent _e)
@@ -100,6 +107,19 @@ public class SlowMotionCamera : TopDownCamera, I_GameEventReceiver
 			  this.CurrentTopDownCameraParameter.cameraFocusOnTransform = _e.GameObjectParameter.transform;
 			  StartSlowMotion_MovableTransform (TimeLength);
 			}
+			break;
+		case GameEventType.PlayerCameraSlowMotionOnPredefinedViewPointAndLookOnFixedPoint:
+			//1. change camera mode:
+			CurrentTopDownCameraParameter.mode = TopDownCameraControlMode.PositionAtPivotAndLookAtPosition;
+			CurrentTopDownCameraParameter.cameraFocusOnPosition = _e.sender.transform.position;
+			CurrentTopDownCameraParameter.CameraPositionPivot = Util.RandomFromArray<Transform>(this.SlowMotionPivots);
+			StartSlowMotion_FixedPoint (TimeLength);
+			break;
+		case GameEventType.PlayerCameraSlowMotionOnPredefinedViewPointAndLookOnTransform:
+			CurrentTopDownCameraParameter.mode = TopDownCameraControlMode.PositionAtPivotAndLookAtTransform;
+			CurrentTopDownCameraParameter.cameraFocusOnTransform = _e.GameObjectParameter.transform;
+			CurrentTopDownCameraParameter.CameraPositionPivot = Util.RandomFromArray<Transform>(this.SlowMotionPivots);
+			StartSlowMotion_MovableTransform (TimeLength);
 			break;
 		}
 	}

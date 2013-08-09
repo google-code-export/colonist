@@ -383,6 +383,15 @@ public class DecalData
     public float DestoryTimeOut = 30;
     public float ScaleRate = 1;
     public LayerMask ApplicableLayer;
+	/// <summary>
+	/// The transform object which define the projection position to create decal.
+	/// It's optional, if ProjectDecalTransform = null, the Decal is created based on the create effect object.
+	/// </summary>
+	public Transform OnTransform = null;
+	/// <summary>
+	/// The create delay time.
+	/// </summary>
+	public float CreateDelay = 0;
 #endregion
 	
 	public DecalData GetClone()
@@ -598,4 +607,20 @@ public class AudioData
 		clone.randomAudioClips = randomAudioClips;
 		return clone;
 	}
+}
+
+
+[System.Serializable]
+/// <summary>
+/// This class is used to defined the behavior of replacing this gameObject to another game object in runtime.
+/// </summary>
+public class ReplaceObjectData
+{
+   public enum ReplaceObjectType
+   {
+		ReplaceToVerticalSplittedBodyObject = 0,
+   }
+	public string Name = "";
+	public ReplaceObjectType replaceType = ReplaceObjectType.ReplaceToVerticalSplittedBodyObject;
+	public GameObject replacement = null;
 }

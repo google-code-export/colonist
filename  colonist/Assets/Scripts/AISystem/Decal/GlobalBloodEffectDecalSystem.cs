@@ -190,118 +190,189 @@ public class GlobalBloodEffectDecalSystem : MonoBehaviour {
     /// <summary>
     /// CreateBloodDecal is used to create blood decal. 
     /// This method should be called by receive damage behavior when receiving damage.
+    /// Center = the position of the object which attempts to create the decal. But, if DecalData
     /// </summary>
     /// <param name="center"></param>
     /// <param name="DecalData"></param>
-    public static void CreateBloodDecal(Vector3 center, DecalData DecalData)
+    public static void CreateBloodDecal(Vector3 center, DecalData _DecalData)
     {
         //create predefine global decal
-        if (DecalData.UseGlobalDecal)
+        if (_DecalData.UseGlobalDecal)
         {
-            GlobalDecalData globalDecalData = Instance.GlobalDecalDataDict[DecalData.GlobalType];
+            GlobalDecalData globalDecalData = Instance.GlobalDecalDataDict[_DecalData.GlobalType];
 			if(globalDecalData.Decal_OnGround.Length > 0)
 			{
-               CreateBloodDecalOnGround(center,
-                                        Util.RandomFromArray<Object>(globalDecalData.Decal_OnGround),
-                                        globalDecalData.GroundLayer,
-                                        true,
-                                        globalDecalData.DecalLifetime,
-                                        Random.Range(globalDecalData.ScaleRateMin, globalDecalData.ScaleRateMax)
-                                        );
+				Instance.StartCoroutine(Instance.CreateGlobalDecalOnGround(center, globalDecalData, _DecalData));
 			}
 			if(globalDecalData.Decal_OnWall.Length > 0)
-			{
-            CreateBloodDecalOnWall(center,
-                                     Util.RandomFromArray<Object>(globalDecalData.Decal_OnWall),
-                                     globalDecalData.WallLayer,
-                                     true,
-                                     globalDecalData.DecalLifetime,
-                                     Random.Range(globalDecalData.ScaleRateMin, globalDecalData.ScaleRateMax)
-                                     );
+			{            
+				Instance.StartCoroutine(Instance.CreateGlobalDecalOnWall(center, globalDecalData, _DecalData));;
 			}
         }
         //Create custom decal defined by Unit
         else
         {
-            switch (DecalData.ProjectDirection)
+            switch (_DecalData.ProjectDirection)
             {
                 //Create decal on ground
                 case HorizontalOrVertical.Vertical:
-                    CreateBloodDecalOnGround(center, 
-                                             Util.RandomFromArray<Object>(DecalData.DecalObjects),
-                                             DecalData.ApplicableLayer,
-                                             DecalData.DestoryInTimeOut,
-                                             DecalData.DestoryTimeOut,
-                                             DecalData.ScaleRate
-                                             );
+				    Instance.StartCoroutine(Instance.CreateDecalOnGround(center, _DecalData));
                     break;
                 //Create decal on wall
                 case HorizontalOrVertical.Horizontal:
-                    CreateBloodDecalOnWall(center, 
-                                             Util.RandomFromArray<Object>(DecalData.DecalObjects),
-                                             DecalData.ApplicableLayer,
-                                             DecalData.DestoryInTimeOut,
-                                             DecalData.DestoryTimeOut,
-                                             DecalData.ScaleRate);
+				    Instance.StartCoroutine(Instance.CreateBloodDecalOnWall(center, _DecalData));
                     break;
             }
         }
     }
 
-    static void CreateBloodDecalOnGround(Vector3 center, 
-                                        Object decalObject,
-                                        LayerMask groundLayer,
-                                        bool HasLifetime,
-                                        float Lifetime,
-                                        float scaleRate
-                                        )
-    {
-        float Radius = 1;
+	
+	/// <summary>
+	/// This method specifically target on creating blood decal on ground.
+	/// </summary>
+	IEnumerator CreateGlobalDecalOnGround(Vector3 Center, GlobalDecalData globalDecalData, DecalData _DecalData)
+	{		
+		if(_DecalData.CreateDelay > 0)
+		{
+			yield return new WaitForSeconds(_DecalData.CreateDelay);
+		}
+		float Radius = 1;
         Vector2 randomFromCircle = Random.insideUnitCircle;
         randomFromCircle *= Radius;
-        Vector3 random = new Vector3(center.x + randomFromCircle.x, center.y + 3, center.z + randomFromCircle.y);
+		Vector3 random = Vector3.zero;
+		if(_DecalData.OnTransform != null)
+		{
+			random = new Vector3(_DecalData.OnTransform.position.x + randomFromCircle.x, 
+				                 _DecalData.OnTransform.position.y + 3, 
+				                 _DecalData.OnTransform.position.z + randomFromCircle.y);
+		}
+        else 
+		{
+			random = new Vector3(Center.x + randomFromCircle.x, Center.y + 3, Center.z + randomFromCircle.y);
+		}
         RaycastHit hitInfo;
-
-        if (Physics.Raycast(random, Vector3.down, out hitInfo, 999, groundLayer))
+		//If there is ground point projection exists, create the decal object.
+        if (Physics.Raycast(random, Vector3.down, out hitInfo, 999, globalDecalData.GroundLayer))
         {
+			//Randomly select a decalObject
+		    Object decalObject = Util.RandomFromArray<Object>(globalDecalData.Decal_OnGround);
+			float scaleRate = Random.Range(globalDecalData.ScaleRateMin, globalDecalData.ScaleRateMax);
+			
+			//Instantiate the DecalObject
             GameObject DecalObject = (GameObject)Object.Instantiate(decalObject, hitInfo.point + hitInfo.normal * 0.1f, Quaternion.identity);
             DecalObject.transform.rotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal);
             DecalObject.transform.RotateAround(DecalObject.transform.up, Random.Range(0, 360));
             DecalObject.transform.localScale *= scaleRate;
-            if (HasLifetime)
-                Destroy(DecalObject, Lifetime);
+            if(globalDecalData.DecalLifetime > 0)
+			{
+               Destroy(DecalObject, globalDecalData.DecalLifetime);
+			}
         }
-    }
-
-    static void CreateBloodDecalOnWall(Vector3 center, Object decalObject,
-                                        LayerMask walllayer,
-                                        bool HasLifetime,
-                                        float Lifetime,
-                                        float scaleRate)
-    {
-        float Radius = 2;
+	}
+	
+	/// <summary>
+	/// This method specifically target on creating blood decal on wall.
+	/// </summary>
+	IEnumerator CreateGlobalDecalOnWall(Vector3 Center, GlobalDecalData globalDecalData, DecalData _DecalData)
+	{
+		if(_DecalData.CreateDelay > 0)
+		{
+			yield return new WaitForSeconds(_DecalData.CreateDelay);
+		}
+		float Radius = 2;
         //check front/back/right/left direction if there's a collision:
-        Collider[] wallColliders = Physics.OverlapSphere(center, Radius, walllayer);
+        Collider[] wallColliders = Physics.OverlapSphere(Center, Radius, globalDecalData.WallLayer);
         if (wallColliders != null && wallColliders.Length > 0)
         {
             Collider wall = wallColliders[0];
-            Vector3 closestPoints = wall.ClosestPointOnBounds(center);
+            Vector3 closestPoints = wall.ClosestPointOnBounds(Center);
+            closestPoints.y += Random.Range(0.1f, 0.5f);
+            //Randomize the point
+            closestPoints += Random.onUnitSphere * 1;
+            RaycastHit hitInfo;
+			//Find the point to create wall decal
+            if (Physics.Raycast(Center, closestPoints - Center, out hitInfo, 20, globalDecalData.WallLayer))
+            {
+				//Randomly select a decal object
+				Object decalObjectProtocal = Util.RandomFromArray<Object>(globalDecalData.Decal_OnWall);
+				//if wall decal instantiation point exists, create the decal object.
+                GameObject DecalObject = (GameObject)Object.Instantiate(decalObjectProtocal, 
+                                                                        hitInfo.point + hitInfo.normal * 0.1f,
+                                                                        Quaternion.identity);
+                DecalObject.transform.rotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal);
+                DecalObject.transform.RotateAround(DecalObject.transform.up, Random.Range(0, 360));
+				float scaleRate = Random.Range(globalDecalData.ScaleRateMin , globalDecalData.ScaleRateMax);
+                DecalObject.transform.localScale *= scaleRate;
+                if (globalDecalData.DecalLifetime > 0)
+                    Destroy(DecalObject, globalDecalData.DecalLifetime);
+            }
+        }
+	}
+	
+	IEnumerator CreateDecalOnGround(Vector3 Center, DecalData _DecalData)
+	{
+		if(_DecalData.CreateDelay > 0)
+		{
+			yield return new WaitForSeconds(_DecalData.CreateDelay);
+		}
+		
+		float Radius = 1;
+        Vector2 randomFromCircle = Random.insideUnitCircle;
+        randomFromCircle *= Radius;
+		Vector3 random = Vector3.zero;
+		
+		if(_DecalData.OnTransform != null)
+		{
+			random = new Vector3(_DecalData.OnTransform.position.x + randomFromCircle.x, Center.y + 3, _DecalData.OnTransform.position.z + randomFromCircle.y);
+		}
+        else 
+		{
+			random = new Vector3(Center.x + randomFromCircle.x, Center.y + 3, Center.z + randomFromCircle.y);
+		}
+        RaycastHit hitInfo;
+
+        if (Physics.Raycast(random, Vector3.down, out hitInfo, 999, _DecalData.ApplicableLayer))
+        {
+			Object decalObjectPrototype = Util.RandomFromArray<Object>(_DecalData.DecalObjects);
+            GameObject DecalObject = (GameObject)Object.Instantiate(decalObjectPrototype, hitInfo.point + hitInfo.normal * 0.1f, Quaternion.identity);
+            DecalObject.transform.rotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal);
+            DecalObject.transform.RotateAround(DecalObject.transform.up, Random.Range(0, 360));
+            DecalObject.transform.localScale *= _DecalData.ScaleRate;
+            if (_DecalData.DestoryInTimeOut)
+                Destroy(DecalObject, _DecalData.DestoryTimeOut);
+        }
+	}
+
+    IEnumerator CreateBloodDecalOnWall(Vector3 Center, DecalData _DecalData)
+	{
+        if(_DecalData.CreateDelay > 0)
+        {
+		   yield return new WaitForSeconds(_DecalData.CreateDelay);
+        }
+		float Radius = 2;
+        //check front/back/right/left direction if there's a collision:
+        Collider[] wallColliders = Physics.OverlapSphere(Center, Radius, _DecalData.ApplicableLayer);
+        if (wallColliders != null && wallColliders.Length > 0)
+        {
+            Collider wall = wallColliders[0];
+            Vector3 closestPoints = wall.ClosestPointOnBounds(Center);
             closestPoints.y += Random.Range(0.1f, 0.5f);
             //Randomize the point
             closestPoints += Random.onUnitSphere*1;
             RaycastHit hitInfo;
-            if (Physics.Raycast(center, closestPoints - center, out hitInfo, 20, walllayer))
+            if (Physics.Raycast(Center, closestPoints - Center, out hitInfo, 20, _DecalData.ApplicableLayer))
             {
-                GameObject DecalObject = (GameObject)Object.Instantiate(decalObject, 
+                Object decalObjectPrototype = Util.RandomFromArray<Object>(_DecalData.DecalObjects);
+                GameObject DecalObject = (GameObject)Object.Instantiate(decalObjectPrototype, 
                                                                   hitInfo.point + hitInfo.normal * 0.1f,
                                                                   Quaternion.identity);
                 DecalObject.transform.rotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal);
                 DecalObject.transform.RotateAround(DecalObject.transform.up, Random.Range(0, 360));
-                DecalObject.transform.localScale *= scaleRate;
-                if (HasLifetime)
-                    Destroy(DecalObject, Lifetime);
+                DecalObject.transform.localScale *= _DecalData.ScaleRate;
+                if (_DecalData.DestoryInTimeOut)
+                    Destroy(DecalObject, _DecalData.DestoryTimeOut);
             }
         }
-    }
+	}
 
 }

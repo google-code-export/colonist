@@ -948,7 +948,7 @@ public class EditorCommon
 		string property = curveData.propertyName;
 		CurvePropertyType curvePropertyType = CurvePropertyNameToType (property);
 		float curveValue = curveData.curve.Evaluate (time);
-		Debug.Log("Curve value:" + curveValue + " transform:" + _targetTransform.name + " type:" + curvePropertyType.ToString());
+//		Debug.Log("Curve value:" + curveValue + " transform:" + _targetTransform.name + " type:" + curvePropertyType.ToString());
 		switch (curvePropertyType) {
 		case CurvePropertyType.Local_PositionX:
 			_targetTransform.localPosition = new Vector3 (curveValue, _targetTransform.localPosition.y, _targetTransform.localPosition.z);

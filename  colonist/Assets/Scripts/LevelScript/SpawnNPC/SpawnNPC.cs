@@ -85,7 +85,9 @@ public class SpawnEntity
 		}
 		return ret;
 	}
-	
+	/// <summary>
+	/// Replaces the game object in the current maintained spawnobject list.
+	/// </summary>
 	public void ReplaceGameObject (GameObject _old, GameObject _new)
 	{
 		if (spawnedObjects.Contains (_old)) {
@@ -203,6 +205,9 @@ public class SpawnNPC : MonoBehaviour, I_GameEventReceiver
 		return spawned;
 	}
 	
+	/// <summary>
+	/// Call this method to replaces the spawned with new object, in the spawned object list.
+	/// </summary>
 	public void ReplaceSpawnedWithNewObject (GameObject _old, GameObject _new)
 	{
 		if (CurrentSpawnEntity != null) {
