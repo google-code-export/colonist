@@ -9,6 +9,5 @@ This wiki is aim to group knowledege and equation of common used Cg/HLSL.
 = Details =
 
 Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+1.colorComponent = 0.5 * normalComponent + 0.5;
+  normalComponent = 2 * (colorComponent - 0.5);
