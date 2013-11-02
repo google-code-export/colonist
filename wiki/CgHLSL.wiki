@@ -1,0 +1,14 @@
+#summary One-sentence summary of this page.
+This wiki is aim to group knowledege and equation of common used Cg/HLSL.
+
+= Introduction =
+
+1. Convert texture RGB tp normal direction.
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
